@@ -150,10 +150,14 @@ piunter --large-files --threshold=500
 | `--yarn` | Limpar cache do Yarn |
 | `--pnpm` | Limpar cache do PNPM |
 | `--flatpak` | Limpar Flatpak |
+| `--snap` | Limpar Snap |
 | `--docker` | Limpar Docker |
 | `--logs` | Limpar logs do sistema |
 | `--packages` | Limpar gerenciador de pacotes |
 | `--large-files` | Detectar arquivos grandes |
+| `--appimage` | Limpar AppImages |
+| `--thumbs` | Limpar miniaturas |
+| `--recent` | Limpar arquivos recentes |
 | `--threshold=MB` | Threshold para arquivos grandes |
 | `--analyze` | Apenas analisar sem limpar |
 | `--dry-run` | Simular limpeza |
@@ -189,24 +193,31 @@ npm run test:watch
 
 ```
 src/
-├── cli.ts            # Interface CLI
-├── core/             # Lógica principal
-│   ├── analyzer.ts   # Análise de espaço
-│   └── cleaner.ts    # Execução de limpeza
-├── modules/          # Módulos de limpeza
-│   ├── cache.ts      # Cache do usuário
-│   ├── npm.ts        # NPM/Yarn/PNPM
-│   ├── flatpak.ts    # Flatpak
-│   ├── docker.ts     # Docker
-│   ├── logs.ts       # Logs do sistema
-│   ├── packages.ts   # Gerenciadores de pacotes
-│   └── disk.ts       # Arquivos grandes e uso de disco
-├── utils/            # Utilitários
-│   ├── exec.ts       # Execução de comandos
-│   ├── os.ts         # Informações do sistema
-│   ├── logger.ts     # Logging
-│   └── config.ts     # Config file
-└── types/            # TypeScript types
+├── cli.ts              # Interface CLI
+├── core/               # Lógica principal
+│   ├── analyzer.ts    # Análise de espaço
+│   └── cleaner.ts     # Execução de limpeza
+├── modules/           # Módulos de limpeza
+│   ├── cache.ts       # Cache do usuário
+│   ├── npm.ts         # NPM/Yarn/PNPM
+│   ├── flatpak.ts     # Flatpak
+│   ├── snap.ts        # Snap
+│   ├── docker.ts      # Docker
+│   ├── logs.ts        # Logs do sistema
+│   ├── packages.ts    # Gerenciadores de pacotes
+│   ├── disk.ts        # Arquivos grandes e uso de disco
+│   ├── appimage.ts    # AppImages
+│   ├── thumbs.ts      # Miniaturas
+│   └── recent.ts      # Arquivos recentes
+├── utils/              # Utilitários
+│   ├── exec.ts         # Execução de comandos
+│   ├── os.ts          # Informações do sistema
+│   ├── logger.ts      # Logging
+│   ├── config.ts      # Config file
+│   ├── completion.ts  # Shell completion
+│   ├── plugins.ts     # Plugin system
+│   └── progress.ts     # Progress bars
+└── types/              # TypeScript types
 ```
 
 ## Segurança
@@ -245,6 +256,48 @@ Crie `~/.piunter.json` para personalizar configurações:
 - Pop!_OS
 - Linux Mint
 - E outras distribuições baseadas nestas
+
+## Plugins
+
+Crie plugins personalizados em `~/.piunter/plugins/`:
+
+```typescript
+export default {
+  id: 'meu-plugin',
+  name: 'Meu Plugin',
+  description: 'Descrição do plugin',
+  version: '1.0.0',
+
+  isAvailable() {
+    return true;
+  },
+
+  async analyze() {
+    return { module: this.id, items: [], totalSize: 0 };
+  },
+
+  async clean(dryRun = false) {
+    return {
+      module: this.id,
+      success: true,
+      spaceFreed: 0,
+      itemsRemoved: 0,
+      errors: []
+    };
+  }
+};
+```
+
+## Wiki
+
+Documentação detalhada disponível na pasta [wiki/](wiki/):
+- Home
+- Installation
+- Basic Usage
+- Configuration
+- Modules
+- Plugins
+- Troubleshooting
 
 ## Contribuindo
 
