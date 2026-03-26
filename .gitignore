@@ -4,6 +4,7 @@ dist/
 .DS_Store
 .env
 .env.local
+.env.*
 coverage/
 .vscode/
 .idea/
@@ -11,3 +12,4 @@ coverage/
 *.swo
 *~
 .turbo/
+.npmrc
