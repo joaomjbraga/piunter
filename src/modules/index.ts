@@ -5,6 +5,10 @@ export * from './docker.js';
 export * from './logs.js';
 export * from './packages.js';
 export * from './disk.js';
+export * from './snap.js';
+export * from './appimage.js';
+export * from './thumbs.js';
+export * from './recent.js';
 
 import { cacheModule } from './cache.js';
 import { npmModule, yarnModule, pnpmModule } from './npm.js';
@@ -13,6 +17,10 @@ import { dockerModule } from './docker.js';
 import { logsModule } from './logs.js';
 import { packagesModule } from './packages.js';
 import { largeFilesModule, diskUsageModule } from './disk.js';
+import { snapModule } from './snap.js';
+import { appimageModule } from './appimage.js';
+import { thumbsModule } from './thumbs.js';
+import { recentFilesModule } from './recent.js';
 import type { ModuleInfo } from '../types/index.js';
 
 export interface Module {
@@ -31,10 +39,14 @@ export const modules: Module[] = [
   yarnModule,
   pnpmModule,
   flatpakModule,
+  snapModule,
   dockerModule,
   logsModule,
   largeFilesModule,
   diskUsageModule,
+  appimageModule,
+  thumbsModule,
+  recentFilesModule,
 ];
 
 export function getAvailableModules(): ModuleInfo[] {

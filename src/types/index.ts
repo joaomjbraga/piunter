@@ -55,6 +55,7 @@ export interface CliFlags {
   yarn: boolean;
   pnpm: boolean;
   flatpak: boolean;
+  snap: boolean;
   docker: boolean;
   logs: boolean;
   packages: boolean;
@@ -64,6 +65,9 @@ export interface CliFlags {
   interactive: boolean;
   largeFiles: boolean;
   largeFilesThreshold: number;
+  appimage: boolean;
+  thumbs: boolean;
+  recent: boolean;
 }
 
 export interface Report {

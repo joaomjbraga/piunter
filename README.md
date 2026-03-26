@@ -29,6 +29,9 @@
 
 > CLI profissional para limpeza e otimização de sistemas Linux. Desenvolvido com TypeScript, seguindo Clean Architecture e boas práticas de código.
 
+<!-- DEMO GIF PLACEHOLDER - Adicione seu GIF aqui -->
+<!-- ![Demo](docs/demo.gif) -->
+
 ## Recursos
 
 - Detecção automática de distribuição Linux (Debian, Ubuntu, Arch, Fedora, etc.)
@@ -36,11 +39,15 @@
 - Módulos de limpeza:
   - Cache do usuário (~/.cache)
   - NPM, Yarn, PNPM
-  - Flatpak
+  - Flatpak e Snap
   - Docker
   - Logs do sistema (journalctl)
   - Gerenciador de pacotes
-  - Arquivos grandes
+  - Arquivos grandes e AppImages
+  - Miniaturas do sistema
+  - Arquivos recentes
+- Sistema de plugins para extensibilidade
+- Shell completion (bash/zsh)
 - Modo interativo com seleção por checkbox
 - Modo dry-run para simular limpeza
 - Confirmação obrigatória para operações destrutivas

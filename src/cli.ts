@@ -36,6 +36,7 @@ function parseFlags(args: string[]): CliFlags {
     yarn: args.includes('--yarn'),
     pnpm: args.includes('--pnpm'),
     flatpak: args.includes('--flatpak'),
+    snap: args.includes('--snap'),
     docker: args.includes('--docker'),
     logs: args.includes('--logs'),
     packages: args.includes('--packages'),
@@ -49,6 +50,9 @@ function parseFlags(args: string[]): CliFlags {
       1,
       10000
     ),
+    appimage: args.includes('--appimage'),
+    thumbs: args.includes('--thumbs'),
+    recent: args.includes('--recent'),
   };
 }
 
@@ -66,10 +70,14 @@ function getModulesFromFlags(flags: CliFlags): string[] {
   if (flags.yarn) modules.push('yarn');
   if (flags.pnpm) modules.push('pnpm');
   if (flags.flatpak) modules.push('flatpak');
+  if (flags.snap) modules.push('snap');
   if (flags.docker) modules.push('docker');
   if (flags.logs) modules.push('logs');
   if (flags.packages) modules.push('packages');
   if (flags.largeFiles) modules.push('large-files');
+  if (flags.appimage) modules.push('appimage');
+  if (flags.thumbs) modules.push('thumbs');
+  if (flags.recent) modules.push('recent');
 
   return modules;
 }
@@ -177,15 +185,19 @@ export async function main(): Promise<void> {
 ║                                                            ║
 ║  Modulos de limpeza:                                       ║
 ║    --all         Limpar todos os módulos                   ║
-║    --cache       Cache do usuario (~/.cache)              ║
+║    --cache       Cache do usuário (~/.cache)               ║
 ║    --npm         Cache do NPM                             ║
 ║    --yarn        Cache do Yarn                            ║
 ║    --pnpm        Cache do PNPM                            ║
 ║    --flatpak     Flatpak                                  ║
+║    --snap        Snap                                    ║
 ║    --docker      Docker                                   ║
 ║    --logs        Logs do sistema                          ║
 ║    --packages    Gerenciador de pacotes                   ║
 ║    --large-files Arquivos grandes                         ║
+║    --appimage    AppImages                                ║
+║    --thumbs      Miniaturas                               ║
+║    --recent      Arquivos recentes                         ║
 ║                                                            ║
 ║  Opcoes:                                                  ║
 ║    --dry-run     Simular sem executar                     ║
