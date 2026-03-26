@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "piunter": "./dist/cli.js"
+    "piunter": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -27,7 +27,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joaomjbraga/piunter"
+    "url": "git+https://github.com/joaomjbraga/piunter.git"
   },
   "engines": {
     "node": ">=18.0.0"
