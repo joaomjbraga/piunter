@@ -11,22 +11,45 @@ import { getDistroInfo } from './utils/os.js';
 
 const VERSION = '1.0.0';
 
+function getTerminalWidth(): number {
+  return process.stdout.columns || 80;
+}
+
 function isRoot(): boolean {
   return process.getuid?.() === 0 || process.env.USER === 'root';
 }
 
-const MODULE_MAP: Record<string, string[]> = {
-  'cache': ['cache'],
-  'npm': ['npm'],
-  'yarn': ['yarn'],
-  'pnpm': ['pnpm'],
-  'flatpak': ['flatpak'],
-  'docker': ['docker'],
-  'logs': ['logs'],
-  'packages': ['packages'],
-  'large-files': ['large-files'],
-  'disk': ['disk-usage'],
-};
+function padEnd(str: string, len: number): string {
+  const width = getTerminalWidth();
+  const maxLen = Math.min(len, width - 10);
+  return str.length >= maxLen ? str.substring(0, maxLen - 3) + '...' : str.padEnd(maxLen);
+}
+
+function getModulesFromFlags(flags: CliFlags): string[] {
+  const modules: string[] = [];
+
+  if (flags.all) {
+    return getAvailableModules()
+      .filter(m => m.available)
+      .map(m => m.id);
+  }
+
+  if (flags.cache) modules.push('cache');
+  if (flags.npm) modules.push('npm');
+  if (flags.yarn) modules.push('yarn');
+  if (flags.pnpm) modules.push('pnpm');
+  if (flags.flatpak) modules.push('flatpak');
+  if (flags.snap) modules.push('snap');
+  if (flags.docker) modules.push('docker');
+  if (flags.logs) modules.push('logs');
+  if (flags.packages) modules.push('packages');
+  if (flags.largeFiles) modules.push('large-files');
+  if (flags.appimage) modules.push('appimage');
+  if (flags.thumbs) modules.push('thumbs');
+  if (flags.recent) modules.push('recent');
+
+  return modules;
+}
 
 function parseFlags(args: string[]): CliFlags {
   return {
@@ -56,72 +79,87 @@ function parseFlags(args: string[]): CliFlags {
   };
 }
 
-function getModulesFromFlags(flags: CliFlags): string[] {
-  const modules: string[] = [];
-
-  if (flags.all) {
-    return getAvailableModules()
-      .filter(m => m.available)
-      .map(m => m.id);
-  }
-
-  if (flags.cache) modules.push('cache');
-  if (flags.npm) modules.push('npm');
-  if (flags.yarn) modules.push('yarn');
-  if (flags.pnpm) modules.push('pnpm');
-  if (flags.flatpak) modules.push('flatpak');
-  if (flags.snap) modules.push('snap');
-  if (flags.docker) modules.push('docker');
-  if (flags.logs) modules.push('logs');
-  if (flags.packages) modules.push('packages');
-  if (flags.largeFiles) modules.push('large-files');
-  if (flags.appimage) modules.push('appimage');
-  if (flags.thumbs) modules.push('thumbs');
-  if (flags.recent) modules.push('recent');
-
-  return modules;
+function line(char: string = '─', len?: number): string {
+  const width = len || getTerminalWidth() - 4;
+  return char.repeat(Math.max(width, 10));
 }
 
-async function showBanner(): Promise<void> {
-  console.log(chalk.cyan(`
-╔═══════════════════════════════════════════════════════════════════╗
-║                                                                   ║
-║ ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗            ║
-║ ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗           ║
-║ ██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝           ║
-║ ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗           ║
-║ ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║           ║
-║ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝           ║
-║                                                                   ║
-║              Limpeza e Otimização para Linux                      ║
-║                                                                   ║
-╚═══════════════════════════════════════════════════════════════════╝
-`));
+function printHeader(): void {
+  const w = getTerminalWidth();
+  console.log();
+  console.log(chalk.cyan.bold(`  piunter`) + chalk.dim(' · CLI para Linux'));
+  console.log(chalk.dim(`  ${line()}`));
+  console.log();
 }
 
-async function showSystemInfo(): Promise<void> {
-  const distro = getDistroInfo();
-  console.log(chalk.dim(`  Sistema: ${distro.name} (${distro.packageManager})`));
+function printHelp(): void {
+  const w = getTerminalWidth();
+  printHeader();
+  
+  console.log(`  ${chalk.bold('USO')}`);
+  console.log(`    ${chalk.dim('piunter')} ${chalk.cyan('[flags]')}`);
+  console.log();
+  
+  console.log(`  ${chalk.bold('FLAGS')}`);
+  console.log(`    ${chalk.cyan('--all')}`);
+  console.log(`    ${chalk.cyan('--analyze')}`);
+  console.log(`    ${chalk.cyan('--dry-run')}  ${chalk.dim('- Simula execução')}`);
+  console.log(`    ${chalk.cyan('--force')}`);
+  console.log(`    ${chalk.cyan('--interactive')}`);
+  console.log();
+  
+  console.log(`  ${chalk.bold('MÓDULOS')}`);
+  console.log(`    ${chalk.cyan('--cache')}         Cache do usuário`);
+  console.log(`    ${chalk.cyan('--npm')}            Cache do NPM`);
+  console.log(`    ${chalk.cyan('--yarn')}           Cache do Yarn`);
+  console.log(`    ${chalk.cyan('--pnpm')}           Cache do PNPM`);
+  console.log(`    ${chalk.cyan('--packages')}       Pacotes órfãos`);
+  console.log(`    ${chalk.cyan('--docker')}         Containers`);
+  console.log(`    ${chalk.cyan('--logs')}           Logs`);
+  console.log(`    ${chalk.cyan('--flatpak')}        Flatpak`);
+  console.log(`    ${chalk.cyan('--snap')}           Snap`);
+  console.log(`    ${chalk.cyan('--large-files')}    Arquivos grandes`);
+  console.log(`    ${chalk.cyan('--appimage')}       AppImages`);
+  console.log(`    ${chalk.cyan('--thumbs')}         Miniaturas`);
+  console.log(`    ${chalk.cyan('--recent')}         Arquivos recentes`);
+  console.log();
+  
+  console.log(`  ${chalk.bold('OPÇÕES')}`);
+  console.log(`    ${chalk.cyan('--threshold=100')}  ${chalk.dim('Tamanho mínimo em MB')}`);
+  console.log();
+  
+  console.log(`  ${chalk.bold('EXEMPLOS')}`);
+  console.log(`    ${chalk.dim('piunter --all')}`);
+  console.log(`    ${chalk.dim('piunter --npm --cache')}`);
+  console.log(`    ${chalk.dim('piunter --all --dry-run')}`);
   console.log();
 }
 
 async function interactiveMode(): Promise<string[]> {
   const availableModules = getAvailableModules();
+  
   const choices = availableModules.map(m => ({
-    name: `${m.available ? '○' : '✗'} ${m.name} - ${m.description}${!m.available ? ' (indisponível)' : ''}`,
+    name: `${m.name} - ${m.description}`,
     value: m.id,
-    disabled: !m.available,
     checked: m.available && ['packages', 'cache', 'npm'].includes(m.id),
+    disabled: !m.available,
   }));
 
-  const answers = await inquirer.prompt([
+  const { modules } = await inquirer.prompt([
     {
       type: 'checkbox',
       name: 'modules',
-      message: chalk.cyan('Selecione os módulos para limpar:'),
+      message: chalk.cyan('Selecione os modulos:'),
       choices,
-      default: ['packages', 'cache', 'npm'],
+      pageSize: 10,
     },
+  ]);
+
+  if (!modules || modules.length === 0) {
+    return [];
+  }
+
+  const { confirm } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'confirm',
@@ -130,12 +168,12 @@ async function interactiveMode(): Promise<string[]> {
     },
   ]);
 
-  if (!answers.confirm) {
-    console.log(chalk.dim('Operação cancelada.'));
+  if (!confirm) {
+    console.log(chalk.dim('Operacao cancelada.'));
     process.exit(0);
   }
 
-  return answers.modules;
+  return modules;
 }
 
 async function analyzeMode(moduleIds?: string[]): Promise<void> {
@@ -146,17 +184,18 @@ async function analyzeMode(moduleIds?: string[]): Promise<void> {
 
 async function cleanMode(moduleIds: string[], options: CleanOptions): Promise<void> {
   if (!options.force && !options.dryRun) {
-    const answer = await inquirer.prompt([
+    console.log();
+    const { proceed } = await inquirer.prompt([
       {
         type: 'confirm',
         name: 'proceed',
-        message: chalk.red('Confirma que deseja limpar estes módulos? Esta ação pode ser irreversível.'),
+        message: chalk.red.bold('Confirmar limpeza?'),
         default: false,
       },
     ]);
 
-    if (!answer.proceed) {
-      console.log(chalk.dim('Operação cancelada pelo usuário.'));
+    if (!proceed) {
+      console.log(chalk.dim('Operacao cancelada.'));
       process.exit(0);
     }
   }
@@ -171,63 +210,51 @@ export async function main(): Promise<void> {
   const flags = parseFlags(args);
 
   if (args.includes('--help') || args.includes('-h') || args.includes('help')) {
-    console.log(chalk.cyan(`
-╔════════════════════════════════════════════════════════════╗
-║                    piunter - Ajuda                       ║
-╠════════════════════════════════════════════════════════════╣
-║                                                            ║
-║  Modo interativo:                                          ║
-║    $ piunter                                              ║
-║    $ piunter --interactive                                ║
-║                                                            ║
-║  Analise:                                                  ║
-║    $ piunter --analyze                                    ║
-║                                                            ║
-║  Modulos de limpeza:                                       ║
-║    --all         Limpar todos os módulos                   ║
-║    --cache       Cache do usuário (~/.cache)               ║
-║    --npm         Cache do NPM                             ║
-║    --yarn        Cache do Yarn                            ║
-║    --pnpm        Cache do PNPM                            ║
-║    --flatpak     Flatpak                                  ║
-║    --snap        Snap                                    ║
-║    --docker      Docker                                   ║
-║    --logs        Logs do sistema                          ║
-║    --packages    Gerenciador de pacotes                   ║
-║    --large-files Arquivos grandes                         ║
-║    --appimage    AppImages                                ║
-║    --thumbs      Miniaturas                               ║
-║    --recent      Arquivos recentes                         ║
-║                                                            ║
-║  Opcoes:                                                  ║
-║    --dry-run     Simular sem executar                     ║
-║    --force       Pular confirmacao                        ║
-║                                                            ║
-║  Exemplos:                                                 ║
-║    $ piunter --all                                        ║
-║    $ piunter --npm --cache --dry-run                      ║
-║    $ piunter --analyze                                    ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
-    `));
+    printHelp();
     return;
   }
 
+  if (args.includes('--version') || args.includes('-V')) {
+    console.log(chalk.cyan(`piunter v${VERSION}`));
+    return;
+  }
+
+  if (args.includes('--list')) {
+    const modules = getAvailableModules();
+    console.log();
+    console.log(chalk.bold('  Modulos disponiveis:'));
+    console.log();
+    for (const m of modules) {
+      const status = m.available ? chalk.green('*') : chalk.red('-');
+      const name = padEnd(m.name, 12);
+      console.log(`  ${status} ${chalk.white(name)} ${chalk.dim(m.description)}`);
+    }
+    console.log();
+    return;
+  }
+
+  const distro = getDistroInfo();
+  
   if (flags.analyze) {
     const modules = getModulesFromFlags(flags);
-    await showBanner();
-    await showSystemInfo();
+    printHeader();
+    console.log(chalk.dim(`  Sistema: ${distro.name}`));
+    console.log(chalk.dim(`  Gerenciador: ${distro.packageManager}`));
+    console.log();
     await analyzeMode(modules.length > 0 ? modules : undefined);
     return;
   }
 
   if (flags.interactive || args.length === 0) {
-    await showBanner();
-    await showSystemInfo();
+    printHeader();
+    console.log(chalk.dim(`  Sistema: ${distro.name}`));
+    console.log(chalk.dim(`  Gerenciador: ${distro.packageManager}`));
+    console.log();
+    
     const selectedModules = await interactiveMode();
 
     if (selectedModules.length === 0) {
-      console.log(chalk.yellow('Nenhum módulo selecionado.'));
+      console.log(chalk.yellow('Nenhum modulo selecionado.'));
       return;
     }
 
@@ -242,15 +269,24 @@ export async function main(): Promise<void> {
   const selectedModules = getModulesFromFlags(flags);
 
   if (selectedModules.length === 0) {
-    console.log(chalk.yellow('Nenhum módulo especificado. Use --help para ver as opções.'));
+    console.log(chalk.red('Nenhum modulo especificado.'));
+    console.log(chalk.dim('Use ') + chalk.cyan('--help') + chalk.dim(' para ver as opcoes.'));
+    console.log();
     process.exit(1);
   }
 
-  await showBanner();
-  await showSystemInfo();
+  printHeader();
+  console.log(chalk.dim(`  Sistema: ${distro.name}`));
+  console.log(chalk.dim(`  Gerenciador: ${distro.packageManager}`));
+  console.log();
+
+  if (flags.dryRun) {
+    console.log(chalk.yellow('  Modo dry-run ativo'));
+    console.log();
+  }
 
   if (!isRoot() && (flags.packages || flags.logs)) {
-    logger.warn('Alguns módulos requerem privilégios sudo - o sistema solicitará sua senha quando necessário');
+    console.log(chalk.dim('  Alguns modulos requerem sudo'));
     console.log();
   }
 
@@ -262,7 +298,6 @@ export async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  logger.error(`Erro fatal: ${error.message}`);
-  console.error(error);
+  logger.error(`Erro: ${error.message}`);
   process.exit(1);
 });

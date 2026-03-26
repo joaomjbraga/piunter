@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { CleaningResult, Report, CleanOptions } from '../types/index.js';
 import { getModuleByIds, type Module } from '../modules/index.js';
 import { logger } from '../utils/logger.js';
@@ -18,32 +19,20 @@ export class Cleaner {
     const results: CleaningResult[] = [];
     const errors: string[] = [];
 
-    if (this.dryRun) {
-      logger.warn('Modo DRY-RUN ativo - nenhuma alteração será feita');
-    }
-
     for (const module of this.modules) {
       if (!module.isAvailable()) {
-        logger.debug(`${module.name} não disponível, pulando`);
+        logger.debug(`${module.name} nao disponivel`);
         continue;
       }
 
-      logger.startSpinner(`Limpando ${module.name}...`);
       try {
         const result = await module.clean(this.dryRun, this.force);
         results.push(result);
-
-        if (result.success) {
-          logger.stopSpinner(true, `${module.name}: ${logger.formatBytes(result.spaceFreed)} liberada`);
-        } else {
-          logger.stopSpinner(false, `${module.name}: Erro`);
-        }
 
         if (result.errors.length > 0) {
           errors.push(...result.errors);
         }
       } catch (error) {
-        logger.stopSpinner(false, `Erro ao limpar ${module.name}`);
         errors.push(`${module.name}: ${(error as Error).message}`);
         results.push({
           module: module.id,
@@ -68,47 +57,51 @@ export class Cleaner {
   }
 
   printReport(report: Report): void {
-    logger.title('Relatório de Limpeza');
-
     const duration = report.endTime.getTime() - report.startTime.getTime();
     const durationStr = duration < 60000 
-      ? `${Math.round(duration / 1000)}s`
-      : `${Math.round(duration / 60000)}min`;
+      ? `${(duration / 1000).toFixed(1)}s`
+      : `${(duration / 60000).toFixed(1)}min`;
 
-    logger.info(`Tempo de execução: ${durationStr}`);
-    logger.space();
+    const items = report.modules.map(r => ({
+      name: r.module,
+      value: r.success ? logger.formatBytes(r.spaceFreed) : 'erro',
+      success: r.success,
+    }));
 
-    if (report.modules.length > 0) {
-      logger.subtitle('Módulos processados:');
-      for (const result of report.modules) {
-        if (result.success) {
-          logger.item(`${result.module}: ${logger.formatBytes(result.spaceFreed)}`, `${result.itemsRemoved} itens`);
-        } else {
-          logger.item(`${result.module}: ERRO`, 'Falhou');
-        }
-      }
+    if (items.length > 0) {
+      logger.list(items);
     }
 
     logger.space();
-    logger.subtitle('Resumo:');
-    logger.info(`Espaço liberado: ${logger.formatBytes(report.totalSpaceFreed)}`);
-    logger.info(`Itens removidos: ${report.totalItemsRemoved}`);
-    logger.info(`Módulos com erro: ${report.errors.length}`);
+    console.log(`  ${chalk.dim('─'.repeat(Math.min(process.stdout.columns || 60, 40) - 4))}`);
+
+    const totalSize = logger.formatBytes(report.totalSpaceFreed);
+    const totalItems = report.totalItemsRemoved.toString();
+    const totalErrors = report.errors.length.toString();
+
+    console.log();
+    console.log(`  ${chalk.bold('Resumo')}`);
+    console.log(`    ${chalk.dim('-')} ${chalk.white('Espaco liberado:')} ${chalk.green(totalSize)}`);
+    console.log(`    ${chalk.dim('-')} ${chalk.white('Itens removidos:')} ${chalk.cyan(totalItems)}`);
+    console.log(`    ${chalk.dim('-')} ${chalk.white('Erros:')} ${totalErrors === '0' ? chalk.green(totalErrors) : chalk.red(totalErrors)}`);
 
     if (report.errors.length > 0) {
       logger.space();
-      logger.warn('Erros encontrados:');
-      for (const error of report.errors) {
-        logger.item(error);
-      }
+      console.log(`  ${chalk.bold.red('Erros:')}`);
+      report.errors.forEach((error) => {
+        console.log(`    ${chalk.dim('-')} ${chalk.red(error)}`);
+      });
     }
 
     logger.space();
+
     if (this.dryRun) {
-      logger.success('Dry-run concluído - use sem --dry-run para aplicar');
+      console.log(`  ${chalk.yellow('!')} Dry-run concluido`);
+      console.log(chalk.dim(`    Execute sem --dry-run para aplicar`));
     } else {
-      logger.success('Limpeza concluída com sucesso!');
+      console.log(`  ${chalk.green('*')} Limpeza concluida em ${durationStr}`);
     }
+    console.log();
   }
 }
 
