@@ -1,8 +1,7 @@
 import { readdirSync, statSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
-import type { AnalysisResult, CleaningResult, ModuleInfo } from '../types/index.js';
+import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getCacheDir } from '../utils/os.js';
-import { exec } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 
 export class CacheModule {
@@ -81,7 +80,7 @@ export class CacheModule {
     return size;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,

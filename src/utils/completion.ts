@@ -56,7 +56,7 @@ _piunter() {
     _arguments -s "\${opts[@]}"
 }
 
-_piunter "\$@"
+_piunter "$@"
 `;
 
 export async function installBashCompletion(): Promise<boolean> {

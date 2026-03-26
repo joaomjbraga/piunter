@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, statSync, rmSync, readFileSync } from 'fs';
+import { existsSync, statSync, rmSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
@@ -47,7 +47,7 @@ export class RecentFilesModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -74,7 +74,7 @@ export class RecentFilesModule {
         result.spaceFreed += item.size;
         result.itemsRemoved++;
         logger.item(`${this.name}: ${item.path.split('/').pop()}`);
-      } catch (e: unknown) {
+      } catch {
         result.errors.push(`Falha ao limpar ${item.path}`);
       }
     }

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { getDistroInfo, getHomeDir, getCacheDir, getConfigDir } from './os.js';
 import { logger } from './logger.js';
-import { exec, isCommandAvailable } from './exec.js';
+import { isCommandAvailable } from './exec.js';
 
 describe('OS Utils', () => {
   it('should get distro info', () => {

@@ -5,9 +5,9 @@ import inquirer from 'inquirer';
 import { createAnalyzer, createCleaner } from './core/index.js';
 import { getAvailableModules } from './modules/index.js';
 import type { CleanOptions, CliFlags } from './types/index.js';
+import { validateThreshold } from './utils/config.js';
 import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
-import { validateThreshold } from './utils/config.js';
 
 const VERSION = '1.0.0';
 
@@ -86,14 +86,14 @@ async function showBanner(): Promise<void> {
   console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║ ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗          ║
-║ ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗         ║
-║ ██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝         ║
-║ ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗         ║
-║ ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║         ║
-║ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝         ║
+║ ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗            ║
+║ ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗           ║
+║ ██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝           ║
+║ ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗           ║
+║ ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║           ║
+║ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝           ║
 ║                                                                   ║
-║              Limpeza e Otimização para Linux                     ║
+║              Limpeza e Otimização para Linux                      ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 `));

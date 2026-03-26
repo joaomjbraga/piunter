@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import type { AnalysisResult, CleaningResult, ModuleInfo } from '../types/index.js';
+import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
@@ -61,7 +61,7 @@ export class NpmModule {
     return size;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -153,7 +153,7 @@ export class YarnModule {
     return size;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -261,7 +261,7 @@ export class PnpmModule {
     return size;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,

@@ -1,4 +1,4 @@
-import type { AnalysisResult, ModuleInfo } from '../types/index.js';
+import type { AnalysisResult } from '../types/index.js';
 import { getAvailableModules, getModuleByIds, type Module } from '../modules/index.js';
 import { logger } from '../utils/logger.js';
 

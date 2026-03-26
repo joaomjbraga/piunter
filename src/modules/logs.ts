@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
@@ -60,7 +60,7 @@ export class LogsModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,

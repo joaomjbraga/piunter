@@ -2,7 +2,6 @@ import { existsSync, readdirSync, statSync, rmSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
-import { exec } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 
 export class ThumbsModule {
@@ -70,7 +69,7 @@ export class ThumbsModule {
     return size;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -117,7 +116,7 @@ export class ThumbsModule {
 
         result.spaceFreed += item.size;
         logger.item(`${this.name}: ${item.path.split('/').pop()}`);
-      } catch (e: unknown) {
+      } catch {
         result.errors.push(`Falha ao limpar ${item.path}`);
       }
     }

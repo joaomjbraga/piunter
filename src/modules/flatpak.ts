@@ -80,7 +80,7 @@ export class FlatpakModule {
     return 0;
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const result: CleaningResult = {
       module: this.id,
       success: true,

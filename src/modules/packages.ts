@@ -1,4 +1,4 @@
-import { exec, isCommandAvailable } from '../utils/exec.js';
+import { exec } from '../utils/exec.js';
 import { getDistroInfo } from '../utils/os.js';
 import type { AnalysisResult, CleaningResult, PackageManager } from '../types/index.js';
 import { logger } from '../utils/logger.js';
@@ -20,7 +20,7 @@ export class PackagesModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
+    const totalSize = 0;
 
     switch (this.packageManager) {
       case 'apt':
@@ -144,7 +144,7 @@ export class PackagesModule {
     return num * (multipliers[unit] || 1024 * 1024);
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,

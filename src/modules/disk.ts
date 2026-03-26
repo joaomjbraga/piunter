@@ -1,5 +1,4 @@
-import { readdirSync, statSync, existsSync } from 'fs';
-import { join } from 'path';
+import { statSync, existsSync } from 'fs';
 import { exec } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
@@ -61,13 +60,13 @@ export class LargeFilesModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
       success: true,
-      spaceFreed: analysis.totalSize,
-      itemsRemoved: analysis.items.length,
+      spaceFreed: 0,
+      itemsRemoved: 0,
       errors: [],
     };
 
@@ -148,7 +147,7 @@ export class DiskUsageModule {
     return num * (multipliers[unit] || 1);
   }
 
-  async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
+  async clean(_dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
