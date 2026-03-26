@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { getDistroInfo } from './utils/os.js';
-import { logger } from './utils/logger.js';
 import { createAnalyzer, createCleaner } from './core/index.js';
-import { getAvailableModules, getModuleByIds } from './modules/index.js';
-import type { CliFlags, CleanOptions } from './types/index.js';
+import { getAvailableModules } from './modules/index.js';
+import type { CleanOptions, CliFlags } from './types/index.js';
+import { logger } from './utils/logger.js';
+import { getDistroInfo } from './utils/os.js';
 
 const VERSION = '1.0.0';
 
@@ -72,16 +71,19 @@ function getModulesFromFlags(flags: CliFlags): string[] {
 
 async function showBanner(): Promise<void> {
   console.log(chalk.cyan(`
-  ╔═══════════════════════════════════════════╗
-  ║                                           ║
-  ║   ░█▀▀█ ░█▀▀▀█ ░█▀▀▀ ░█▀▀█ ▀█▀ ░█▀▀█       ║
-  ║   ░█──█ ░█──░█ ░█▀▀▀ ░█▄▄▀ ░█─ ░█▄▄▄█       ║
-  ║   ░█▄▄█ ░█▄▄▄█ ░█─── ░█─░█ ▄█▄ ░█─░█       ║
-  ║                                           ║
-  ║   ${chalk.white('CLI de Limpeza para Linux')}            ║
-  ║                                           ║
-  ╚═══════════════════════════════════════════╝
-  `));
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║ ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗          ║
+║ ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗         ║
+║ ██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝         ║
+║ ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗         ║
+║ ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║         ║
+║ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝         ║
+║                                                                   ║
+║              Limpeza e Otimização para Linux                     ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+`));
 }
 
 async function showSystemInfo(): Promise<void> {
@@ -93,7 +95,7 @@ async function showSystemInfo(): Promise<void> {
 async function interactiveMode(): Promise<string[]> {
   const availableModules = getAvailableModules();
   const choices = availableModules.map(m => ({
-    name: `${m.available ? '○' : '✗'} ${m.name} - ${m.description}${!m.available ? ' (indisponível)' : ''}`,
+    name: `${m.available ? '○' : '✗'} ${m.name} - ${m.description}${!m.available ? ' (indisponivel)' : ''}`,
     value: m.id,
     disabled: !m.available,
     checked: m.available && ['packages', 'cache', 'npm'].includes(m.id),
@@ -103,7 +105,7 @@ async function interactiveMode(): Promise<string[]> {
     {
       type: 'checkbox',
       name: 'modules',
-      message: chalk.cyan('Selecione os módulos para limpar:'),
+      message: chalk.cyan('Selecione os modulos para limpar:'),
       choices,
       default: ['packages', 'cache', 'npm'],
     },
@@ -116,7 +118,7 @@ async function interactiveMode(): Promise<string[]> {
   ]);
 
   if (!answers.confirm) {
-    console.log(chalk.dim('Operação cancelada.'));
+    console.log(chalk.dim('Operacao cancelada.'));
     process.exit(0);
   }
 
@@ -135,13 +137,13 @@ async function cleanMode(moduleIds: string[], options: CleanOptions): Promise<vo
       {
         type: 'confirm',
         name: 'proceed',
-        message: chalk.red('⚠ Confirma que deseja limpar estes módulos? Esta ação pode ser irreversível.'),
+        message: chalk.red('Confirma que deseja limpar estes modulos? Esta acao pode ser irreversivel.'),
         default: false,
       },
     ]);
 
     if (!answer.proceed) {
-      console.log(chalk.dim('Operação cancelada pelo usuário.'));
+      console.log(chalk.dim('Operacao cancelada pelo usuario.'));
       process.exit(0);
     }
   }
@@ -157,37 +159,39 @@ export async function main(): Promise<void> {
 
   if (args.includes('--help') || args.includes('-h') || args.includes('help')) {
     console.log(chalk.cyan(`
-╔══════════════════════════════════════════════════════════╗
-║                   piunter - Ajuda                       ║
-║    $ piunter                                            ║
-║    $ piunter --interactive                              ║
-║    $ piunter --analyze                                  ║
-║    $ piunter --all                                      ║
-║    $ piunter --npm --cache --dry-run                    ║
-║    $ piunter --analyze                                  ║
-║                                                          ║
-║  Módulos de limpeza:                                      ║
-║    --all         Limpar todos os módulos                 ║
-║    --cache       Cache do usuário (~/.cache)            ║
-║    --npm         Cache do NPM                            ║
-║    --yarn        Cache do Yarn                           ║
+╔════════════════════════════════════════════════════════════╗
+║                    piunter - Ajuda                       ║
+╠════════════════════════════════════════════════════════════╣
+║                                                            ║
+║  Modo interativo:                                          ║
+║    $ piunter                                              ║
+║    $ piunter --interactive                                ║
+║                                                            ║
+║  Analise:                                                  ║
+║    $ piunter --analyze                                    ║
+║                                                            ║
+║  Modulos de limpeza:                                       ║
+║    --all         Limpar todos os modulos                   ║
+║    --cache       Cache do usuario (~/.cache)              ║
+║    --npm         Cache do NPM                             ║
+║    --yarn        Cache do Yarn                            ║
 ║    --pnpm        Cache do PNPM                            ║
-║    --flatpak     Flatpak                                 ║
+║    --flatpak     Flatpak                                  ║
 ║    --docker      Docker                                   ║
 ║    --logs        Logs do sistema                          ║
-║    --packages    Gerenciador de pacotes                  ║
-║    --large-files Arquivos grandes                        ║
-║                                                          ║
-║  Opções:                                                 ║
+║    --packages    Gerenciador de pacotes                   ║
+║    --large-files Arquivos grandes                         ║
+║                                                            ║
+║  Opcoes:                                                  ║
 ║    --dry-run     Simular sem executar                     ║
-║    --force       Pular confirmação                       ║
-║                                                          ║
-║  Exemplos:                                                ║
-║    $ pc-limpo --all                                      ║
-║    $ pc-limpo --npm --cache --dry-run                    ║
-║    $ pc-limpo --analyze                                  ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
+║    --force       Pular confirmacao                        ║
+║                                                            ║
+║  Exemplos:                                                 ║
+║    $ piunter --all                                        ║
+║    $ piunter --npm --cache --dry-run                      ║
+║    $ piunter --analyze                                    ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
     `));
     return;
   }
@@ -204,9 +208,9 @@ export async function main(): Promise<void> {
     await showBanner();
     await showSystemInfo();
     const selectedModules = await interactiveMode();
-    
+
     if (selectedModules.length === 0) {
-      console.log(chalk.yellow('Nenhum módulo selecionado.'));
+      console.log(chalk.yellow('Nenhum modulo selecionado.'));
       return;
     }
 
@@ -221,7 +225,7 @@ export async function main(): Promise<void> {
   const selectedModules = getModulesFromFlags(flags);
 
   if (selectedModules.length === 0) {
-    console.log(chalk.yellow('Nenhum módulo especificado. Use --help para ver as opções.'));
+    console.log(chalk.yellow('Nenhum modulo especificado. Use --help para ver as opcoes.'));
     process.exit(1);
   }
 
@@ -229,7 +233,7 @@ export async function main(): Promise<void> {
   await showSystemInfo();
 
   if (!isRoot() && (flags.packages || flags.logs)) {
-    logger.warn('Alguns módulos requerem privilégios sudo - o sistema solicitará sua senha quando necessário');
+    logger.warn('Alguns modulos requerem privilegios sudo - o sistema solicitara sua senha quando necessario');
     console.log();
   }
 
