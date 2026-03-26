@@ -89,6 +89,12 @@ export class FlatpakModule {
       errors: [],
     };
 
+    if (!this.isAvailable()) {
+      result.errors.push('Flatpak não está instalado no sistema');
+      result.success = false;
+      return result;
+    }
+
     const analysis = await this.analyze();
 
     if (dryRun) {
@@ -97,25 +103,32 @@ export class FlatpakModule {
       return result;
     }
 
-    const repairResult = await exec('flatpak', ['repair', '--system']);
-    if (!repairResult.success) {
+    try {
+      const repairResult = await exec('flatpak', ['repair', '--system'], { sudo: true });
+      if (repairResult.success) {
+        logger.item(`${this.name}: Repair concluído`);
+      }
+    } catch {
       result.errors.push('Falha no repair do Flatpak');
     }
 
-    const cacheResult = await exec('flatpak', ['repair', '-y']);
-    if (cacheResult.success) {
-      result.spaceFreed += analysis.totalSize * 0.1;
-      logger.item(`${this.name}: Repair concluído`);
+    try {
+      const uninstallResult = await exec('flatpak', ['uninstall', '--unused', '-y'], { sudo: true });
+      if (uninstallResult.success) {
+        logger.item(`${this.name}: Apps não utilizados removidos`);
+      }
+    } catch {
+      // Silent fail for unused apps
     }
 
-    const uninstallResult = await exec('flatpak', ['uninstall', '--unused', '-y']);
-    if (uninstallResult.success) {
-      logger.item(`${this.name}: Apps não utilizados removidos`);
-    }
-
-    const pruneResult = await exec('flatpak', ['system', 'reset', '-y']);
-    if (pruneResult.success) {
-      logger.item(`${this.name}: Sistema Flatpak otimizado`);
+    try {
+      const cacheResult = await exec('flatpak', ['repair', '-y'], { sudo: true });
+      if (cacheResult.success) {
+        result.spaceFreed += analysis.totalSize * 0.1;
+        logger.item(`${this.name}: Cache otimizado`);
+      }
+    } catch {
+      // Silent fail for cache
     }
 
     return result;

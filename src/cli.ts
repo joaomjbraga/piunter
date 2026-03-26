@@ -7,6 +7,7 @@ import { getAvailableModules } from './modules/index.js';
 import type { CleanOptions, CliFlags } from './types/index.js';
 import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
+import { validateThreshold } from './utils/config.js';
 
 const VERSION = '1.0.0';
 
@@ -43,7 +44,11 @@ function parseFlags(args: string[]): CliFlags {
     force: args.includes('--force') || args.includes('-f'),
     interactive: args.includes('--interactive') || args.includes('-i'),
     largeFiles: args.includes('--large-files'),
-    largeFilesThreshold: parseInt(args.find(a => a.startsWith('--threshold='))?.split('=')[1] || '100'),
+    largeFilesThreshold: validateThreshold(
+      parseInt(args.find(a => a.startsWith('--threshold='))?.split('=')[1] || '100'),
+      1,
+      10000
+    ),
   };
 }
 
@@ -95,7 +100,7 @@ async function showSystemInfo(): Promise<void> {
 async function interactiveMode(): Promise<string[]> {
   const availableModules = getAvailableModules();
   const choices = availableModules.map(m => ({
-    name: `${m.available ? '○' : '✗'} ${m.name} - ${m.description}${!m.available ? ' (indisponivel)' : ''}`,
+    name: `${m.available ? '○' : '✗'} ${m.name} - ${m.description}${!m.available ? ' (indisponível)' : ''}`,
     value: m.id,
     disabled: !m.available,
     checked: m.available && ['packages', 'cache', 'npm'].includes(m.id),
@@ -105,7 +110,7 @@ async function interactiveMode(): Promise<string[]> {
     {
       type: 'checkbox',
       name: 'modules',
-      message: chalk.cyan('Selecione os modulos para limpar:'),
+      message: chalk.cyan('Selecione os módulos para limpar:'),
       choices,
       default: ['packages', 'cache', 'npm'],
     },
@@ -118,7 +123,7 @@ async function interactiveMode(): Promise<string[]> {
   ]);
 
   if (!answers.confirm) {
-    console.log(chalk.dim('Operacao cancelada.'));
+    console.log(chalk.dim('Operação cancelada.'));
     process.exit(0);
   }
 
@@ -137,13 +142,13 @@ async function cleanMode(moduleIds: string[], options: CleanOptions): Promise<vo
       {
         type: 'confirm',
         name: 'proceed',
-        message: chalk.red('Confirma que deseja limpar estes modulos? Esta acao pode ser irreversivel.'),
+        message: chalk.red('Confirma que deseja limpar estes módulos? Esta ação pode ser irreversível.'),
         default: false,
       },
     ]);
 
     if (!answer.proceed) {
-      console.log(chalk.dim('Operacao cancelada pelo usuario.'));
+      console.log(chalk.dim('Operação cancelada pelo usuário.'));
       process.exit(0);
     }
   }
@@ -171,7 +176,7 @@ export async function main(): Promise<void> {
 ║    $ piunter --analyze                                    ║
 ║                                                            ║
 ║  Modulos de limpeza:                                       ║
-║    --all         Limpar todos os modulos                   ║
+║    --all         Limpar todos os módulos                   ║
 ║    --cache       Cache do usuario (~/.cache)              ║
 ║    --npm         Cache do NPM                             ║
 ║    --yarn        Cache do Yarn                            ║
@@ -210,7 +215,7 @@ export async function main(): Promise<void> {
     const selectedModules = await interactiveMode();
 
     if (selectedModules.length === 0) {
-      console.log(chalk.yellow('Nenhum modulo selecionado.'));
+      console.log(chalk.yellow('Nenhum módulo selecionado.'));
       return;
     }
 
@@ -225,7 +230,7 @@ export async function main(): Promise<void> {
   const selectedModules = getModulesFromFlags(flags);
 
   if (selectedModules.length === 0) {
-    console.log(chalk.yellow('Nenhum modulo especificado. Use --help para ver as opcoes.'));
+    console.log(chalk.yellow('Nenhum módulo especificado. Use --help para ver as opções.'));
     process.exit(1);
   }
 
@@ -233,7 +238,7 @@ export async function main(): Promise<void> {
   await showSystemInfo();
 
   if (!isRoot() && (flags.packages || flags.logs)) {
-    logger.warn('Alguns modulos requerem privilegios sudo - o sistema solicitara sua senha quando necessario');
+    logger.warn('Alguns módulos requerem privilégios sudo - o sistema solicitará sua senha quando necessário');
     console.log();
   }
 

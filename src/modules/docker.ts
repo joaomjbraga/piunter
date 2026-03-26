@@ -104,7 +104,6 @@ export class DockerModule {
   }
 
   async clean(dryRun: boolean = false, force: boolean = false): Promise<CleaningResult> {
-    const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -113,42 +112,66 @@ export class DockerModule {
       errors: [],
     };
 
+    if (!this.isAvailable()) {
+      result.errors.push('Docker não está instalado ou o serviço não está em execução');
+      result.success = false;
+      return result;
+    }
+
+    const analysis = await this.analyze();
+
     if (dryRun) {
       logger.info(`[DRY-RUN] Docker: limparía ${logger.formatBytes(analysis.totalSize)}`);
       result.spaceFreed = analysis.totalSize;
       return result;
     }
 
-    const containersResult = await exec('docker', ['container', 'prune', '-f']);
-    if (containersResult.success) {
-      logger.item(`${this.name}: Containers parados removidos`);
-    } else {
+    try {
+      const containersResult = await exec('docker', ['container', 'prune', '-f']);
+      if (containersResult.success) {
+        logger.item(`${this.name}: Containers parados removidos`);
+      }
+    } catch {
       result.errors.push('Falha ao limpar containers');
     }
 
-    const networksResult = await exec('docker', ['network', 'prune', '-f']);
-    if (networksResult.success) {
-      logger.item(`${this.name}: Networks não utilizadas removidas`);
+    try {
+      const networksResult = await exec('docker', ['network', 'prune', '-f']);
+      if (networksResult.success) {
+        logger.item(`${this.name}: Networks não utilizadas removidas`);
+      }
+    } catch {
+      // Silent fail for networks
     }
 
-    const imagesResult = await exec('docker', ['image', 'prune', '-a', '-f']);
-    if (imagesResult.success) {
-      logger.item(`${this.name}: Imagens não utilizadas removidas`);
+    try {
+      const imagesResult = await exec('docker', ['image', 'prune', '-a', '-f']);
+      if (imagesResult.success) {
+        logger.item(`${this.name}: Imagens não utilizadas removidas`);
+      }
+    } catch {
+      // Silent fail for images
     }
 
-    const volumesResult = await exec('docker', ['volume', 'prune', '-f']);
-    if (volumesResult.success) {
-      logger.item(`${this.name}: Volumes não utilizados removidos`);
+    try {
+      const volumesResult = await exec('docker', ['volume', 'prune', '-f']);
+      if (volumesResult.success) {
+        logger.item(`${this.name}: Volumes não utilizados removidos`);
+      }
+    } catch {
+      // Silent fail for volumes
     }
 
-    const systemPruneResult = await exec('docker', ['system', 'prune', '-a', '-f', '--volumes']);
-    if (systemPruneResult.success) {
-      logger.item(`${this.name}: Sistema Docker completo otimizado`);
-      result.success = true;
-      result.spaceFreed = analysis.totalSize;
-      result.itemsRemoved = analysis.items.length;
-    } else {
-      result.errors.push('Falha na limpeza completa do Docker');
+    try {
+      const systemPruneResult = await exec('docker', ['system', 'prune', '-a', '-f']);
+      if (systemPruneResult.success) {
+        logger.item(`${this.name}: Sistema Docker completo otimizado`);
+        result.success = true;
+        result.spaceFreed = analysis.totalSize;
+        result.itemsRemoved = analysis.items.length;
+      }
+    } catch {
+      result.errors.push('Falha na limpeza completa do Docker - verifique se o daemon está em execução');
     }
 
     return result;
