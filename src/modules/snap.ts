@@ -72,22 +72,24 @@ export class SnapModule {
       return result;
     }
 
-    const analysis = await this.analyze();
+    const beforeAnalysis = await this.analyze();
+    const beforeSize = beforeAnalysis.totalSize;
 
     if (dryRun) {
-      logger.info(`[DRY-RUN] Snap: limparía ${logger.formatBytes(analysis.totalSize)}`);
-      result.spaceFreed = analysis.totalSize;
+      logger.info(`[DRY-RUN] Snap: espaço em ${logger.formatBytes(beforeSize)}`);
+      result.spaceFreed = beforeSize;
+      logger.warn('Remoção manual necessária: snap remove <name>');
       return result;
     }
 
     try {
-      const listResult = await exec('snap', ['list']);
-      if (listResult.success) {
-        const lines = listResult.stdout.split('\n').filter(l => l.trim() && !l.startsWith('Name'));
-        for (const line of lines) {
-          const parts = line.trim().split(/\s+/);
-          if (parts.length >= 2) {
-            logger.item(`Snap: ${parts[0]}`);
+      const refreshResult = await exec('snap', ['refresh', '--list']);
+      if (refreshResult.success) {
+        const lines = refreshResult.stdout.split('\n').filter(l => l.trim() && !l.includes('Name'));
+        if (lines.length > 0) {
+          logger.info(`${this.name}: Snaps atualizáveis encontrados`);
+          for (const line of lines) {
+            logger.item(line.trim());
           }
         }
       }
@@ -95,7 +97,7 @@ export class SnapModule {
       result.errors.push('Falha ao listar snaps');
     }
 
-    logger.item(`${this.name}: Limpeza manual recomendada - use 'snap remove <name>' para remover`);
+    logger.info(`${this.name}: Use 'snap remove <nome>' para remover snaps não utilizados`);
 
     return result;
   }

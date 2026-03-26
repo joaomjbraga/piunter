@@ -88,13 +88,17 @@ export class ThumbsModule {
     for (const item of analysis.items) {
       if (!existsSync(item.path)) continue;
 
+      let freedFromThis = 0;
+
       try {
         const entries = readdirSync(item.path);
         for (const entry of entries) {
           if (entry !== 'large' && entry !== 'normal') {
             const fullPath = join(item.path, entry);
             try {
+              const entrySize = this.getEntrySize(fullPath);
               rmSync(fullPath, { recursive: true, force: true });
+              freedFromThis += entrySize;
               result.itemsRemoved++;
             } catch {
               // Skip
@@ -106,7 +110,9 @@ export class ThumbsModule {
           const subPath = join(item.path, subdir);
           if (existsSync(subPath)) {
             try {
+              const subSize = this.getDirSize(subPath);
               rmSync(subPath, { recursive: true, force: true });
+              freedFromThis += subSize;
               result.itemsRemoved++;
             } catch {
               // Skip
@@ -114,14 +120,25 @@ export class ThumbsModule {
           }
         }
 
-        result.spaceFreed += item.size;
-        logger.item(`${this.name}: ${item.path.split('/').pop()}`);
+        result.spaceFreed += freedFromThis;
+        if (freedFromThis > 0) {
+          logger.item(`${this.name}: ${item.path.split('/').pop()} (${logger.formatBytes(freedFromThis)})`);
+        }
       } catch {
         result.errors.push(`Falha ao limpar ${item.path}`);
       }
     }
 
     return result;
+  }
+
+  private getEntrySize(path: string): number {
+    try {
+      const stat = statSync(path);
+      return stat.isDirectory() ? this.getDirSize(path) : stat.size;
+    } catch {
+      return 0;
+    }
   }
 }
 

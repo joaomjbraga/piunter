@@ -62,6 +62,7 @@ export class LogsModule {
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
+    const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -79,7 +80,6 @@ export class LogsModule {
     const vacuumResult = await exec('journalctl', ['--vacuum-size=500M'], { sudo: true });
     if (vacuumResult.success) {
       logger.item(`${this.name}: Journal limpo (limite 500MB)`);
-      result.spaceFreed += analysis.totalSize * 0.5;
       result.itemsRemoved++;
     } else {
       result.errors.push('Falha ao limpar journalctl (verifique se tem privilégios sudo)');
@@ -95,8 +95,8 @@ export class LogsModule {
       logger.item(`${this.name}: Logs antigos (>30 dias) removidos`);
     }
 
-    result.success = true;
-    result.spaceFreed = analysis.totalSize;
+    const afterAnalysis = await this.analyze();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }

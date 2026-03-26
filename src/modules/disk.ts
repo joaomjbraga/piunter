@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
 export class LargeFilesModule {
   readonly id = 'large-files';
   readonly name = 'Arquivos Grandes';
-  readonly description = 'Detecta e limpa arquivos maiores que o limite especificado';
+  readonly description = 'Detecta arquivos grandes (remocao manual recomendada)';
 
   private threshold: number;
 
@@ -152,8 +152,8 @@ export class DiskUsageModule {
     const result: CleaningResult = {
       module: this.id,
       success: true,
-      spaceFreed: analysis.totalSize,
-      itemsRemoved: analysis.items.length,
+      spaceFreed: 0,
+      itemsRemoved: 0,
       errors: [],
     };
 

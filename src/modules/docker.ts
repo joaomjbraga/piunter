@@ -118,11 +118,12 @@ export class DockerModule {
       return result;
     }
 
-    const analysis = await this.analyze();
+    const beforeAnalysis = await this.analyze();
+    const beforeSize = beforeAnalysis.totalSize;
 
     if (dryRun) {
-      logger.info(`[DRY-RUN] Docker: limparía ${logger.formatBytes(analysis.totalSize)}`);
-      result.spaceFreed = analysis.totalSize;
+      logger.info(`[DRY-RUN] Docker: limparía ${logger.formatBytes(beforeAnalysis.totalSize)}`);
+      result.spaceFreed = beforeAnalysis.totalSize;
       return result;
     }
 
@@ -167,12 +168,14 @@ export class DockerModule {
       if (systemPruneResult.success) {
         logger.item(`${this.name}: Sistema Docker completo otimizado`);
         result.success = true;
-        result.spaceFreed = analysis.totalSize;
-        result.itemsRemoved = analysis.items.length;
       }
     } catch {
       result.errors.push('Falha na limpeza completa do Docker - verifique se o daemon está em execução');
     }
+
+    const afterAnalysis = await this.analyze();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
+    result.itemsRemoved = beforeAnalysis.items.length - afterAnalysis.items.length;
 
     return result;
   }

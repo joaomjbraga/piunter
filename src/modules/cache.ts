@@ -90,31 +90,35 @@ export class CacheModule {
       errors: [],
     };
 
-    const safeDirs = ['.cache'];
+    const dirsToSkip = ['thumbnails', 'thumbnail', 'icon-cache', '.cache'];
 
     for (const item of analysis.items) {
-      if (safeDirs.some(d => item.path.includes(d)) && !item.path.includes('thumbnails')) {
-        continue;
-      }
-      if (item.path.includes('thumbnail') || item.path.includes('thumbnails')) {
-        result.itemsRemoved++;
-        result.spaceFreed += item.size;
-        if (!dryRun) {
-          try {
-            if (item.type === 'directory') {
-              rmSync(item.path, { recursive: true, force: true });
-            } else {
-              rmSync(item.path, { force: true });
-            }
-          } catch (e: unknown) {
-            result.errors.push(`Falha ao remover ${item.path}: ${(e as Error).message}`);
+      const shouldSkip = dirsToSkip.some(d => item.path.includes(d));
+      if (shouldSkip) continue;
+
+      if (!dryRun) {
+        try {
+          if (item.type === 'directory') {
+            rmSync(item.path, { recursive: true, force: true });
+          } else {
+            rmSync(item.path, { force: true });
           }
+          result.spaceFreed += item.size;
+          result.itemsRemoved++;
+        } catch (e: unknown) {
+          result.errors.push(`Falha ao remover ${item.path}: ${(e as Error).message}`);
         }
       }
     }
 
+    if (dryRun) {
+      const cleanableItems = analysis.items.filter(i => !dirsToSkip.some(d => i.path.includes(d)));
+      result.spaceFreed = cleanableItems.reduce((sum, i) => sum + i.size, 0);
+      result.itemsRemoved = cleanableItems.length;
+    }
+
     if (result.spaceFreed > 0) {
-      logger.item(`${this.name}: Thumbnails e outros caches`, logger.formatBytes(result.spaceFreed));
+      logger.item(`${this.name}: Cache limpo`, logger.formatBytes(result.spaceFreed));
     }
 
     return result;

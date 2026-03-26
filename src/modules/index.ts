@@ -16,7 +16,7 @@ import { flatpakModule } from './flatpak.js';
 import { dockerModule } from './docker.js';
 import { logsModule } from './logs.js';
 import { packagesModule } from './packages.js';
-import { largeFilesModule, diskUsageModule } from './disk.js';
+import { largeFilesModule } from './disk.js';
 import { snapModule } from './snap.js';
 import { appimageModule } from './appimage.js';
 import { thumbsModule } from './thumbs.js';
@@ -43,7 +43,6 @@ export const modules: Module[] = [
   dockerModule,
   logsModule,
   largeFilesModule,
-  diskUsageModule,
   appimageModule,
   thumbsModule,
   recentFilesModule,
