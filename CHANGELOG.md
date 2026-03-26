@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-26
+
+### Fixed
+
+- **Command Injection Bug:** Pacman orphan removal now executes packages safely in loop instead of passing subshell string
+- **Memory Leak:** Fixed stdin event listener not being cleaned up in sudo password prompt
+- **Race Condition:** Added 30s timeout to sudo password prompt
+- **Inaccurate Space Calculation:** All modules now calculate real space freed using before/after analysis
+- **apt-orphans Detection:** APT module now detects orphan packages during analysis
+- **promptYesNo Recursion:** Fixed potential stack overflow with recursive calls
+
+### Changed
+
+- Single-key confirmation (y/n) without needing Enter key
+- Refactored duplicate code into shared utils (`src/utils/fs.ts`)
+- Improved error handling and logging
+
 ## [1.1.0] - 2026-03-26
 
 ### Added

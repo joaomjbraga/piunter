@@ -16,28 +16,34 @@ const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
 async function promptYesNo(message: string): Promise<boolean> {
   return new Promise((resolve) => {
-    process.stdout.write(`${message} `);
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
+    const ask = () => {
+      process.stdout.write(`${message} `);
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
 
-    const cleanup = () => {
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
+      const cleanup = () => {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        process.stdin.removeAllListeners('data');
+      };
+
+      const handler = (chunk: Buffer) => {
+        cleanup();
+        const char = chunk.toString().toLowerCase();
+        process.stdout.write(char + '\n');
+        
+        if (char === 'y' || char === 's') {
+          resolve(true);
+        } else if (char === 'n') {
+          resolve(false);
+        } else {
+          ask();
+        }
+      };
+
+      process.stdin.once('data', handler);
     };
-
-    process.stdin.once('data', (chunk) => {
-      const char = chunk.toString().toLowerCase();
-      cleanup();
-      process.stdout.write(char + '\n');
-      
-      if (char === 'y' || char === 's') {
-        resolve(true);
-      } else if (char === 'n') {
-        resolve(false);
-      } else {
-        promptYesNo(message).then(resolve);
-      }
-    });
+    ask();
   });
 }
 

@@ -1,9 +1,10 @@
-import { existsSync, readdirSync, statSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
+import { getDirSize } from '../utils/fs.js';
 
 export class NpmModule {
   readonly id = 'npm';
@@ -22,7 +23,7 @@ export class NpmModule {
 
     if (existsSync(npmCachePath)) {
       try {
-        const size = this.getDirSize(npmCachePath);
+        const size = getDirSize(npmCachePath);
         items.push({
           path: npmCachePath,
           size,
@@ -36,29 +37,6 @@ export class NpmModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private getDirSize(dirPath: string): number {
-    let size = 0;
-    try {
-      const entries = readdirSync(dirPath);
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            size += this.getDirSize(fullPath);
-          } else {
-            size += stat.size;
-          }
-        } catch {
-          // Skip
-        }
-      }
-    } catch {
-      // Skip
-    }
-    return size;
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
@@ -114,7 +92,7 @@ export class YarnModule {
 
     if (existsSync(yarnCachePath)) {
       try {
-        const size = this.getDirSize(yarnCachePath);
+        const size = getDirSize(yarnCachePath);
         items.push({
           path: yarnCachePath,
           size,
@@ -128,29 +106,6 @@ export class YarnModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private getDirSize(dirPath: string): number {
-    let size = 0;
-    try {
-      const entries = readdirSync(dirPath);
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            size += this.getDirSize(fullPath);
-          } else {
-            size += stat.size;
-          }
-        } catch {
-          // Skip
-        }
-      }
-    } catch {
-      // Skip
-    }
-    return size;
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
@@ -206,7 +161,7 @@ export class PnpmModule {
 
     if (existsSync(pnpmCachePath)) {
       try {
-        const size = this.getDirSize(pnpmCachePath);
+        const size = getDirSize(pnpmCachePath);
         items.push({
           path: pnpmCachePath,
           size,
@@ -222,7 +177,7 @@ export class PnpmModule {
     const pnpmCachePath2 = join(getHomeDir(), '.local', 'share', 'pnpm', 'cache');
     if (existsSync(pnpmCachePath2)) {
       try {
-        const size = this.getDirSize(pnpmCachePath2);
+        const size = getDirSize(pnpmCachePath2);
         items.push({
           path: pnpmCachePath2,
           size,
@@ -236,29 +191,6 @@ export class PnpmModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private getDirSize(dirPath: string): number {
-    let size = 0;
-    try {
-      const entries = readdirSync(dirPath);
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            size += this.getDirSize(fullPath);
-          } else {
-            size += stat.size;
-          }
-        } catch {
-          // Skip
-        }
-      }
-    } catch {
-      // Skip
-    }
-    return size;
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {

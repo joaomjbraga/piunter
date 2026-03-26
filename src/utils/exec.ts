@@ -15,16 +15,21 @@ export async function requestSudo(): Promise<boolean> {
     const password: string[] = [];
     let cursorPos = 0;
 
-    process.stdout.write(chalk.yellow('  Senha sudo: '));
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-
     const cleanup = () => {
       process.stdin.setRawMode(false);
       process.stdin.pause();
+      process.stdin.removeAllListeners('data');
     };
 
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      process.stdout.write('\n');
+      console.log(chalk.red('  Timeout. Operacoes que requerem sudo serao puladas.'));
+      resolve(false);
+    }, 30000);
+
     const finish = () => {
+      clearTimeout(timeoutId);
       cleanup();
       process.stdout.write('\n');
       
@@ -49,10 +54,11 @@ export async function requestSudo(): Promise<boolean> {
       }
     };
 
-    process.stdin.on('data', (chunk) => {
+    const handleInput = (chunk: Buffer) => {
       const char = chunk.toString();
       
       if (char === '\x03') {
+        clearTimeout(timeoutId);
         cleanup();
         process.stdout.write('^C\n');
         process.exit(0);
@@ -90,7 +96,12 @@ export async function requestSudo(): Promise<boolean> {
       password.splice(cursorPos, 0, char);
       cursorPos++;
       process.stdout.write('*');
-    });
+    };
+
+    process.stdout.write(chalk.yellow('  Senha sudo: '));
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.once('data', handleInput);
   });
 }
 

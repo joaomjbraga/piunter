@@ -106,6 +106,9 @@ npm run lint
 - Dry-run disponível para testar antes
 - Verifica comandos antes de executar
 - Tratamento robusto de erros
+- Cálculo preciso de espaço liberado (antes/depois)
+- Timeout de 30s para prompts de senha sudo
+- Sem command injection (pacotes processados de forma segura)
 
 ## Config File
 

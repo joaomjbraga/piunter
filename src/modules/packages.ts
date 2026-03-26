@@ -2,6 +2,7 @@ import { exec } from '../utils/exec.js';
 import { getDistroInfo } from '../utils/os.js';
 import type { AnalysisResult, CleaningResult, PackageManager } from '../types/index.js';
 import { logger } from '../utils/logger.js';
+import { parseSize } from '../utils/fs.js';
 
 export class PackagesModule {
   readonly id = 'packages';
@@ -62,6 +63,25 @@ export class PackagesModule {
       });
     }
 
+    try {
+      const orphansResult = await exec('apt', ['autoremove', '--dry-run']);
+      if (orphansResult.success) {
+        const match = orphansResult.stdout.match(/(\d+)\s+package/i);
+        if (match) {
+          const count = parseInt(match[1], 10);
+          items.push({
+            path: 'apt-orphans',
+            size: count * 50 * 1024 * 1024,
+            type: 'apt-orphans',
+            description: `Pacotes órfãos APT (${count})`,
+          });
+          totalSize += count * 50 * 1024 * 1024;
+        }
+      }
+    } catch {
+      // Dry-run pode falhar se não houver órfãos
+    }
+
     return { module: this.id, items, totalSize };
   }
 
@@ -88,7 +108,7 @@ export class PackagesModule {
     if (orphansResult.success) {
       const match = orphansResult.stdout.match(/([\d.]+)\s*(?:KiB|MiB|GiB)/i);
       if (match) {
-        const size = this.parseSize(match[1] + ' KiB');
+        const size = parseSize(match[1] + ' KiB');
         items.push({
           path: 'pacman-orphans',
           size,
@@ -124,26 +144,6 @@ export class PackagesModule {
     return { module: this.id, items, totalSize };
   }
 
-  private parseSize(sizeStr: string): number {
-    const match = sizeStr.match(/([\d.]+)\s*([A-Z]+)?B?/i);
-    if (!match) return 0;
-    
-    const num = parseFloat(match[1]);
-    const unit = (match[2] || 'MB').toUpperCase();
-    
-    const multipliers: Record<string, number> = {
-      'B': 1,
-      'KB': 1024,
-      'KIB': 1024,
-      'MB': 1024 * 1024,
-      'MIB': 1024 * 1024,
-      'GB': 1024 * 1024 * 1024,
-      'GIB': 1024 * 1024 * 1024,
-    };
-    
-    return num * (multipliers[unit] || 1024 * 1024);
-  }
-
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
@@ -174,6 +174,7 @@ export class PackagesModule {
   }
 
   private async cleanApt(analysis: AnalysisResult): Promise<CleaningResult> {
+    const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -185,7 +186,6 @@ export class PackagesModule {
     const cleanResult = await exec('apt', ['clean'], { sudo: true });
     if (cleanResult.success) {
       logger.item(`APT: Cache limpo`);
-      result.spaceFreed += analysis.items.find(i => i.type === 'apt-cache')?.size || 0;
       result.itemsRemoved++;
     } else {
       result.errors.push('Falha ao limpar cache APT (verifique se tem privilégios sudo)');
@@ -194,14 +194,17 @@ export class PackagesModule {
     const autoremoveResult = await exec('apt', ['autoremove', '-y'], { sudo: true });
     if (autoremoveResult.success) {
       logger.item(`APT: Pacotes órfãos removidos`);
-      result.spaceFreed += analysis.items.find(i => i.type === 'apt-orphans')?.size || 0;
       result.itemsRemoved++;
     }
+
+    const afterAnalysis = await this.analyzeApt();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }
 
   private async cleanPacman(analysis: AnalysisResult): Promise<CleaningResult> {
+    const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -213,26 +216,37 @@ export class PackagesModule {
     const cleanResult = await exec('pacman', ['-Sc', '--noconfirm'], { sudo: true });
     if (cleanResult.success) {
       logger.item(`Pacman: Cache limpo (mantém última versão)`);
-      result.spaceFreed += analysis.items.find(i => i.type === 'pacman-cache')?.size || 0;
       result.itemsRemoved++;
     } else {
       result.errors.push('Falha ao limpar cache Pacman (verifique se tem privilégios sudo)');
     }
 
-    const cleanAllResult = await exec('pacman', ['-Scc', '--noconfirm'], { sudo: true });
-    if (cleanAllResult.success) {
-      logger.item(`Pacman: Cache completo limpo`);
+    try {
+      const orphansResult = await exec('pacman', ['-Qtdq']);
+      if (orphansResult.success && orphansResult.stdout.trim()) {
+        const orphanPackages = orphansResult.stdout.trim().split('\n').filter(p => p);
+        for (const pkg of orphanPackages) {
+          const removeResult = await exec('pacman', ['-Rns', pkg, '--noconfirm'], { sudo: true });
+          if (removeResult.success) {
+            result.itemsRemoved++;
+          }
+        }
+        if (orphanPackages.length > 0) {
+          logger.item(`Pacman: ${orphanPackages.length} pacotes órfãos removidos`);
+        }
+      }
+    } catch {
+      logger.debug('Nenhum pacote órfão encontrado');
     }
 
-    const orphansResult = await exec('pacman', ['-Rns', '$(pacman -Qtdq)', '--noconfirm'], { sudo: true });
-    if (orphansResult.success || orphansResult.code === 0) {
-      logger.item(`Pacman: Pacotes órfãos removidos`);
-    }
+    const afterAnalysis = await this.analyzePacman();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }
 
   private async cleanDnf(analysis: AnalysisResult): Promise<CleaningResult> {
+    const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -244,7 +258,6 @@ export class PackagesModule {
     const cleanResult = await exec('dnf', ['clean', 'all'], { sudo: true });
     if (cleanResult.success) {
       logger.item(`DNF: Cache limpo`);
-      result.spaceFreed += analysis.items.find(i => i.type === 'dnf-cache')?.size || 0;
       result.itemsRemoved++;
     } else {
       result.errors.push('Falha ao limpar cache DNF (verifique se tem privilégios sudo)');
@@ -255,6 +268,9 @@ export class PackagesModule {
       logger.item(`DNF: Pacotes órfãos removidos`);
       result.itemsRemoved++;
     }
+
+    const afterAnalysis = await this.analyzeDnf();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }

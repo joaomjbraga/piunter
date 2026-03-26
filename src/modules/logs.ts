@@ -102,7 +102,8 @@ export class LogsModule {
   }
 
   async cleanOldLogs(days: number = 30, dryRun: boolean = false): Promise<CleaningResult> {
-    const analysis = await this.analyze();
+    const beforeAnalysis = await this.analyze();
+    const beforeSize = beforeAnalysis.totalSize;
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -117,7 +118,7 @@ export class LogsModule {
         const files = findResult.stdout.split('\n').filter(l => l.trim());
         logger.info(`[DRY-RUN] Removería ${files.length} logs com mais de ${days} dias`);
       }
-      result.spaceFreed = analysis.totalSize;
+      result.spaceFreed = beforeSize;
       return result;
     }
 
@@ -125,10 +126,12 @@ export class LogsModule {
     if (cleanResult.success) {
       logger.item(`${this.name}: Logs com mais de ${days} dias removidos`);
       result.success = true;
-      result.spaceFreed = analysis.totalSize;
     } else {
       result.errors.push('Falha ao limpar logs antigos');
     }
+
+    const afterAnalysis = await this.analyze();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }

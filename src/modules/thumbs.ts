@@ -1,8 +1,9 @@
-import { existsSync, readdirSync, statSync, rmSync } from 'fs';
+import { existsSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
 import { logger } from '../utils/logger.js';
+import { getDirSize } from '../utils/fs.js';
 
 export class ThumbsModule {
   readonly id = 'thumbs';
@@ -30,7 +31,7 @@ export class ThumbsModule {
       if (!existsSync(dir)) continue;
 
       try {
-        const size = this.getDirSize(dir);
+        const size = getDirSize(dir);
         items.push({
           path: dir,
           size,
@@ -44,29 +45,6 @@ export class ThumbsModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private getDirSize(dirPath: string): number {
-    let size = 0;
-    try {
-      const entries = readdirSync(dirPath);
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            size += this.getDirSize(fullPath);
-          } else {
-            size += stat.size;
-          }
-        } catch {
-          // Skip
-        }
-      }
-    } catch {
-      // Skip
-    }
-    return size;
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
@@ -96,7 +74,7 @@ export class ThumbsModule {
           if (entry !== 'large' && entry !== 'normal') {
             const fullPath = join(item.path, entry);
             try {
-              const entrySize = this.getEntrySize(fullPath);
+              const entrySize = getDirSize(fullPath);
               rmSync(fullPath, { recursive: true, force: true });
               freedFromThis += entrySize;
               result.itemsRemoved++;
@@ -110,7 +88,7 @@ export class ThumbsModule {
           const subPath = join(item.path, subdir);
           if (existsSync(subPath)) {
             try {
-              const subSize = this.getDirSize(subPath);
+              const subSize = getDirSize(subPath);
               rmSync(subPath, { recursive: true, force: true });
               freedFromThis += subSize;
               result.itemsRemoved++;
@@ -130,15 +108,6 @@ export class ThumbsModule {
     }
 
     return result;
-  }
-
-  private getEntrySize(path: string): number {
-    try {
-      const stat = statSync(path);
-      return stat.isDirectory() ? this.getDirSize(path) : stat.size;
-    } catch {
-      return 0;
-    }
   }
 }
 

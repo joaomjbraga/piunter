@@ -1,6 +1,7 @@
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
+import { parseSize } from '../utils/fs.js';
 
 export class DockerModule {
   readonly id = 'docker';
@@ -21,7 +22,7 @@ export class DockerModule {
       for (const line of lines) {
         const parts = line.split('\t');
         if (parts.length >= 2) {
-          const size = this.parseSize(parts[0]);
+          const size = parseSize(parts[0]);
           const name = parts[1];
           if (name !== '<none>:<none>') {
             items.push({
@@ -42,7 +43,7 @@ export class DockerModule {
       for (const line of lines) {
         const parts = line.split('\t');
         if (parts.length >= 2) {
-          const size = this.parseSize(parts[0]);
+          const size = parseSize(parts[0]);
           const name = parts[1];
           items.push({
             path: name,
@@ -72,7 +73,7 @@ export class DockerModule {
     if (systemDfResult.success) {
       const match = systemDfResult.stdout.match(/Total\s+([\d.]+\s*[A-Z]+)/i);
       if (match) {
-        const size = this.parseSize(match[1]);
+        const size = parseSize(match[1]);
         items.push({
           path: 'docker-system',
           size,
@@ -84,23 +85,6 @@ export class DockerModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private parseSize(sizeStr: string): number {
-    const match = sizeStr.match(/([\d.]+)\s*([A-Z]+)?B?/i);
-    if (!match) return 0;
-    
-    const num = parseFloat(match[1]);
-    const unit = (match[2] || 'MB').toUpperCase();
-    
-    const multipliers: Record<string, number> = {
-      'B': 1,
-      'KB': 1024,
-      'MB': 1024 * 1024,
-      'GB': 1024 * 1024 * 1024,
-    };
-    
-    return num * (multipliers[unit] || 1024 * 1024);
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {

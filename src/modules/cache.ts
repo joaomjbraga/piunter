@@ -3,6 +3,7 @@ import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getCacheDir } from '../utils/os.js';
 import { logger } from '../utils/logger.js';
+import { getDirSize } from '../utils/fs.js';
 
 export class CacheModule {
   readonly id = 'cache';
@@ -29,7 +30,7 @@ export class CacheModule {
         try {
           const stat = statSync(fullPath);
           if (stat.isDirectory()) {
-            const size = this.getDirSize(fullPath);
+            const size = getDirSize(fullPath);
             items.push({
               path: fullPath,
               size,
@@ -55,29 +56,6 @@ export class CacheModule {
     }
 
     return { module: this.id, items, totalSize };
-  }
-
-  private getDirSize(dirPath: string): number {
-    let size = 0;
-    try {
-      const entries = readdirSync(dirPath);
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            size += this.getDirSize(fullPath);
-          } else {
-            size += stat.size;
-          }
-        } catch {
-          // Skip
-        }
-      }
-    } catch {
-      // Skip
-    }
-    return size;
   }
 
   async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
