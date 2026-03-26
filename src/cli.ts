@@ -14,6 +14,33 @@ const VERSION = '1.0.0';
 
 const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
+async function promptYesNo(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    process.stdout.write(`${message} `);
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+
+    const cleanup = () => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+    };
+
+    process.stdin.once('data', (chunk) => {
+      const char = chunk.toString().toLowerCase();
+      cleanup();
+      process.stdout.write(char + '\n');
+      
+      if (char === 'y' || char === 's') {
+        resolve(true);
+      } else if (char === 'n') {
+        resolve(false);
+      } else {
+        promptYesNo(message).then(resolve);
+      }
+    });
+  });
+}
+
 function getTerminalWidth(): number {
   return process.stdout.columns || 80;
 }
@@ -168,14 +195,7 @@ async function interactiveMode(): Promise<string[]> {
     return [];
   }
 
-  const { confirm } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'confirm',
-      message: chalk.yellow('Continuar com a limpeza?'),
-      default: false,
-    },
-  ]);
+  const confirm = await promptYesNo(chalk.yellow('Continuar com a limpeza? (y/N)'));
 
   if (!confirm) {
     console.log(chalk.dim('Operacao cancelada.'));
@@ -194,14 +214,7 @@ async function analyzeMode(moduleIds?: string[]): Promise<void> {
 async function cleanMode(moduleIds: string[], options: CleanOptions): Promise<void> {
   if (!options.force && !options.dryRun) {
     console.log();
-    const { proceed } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'proceed',
-        message: chalk.red.bold('Confirmar limpeza?'),
-        default: false,
-      },
-    ]);
+    const proceed = await promptYesNo(chalk.red.bold('Confirmar limpeza? (y/N)'));
 
     if (!proceed) {
       console.log(chalk.dim('Operacao cancelada.'));
