@@ -8,8 +8,11 @@ import type { CleanOptions, CliFlags } from './types/index.js';
 import { validateThreshold } from './utils/config.js';
 import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
+import { requestSudo, hasSudoPassword } from './utils/exec.js';
 
 const VERSION = '1.0.0';
+
+const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
 function getTerminalWidth(): number {
   return process.stdout.columns || 80;
@@ -23,6 +26,10 @@ function padEnd(str: string, len: number): string {
   const width = getTerminalWidth();
   const maxLen = Math.min(len, width - 10);
   return str.length >= maxLen ? str.substring(0, maxLen - 3) + '...' : str.padEnd(maxLen);
+}
+
+function requiresSudo(moduleIds: string[]): boolean {
+  return moduleIds.some(id => MODULES_REQUIRING_SUDO.includes(id));
 }
 
 function getModulesFromFlags(flags: CliFlags): string[] {
@@ -85,7 +92,6 @@ function line(char: string = '─', len?: number): string {
 }
 
 function printHeader(): void {
-  const w = getTerminalWidth();
   console.log();
   console.log(chalk.cyan.bold(`  piunter`) + chalk.dim(' · CLI para Linux'));
   console.log(chalk.dim(`  ${line()}`));
@@ -93,39 +99,41 @@ function printHeader(): void {
 }
 
 function printHelp(): void {
-  const w = getTerminalWidth();
   printHeader();
   
   console.log(`  ${chalk.bold('USO')}`);
-  console.log(`    ${chalk.dim('piunter')} ${chalk.cyan('[flags]')}`);
+  console.log(`    ${chalk.dim('piunter')} ${chalk.cyan('[opcoes]')}`);
   console.log();
   
-  console.log(`  ${chalk.bold('FLAGS')}`);
-  console.log(`    ${chalk.cyan('--all')}`);
-  console.log(`    ${chalk.cyan('--analyze')}`);
-  console.log(`    ${chalk.cyan('--dry-run')}  ${chalk.dim('- Simula execução')}`);
-  console.log(`    ${chalk.cyan('--force')}`);
-  console.log(`    ${chalk.cyan('--interactive')}`);
+  console.log(`  ${chalk.bold('OPCOES DE EXECUCAO')}`);
+  console.log(`    ${chalk.cyan('--all')}            ${chalk.dim('Executa todos os modulos')}`);
+  console.log(`    ${chalk.cyan('--analyze')}        ${chalk.dim('Analisa sem limpar')}`);
+  console.log(`    ${chalk.cyan('--dry-run')}         ${chalk.dim('Simula a execucao')}`);
+  console.log(`    ${chalk.cyan('--force')}          ${chalk.dim('Pula confirmacoes')}`);
+  console.log(`    ${chalk.cyan('--interactive')}    ${chalk.dim('Modo interativo')}`);
   console.log();
   
-  console.log(`  ${chalk.bold('MÓDULOS')}`);
-  console.log(`    ${chalk.cyan('--cache')}         Cache do usuário`);
-  console.log(`    ${chalk.cyan('--npm')}            Cache do NPM`);
-  console.log(`    ${chalk.cyan('--yarn')}           Cache do Yarn`);
-  console.log(`    ${chalk.cyan('--pnpm')}           Cache do PNPM`);
-  console.log(`    ${chalk.cyan('--packages')}       Pacotes órfãos`);
-  console.log(`    ${chalk.cyan('--docker')}         Containers`);
-  console.log(`    ${chalk.cyan('--logs')}           Logs`);
-  console.log(`    ${chalk.cyan('--flatpak')}        Flatpak`);
-  console.log(`    ${chalk.cyan('--snap')}           Snap`);
-  console.log(`    ${chalk.cyan('--large-files')}    Arquivos grandes`);
-  console.log(`    ${chalk.cyan('--appimage')}       AppImages`);
-  console.log(`    ${chalk.cyan('--thumbs')}         Miniaturas`);
-  console.log(`    ${chalk.cyan('--recent')}         Arquivos recentes`);
+  console.log(`  ${chalk.bold('MODULOS')}`);
+  console.log(`    ${chalk.cyan('--cache')}         ${chalk.dim('Cache do usuario')}`);
+  console.log(`    ${chalk.cyan('--npm')}            ${chalk.dim('Cache do NPM')}`);
+  console.log(`    ${chalk.cyan('--yarn')}           ${chalk.dim('Cache do Yarn')}`);
+  console.log(`    ${chalk.cyan('--pnpm')}           ${chalk.dim('Cache do PNPM')}`);
+  console.log(`    ${chalk.cyan('--packages')}       ${chalk.dim('Pacotes orfaos')}`);
+  console.log(`    ${chalk.cyan('--docker')}         ${chalk.dim('Containers e imagens')}`);
+  console.log(`    ${chalk.cyan('--logs')}           ${chalk.dim('Logs do sistema')}`);
+  console.log(`    ${chalk.cyan('--flatpak')}        ${chalk.dim('Dados orfaos do Flatpak')}`);
+  console.log(`    ${chalk.cyan('--snap')}           ${chalk.dim('Revisoes antigas do Snap')}`);
+  console.log(`    ${chalk.cyan('--large-files')}    ${chalk.dim('Arquivos grandes')}`);
+  console.log(`    ${chalk.cyan('--appimage')}       ${chalk.dim('AppImages')}`);
+  console.log(`    ${chalk.cyan('--thumbs')}         ${chalk.dim('Miniaturas em cache')}`);
+  console.log(`    ${chalk.cyan('--recent')}         ${chalk.dim('Arquivos recentes')}`);
   console.log();
   
-  console.log(`  ${chalk.bold('OPÇÕES')}`);
-  console.log(`    ${chalk.cyan('--threshold=100')}  ${chalk.dim('Tamanho mínimo em MB')}`);
+  console.log(`  ${chalk.bold('OUTRAS OPCOES')}`);
+  console.log(`    ${chalk.cyan('--threshold=100')}   ${chalk.dim('Tamanho minimo (MB)')}`);
+  console.log(`    ${chalk.cyan('--help')}            ${chalk.dim('Mostra esta ajuda')}`);
+  console.log(`    ${chalk.cyan('--version')}         ${chalk.dim('Mostra a versao')}`);
+  console.log(`    ${chalk.cyan('--list')}            ${chalk.dim('Lista modulos disponiveis')}`);
   console.log();
   
   console.log(`  ${chalk.bold('EXEMPLOS')}`);
@@ -156,6 +164,7 @@ async function interactiveMode(): Promise<string[]> {
   ]);
 
   if (!modules || modules.length === 0) {
+    console.log(chalk.yellow('Nenhum modulo selecionado.'));
     return [];
   }
 
@@ -258,6 +267,16 @@ export async function main(): Promise<void> {
       return;
     }
 
+    if (requiresSudo(selectedModules) && !isRoot() && !hasSudoPassword()) {
+      console.log();
+      console.log(chalk.yellow('  Alguns modulos requerem privilegios de administrador.'));
+      const sudoOk = await requestSudo();
+      if (!sudoOk) {
+        console.log(chalk.dim('  Modulos que requerem sudo serao pulados.'));
+      }
+      console.log();
+    }
+
     await cleanMode(selectedModules, {
       dryRun: flags.dryRun,
       force: flags.force,
@@ -285,8 +304,13 @@ export async function main(): Promise<void> {
     console.log();
   }
 
-  if (!isRoot() && (flags.packages || flags.logs)) {
-    console.log(chalk.dim('  Alguns modulos requerem sudo'));
+  if (requiresSudo(selectedModules) && !isRoot() && !hasSudoPassword()) {
+    console.log();
+    console.log(chalk.yellow('  Alguns modulos requerem privilegios de administrador.'));
+    const sudoOk = await requestSudo();
+    if (!sudoOk) {
+      console.log(chalk.dim('  Modulos que requerem sudo serao pulados.'));
+    }
     console.log();
   }
 

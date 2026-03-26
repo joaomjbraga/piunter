@@ -1,15 +1,76 @@
-import { execFileSync } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
+import readline from 'readline';
+import chalk from 'chalk';
 import type { CommandResult } from '../types/index.js';
 
-export async function exec(command: string, args: string[] = [], options: { sudo?: boolean } = {}): Promise<CommandResult> {
-  const actualArgs = options.sudo ? ['-S', command, ...args] : args;
-  const actualCommand = options.sudo ? 'sudo' : command;
+let sudoPassword: string | null = null;
+
+export function hasSudoPassword(): boolean {
+  return sudoPassword !== null;
+}
+
+export async function requestSudo(): Promise<boolean> {
+  if (sudoPassword) return true;
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(chalk.yellow('  Senha sudo: '), (password) => {
+      rl.close();
+      
+      if (!password) {
+        console.log(chalk.red('  Senha vazia. Operacoes que requerem sudo serao puladas.'));
+        resolve(false);
+        return;
+      }
+
+      try {
+        execFileSync('sudo', ['-S', 'true'], {
+          input: password + '\n',
+          timeout: 10000,
+        });
+        sudoPassword = password;
+        console.log(chalk.green('  Sudo confirmado.'));
+        resolve(true);
+      } catch {
+        console.log(chalk.red('  Senha incorreta.'));
+        resolve(false);
+      }
+    });
+  });
+}
+
+export async function exec(
+  command: string,
+  args: string[] = [],
+  options: { sudo?: boolean } = {}
+): Promise<CommandResult> {
+  let actualArgs = args;
+  let actualCommand = command;
+
+  if (options.sudo) {
+    if (!sudoPassword) {
+      return {
+        success: false,
+        stdout: '',
+        stderr: 'Sudo requerido mas senha nao foi fornecida',
+        code: 1,
+      };
+    }
+    actualArgs = ['-S', command, ...args];
+    actualCommand = 'sudo';
+  }
 
   try {
     const result = execFileSync(actualCommand, actualArgs, {
       encoding: 'utf-8',
       timeout: 300000,
       maxBuffer: 50 * 1024 * 1024,
+      input: options.sudo ? sudoPassword + '\n' : undefined,
+      stdio: options.sudo ? 'pipe' : 'pipe',
     });
 
     return {
@@ -19,7 +80,17 @@ export async function exec(command: string, args: string[] = [], options: { sudo
       code: 0,
     };
   } catch (error: unknown) {
-    const err = error as { status?: number; message?: string };
+    const err = error as { status?: number; message?: string; signal?: string };
+    
+    if (err.signal === 'SIGTERM' || err.message?.includes('sudo')) {
+      return {
+        success: false,
+        stdout: '',
+        stderr: 'Senha sudo incorreta ou expirada',
+        code: 1,
+      };
+    }
+
     return {
       success: false,
       stdout: '',
