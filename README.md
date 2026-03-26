@@ -1,17 +1,6 @@
-```text
-╔═══════════════════════════════════════════════════════════════════╗
-║                                                                   ║
-║ ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗            ║
-║ ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗           ║
-║ ██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝           ║
-║ ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗           ║
-║ ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║           ║
-║ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝           ║
-║                                                                   ║
-║              Limpeza e Otimização para Linux                      ║
-║                                                                   ║
-╚═══════════════════════════════════════════════════════════════════╝
-```
+# piunter
+
+CLI para limpeza e otimização de sistemas Linux.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node.js">
@@ -27,142 +16,73 @@
   <img src="https://img.shields.io/badge/DNF-Fedora-blue.svg" alt="DNF">
 </p>
 
-> CLI profissional para limpeza e otimização de sistemas Linux. Desenvolvido com TypeScript, seguindo Clean Architecture e boas práticas de código.
-
-<!-- DEMO GIF PLACEHOLDER - Adicione seu GIF aqui -->
-<!-- ![Demo](docs/demo.gif) -->
-
-## Recursos
-
-- Detecção automática de distribuição Linux (Debian, Ubuntu, Arch, Fedora, etc.)
-- Suporte a múltiplos gerenciadores de pacotes (APT, Pacman, DNF)
-- Módulos de limpeza:
-  - Cache do usuário (~/.cache)
-  - NPM, Yarn, PNPM
-  - Flatpak e Snap
-  - Docker
-  - Logs do sistema (journalctl)
-  - Gerenciador de pacotes
-  - Arquivos grandes e AppImages
-  - Miniaturas do sistema
-  - Arquivos recentes
-- Sistema de plugins para extensibilidade
-- Shell completion (bash/zsh)
-- Modo interativo com seleção por checkbox
-- Modo dry-run para simular limpeza
-- Confirmação obrigatória para operações destrutivas
-- Elevação automática de privilégios (sudo)
-- Relatório detalhado de espaço liberado
-- Config file personalizável (~/.piunter.json)
-- Testes unitários com Vitest
-
 ## Instalação
-
-### Via npm (global)
 
 ```bash
 npm install -g @bforgeio/piunter
 ```
 
-### Via npx
+## Uso Rápido
 
 ```bash
-npx piunter
-```
-
-### Do código fonte
-
-```bash
-git clone https://github.com/joaomjbraga/piunter.git
-cd piunter
-npm install
-npm run build
-npm link
-```
-
-## Uso
-
-### Modo interativo
-
-```bash
+# Modo interativo
 piunter
-# ou
-piunter --interactive
-```
 
-### Análise
-
-```bash
-piunter --analyze
-```
-
-### Limpeza completa
-
-```bash
+# Limpar tudo
 piunter --all
-```
 
-### Limpeza seletiva
+# Limpar específicos
+piunter --npm --cache --logs
 
-```bash
-# Limpar cache npm
-piunter --npm
-
-# Limpar cache e logs
-piunter --cache --logs
-
-# Limpar Docker
-piunter --docker
-
-# Limpar gerenciador de pacotes
-piunter --packages
-```
-
-### Dry-run (simulação)
-
-```bash
+# Simular (dry-run)
 piunter --all --dry-run
 ```
 
-### Forçar execução
+## Recursos
 
-```bash
-piunter --all --force
-```
+- Detecção automática de distribuição (Debian, Ubuntu, Arch, Fedora)
+- Suporte a APT, Pacman e DNF
+- 14 módulos de limpeza
+- Modo interativo com seleção por checkbox
+- Dry-run para simular antes de executar
+- Confirmação obrigatória para operações destrutivas
+- Sistema de plugins
+- Shell completion (bash/zsh)
+- Config file personalizável
 
-### Arquivos grandes
+## Módulos
 
-```bash
-# Detectar arquivos > 100MB
-piunter --large-files
+| Módulo | Flag | Descrição |
+|--------|------|-----------|
+| Pacotes | `--packages` | Remove pacotes órfãos |
+| NPM | `--npm` | Limpa cache do npm |
+| Yarn | `--yarn` | Limpa cache do Yarn |
+| PNPM | `--pnpm` | Limpa cache do pnpm |
+| Cache | `--cache` | Limpa ~/.cache |
+| Flatpak | `--flatpak` | Remove dados órfãos |
+| Snap | `--snap` | Remove revisões antigas |
+| Docker | `--docker` | Remove containers/imagens |
+| Logs | `--logs` | Limpa logs do sistema |
+| Large Files | `--large-files` | Encontra arquivos grandes |
+| AppImage | `--appimage` | Gerencia AppImages |
+| Thumbs | `--thumbs` | Remove miniaturas |
+| Recent | `--recent` | Limpa arquivos recentes |
+| Analyze | `--analyze` | Analisa uso de disco |
 
-# Com threshold customizado (em MB)
-piunter --large-files --threshold=500
-```
-
-## Opções
+## Flags
 
 | Flag | Descrição |
 |------|-----------|
-| `--all` | Selecionar todos os módulos disponíveis |
-| `--cache` | Limpar cache do usuário |
-| `--npm` | Limpar cache do NPM |
-| `--yarn` | Limpar cache do Yarn |
-| `--pnpm` | Limpar cache do PNPM |
-| `--flatpak` | Limpar Flatpak |
-| `--snap` | Limpar Snap |
-| `--docker` | Limpar Docker |
-| `--logs` | Limpar logs do sistema |
-| `--packages` | Limpar gerenciador de pacotes |
-| `--large-files` | Detectar arquivos grandes |
-| `--appimage` | Limpar AppImages |
-| `--thumbs` | Limpar miniaturas |
-| `--recent` | Limpar arquivos recentes |
-| `--threshold=MB` | Threshold para arquivos grandes |
-| `--analyze` | Apenas analisar sem limpar |
-| `--dry-run` | Simular limpeza |
-| `--force` | Pular confirmação |
-| `--interactive` | Modo interativo |
+| `--all` | Executa todos os módulos |
+| `--analyze` | Analisa sem limpar |
+| `--dry-run` | Simula execução |
+| `--force` | Pula confirmações |
+| `--threshold=MB` | Tamanho mínimo para arquivos grandes |
+| `--config` | Arquivo de configuração customizado |
+
+## Documentação
+
+Documentação completa disponível em: **[https://joaomjbraga.github.io/piunter/docs.html](https://joaomjbraga.github.io/piunter/docs.html)**
 
 ## Desenvolvimento
 
@@ -170,80 +90,34 @@ piunter --large-files --threshold=500
 # Instalar dependências
 npm install
 
-# Executar em modo dev
-npm run dev
-
 # Build
 npm run build
 
-# Lint
-npm run lint
-
-# Formatar código
-npm run format
-
-# Rodar testes
+# Testes
 npm test
 
-# Rodar testes em watch mode
-npm run test:watch
-```
-
-## Arquitetura
-
-```
-src/
-├── cli.ts              # Interface CLI
-├── core/               # Lógica principal
-│   ├── analyzer.ts    # Análise de espaço
-│   └── cleaner.ts     # Execução de limpeza
-├── modules/           # Módulos de limpeza
-│   ├── cache.ts       # Cache do usuário
-│   ├── npm.ts         # NPM/Yarn/PNPM
-│   ├── flatpak.ts     # Flatpak
-│   ├── snap.ts        # Snap
-│   ├── docker.ts      # Docker
-│   ├── logs.ts        # Logs do sistema
-│   ├── packages.ts    # Gerenciadores de pacotes
-│   ├── disk.ts        # Arquivos grandes e uso de disco
-│   ├── appimage.ts    # AppImages
-│   ├── thumbs.ts      # Miniaturas
-│   └── recent.ts      # Arquivos recentes
-├── utils/              # Utilitários
-│   ├── exec.ts         # Execução de comandos
-│   ├── os.ts          # Informações do sistema
-│   ├── logger.ts      # Logging
-│   ├── config.ts      # Config file
-│   ├── completion.ts  # Shell completion
-│   ├── plugins.ts     # Plugin system
-│   └── progress.ts     # Progress bars
-└── types/              # TypeScript types
+# Lint
+npm run lint
 ```
 
 ## Segurança
 
-- Nunca executa operações destrutivas sem confirmação (exceto com `--force`)
-- Modo dry-run disponível para testar antes de aplicar
-- Detecção de comandos disponíveis antes de executar
-- Elevação automática de privilégios para operações do sistema
-- Tratamento robusto de erros com fallbacks
+- Nunca executa operações sem confirmação (exceto com `--force`)
+- Dry-run disponível para testar antes
+- Verifica comandos antes de executar
+- Tratamento robusto de erros
 
 ## Config File
 
-Crie `~/.piunter.json` para personalizar configurações:
+Crie `~/.piunter.json`:
 
 ```json
 {
-  "version": "1.0.0",
-  "defaults": {
-    "dryRun": false,
-    "force": false,
-    "modules": ["packages", "cache", "npm"]
-  },
-  "thresholds": {
-    "largeFilesMB": 100,
-    "logDays": 30,
-    "journalSizeMB": 500
+  "threshold": 100,
+  "modules": {
+    "npm": true,
+    "cache": true,
+    "logs": true
   }
 }
 ```
@@ -251,71 +125,13 @@ Crie `~/.piunter.json` para personalizar configurações:
 ## Compatibilidade
 
 - Debian/Ubuntu (APT)
-- Arch Linux/Manjaro (Pacman)
+- Arch/Manjaro (Pacman)
 - Fedora/RHEL (DNF)
-- Pop!_OS
-- Linux Mint
-- E outras distribuições baseadas nestas
-
-## Plugins
-
-Crie plugins personalizados em `~/.piunter/plugins/`:
-
-```typescript
-export default {
-  id: 'meu-plugin',
-  name: 'Meu Plugin',
-  description: 'Descrição do plugin',
-  version: '1.0.0',
-
-  isAvailable() {
-    return true;
-  },
-
-  async analyze() {
-    return { module: this.id, items: [], totalSize: 0 };
-  },
-
-  async clean(dryRun = false) {
-    return {
-      module: this.id,
-      success: true,
-      spaceFreed: 0,
-      itemsRemoved: 0,
-      errors: []
-    };
-  }
-};
-```
-
-## Wiki
-
-Documentação detalhada disponível na pasta [wiki/](wiki/):
-- Home
-- Installation
-- Basic Usage
-- Configuration
-- Modules
-- Plugins
-- Troubleshooting
-
-## Contribuindo
-
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) para guidelines.
-
-## Changelog
-
-Veja [CHANGELOG.md](CHANGELOG.md) para histórico de mudanças.
 
 ## Licença
 
 MIT - João Braga
 
-## Autor
+## Contribuindo
 
-<a href="https://github.com/joaomjbraga">
-  <img src="https://img.shields.io/badge/GitHub-joaomjbraga-blue?style=flat&logo=github" alt="GitHub">
-</a>
-<a href="https://www.npmjs.com/~bforgeio">
-  <img src="https://img.shields.io/badge/npm-@bforgeio-red?style=flat&logo=npm" alt="npm">
-</a>
+Veja [CONTRIBUTING.md](CONTRIBUTING.md)
