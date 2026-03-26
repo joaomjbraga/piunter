@@ -1,5 +1,4 @@
-import { execFileSync, spawn } from 'child_process';
-import readline from 'readline';
+import { execFileSync } from 'child_process';
 import chalk from 'chalk';
 import type { CommandResult } from '../types/index.js';
 
@@ -12,16 +11,25 @@ export function hasSudoPassword(): boolean {
 export async function requestSudo(): Promise<boolean> {
   if (sudoPassword) return true;
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
   return new Promise((resolve) => {
-    rl.question(chalk.yellow('  Senha sudo: '), (password) => {
-      rl.close();
+    const password: string[] = [];
+    let cursorPos = 0;
+
+    process.stdout.write(chalk.yellow('  Senha sudo: '));
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+
+    const cleanup = () => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+    };
+
+    const finish = () => {
+      cleanup();
+      process.stdout.write('\n');
       
-      if (!password) {
+      const pass = password.join('');
+      if (!pass) {
         console.log(chalk.red('  Senha vazia. Operacoes que requerem sudo serao puladas.'));
         resolve(false);
         return;
@@ -29,16 +37,59 @@ export async function requestSudo(): Promise<boolean> {
 
       try {
         execFileSync('sudo', ['-S', 'true'], {
-          input: password + '\n',
+          input: pass + '\n',
           timeout: 10000,
         });
-        sudoPassword = password;
+        sudoPassword = pass;
         console.log(chalk.green('  Sudo confirmado.'));
         resolve(true);
       } catch {
         console.log(chalk.red('  Senha incorreta.'));
         resolve(false);
       }
+    };
+
+    process.stdin.on('data', (chunk) => {
+      const char = chunk.toString();
+      
+      if (char === '\x03') {
+        cleanup();
+        process.stdout.write('^C\n');
+        process.exit(0);
+      }
+
+      if (char === '\r' || char === '\n') {
+        finish();
+        return;
+      }
+
+      if (char === '\x7f') {
+        if (cursorPos > 0) {
+          password.splice(--cursorPos, 1);
+          process.stdout.write('\b \b');
+        }
+        return;
+      }
+
+      if (char === '\x1b[D') {
+        if (cursorPos > 0) {
+          cursorPos--;
+          process.stdout.write('\x1b[D');
+        }
+        return;
+      }
+
+      if (char === '\x1b[C') {
+        if (cursorPos < password.length) {
+          cursorPos++;
+          process.stdout.write('\x1b[C');
+        }
+        return;
+      }
+
+      password.splice(cursorPos, 0, char);
+      cursorPos++;
+      process.stdout.write('*');
     });
   });
 }
