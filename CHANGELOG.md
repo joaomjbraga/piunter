@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-03-27
+
+### Fixed
+
+- **Cache Module Bug:** Fixed critical bug where `.cache` directory was being skipped entirely due to incorrect string matching
+- **Logger:** Removed duplicate green color in `success()` method
+- **Confirmation Messages:** Updated to show `(y/s/N)` since 's' is accepted as "yes"
+- **Docker Error Handling:** Improved error capture and reporting for each Docker operation (containers, networks, images, volumes)
+- **Threshold Parsing:** Fixed NaN issue when `--threshold=` is provided without value
+
+### Added
+
+- **Test Suite:** Comprehensive test coverage with 52 tests covering:
+  - Core modules (analyzer, cleaner)
+  - CLI (parseFlags, getModulesFromFlags)
+  - Package modules (npm, yarn, pnpm, packages)
+- **Error Handling Module:** Structured error classes (`PiunterError`, `ModuleNotAvailableError`, `SudoRequiredError`, `CommandExecutionError`)
+- **CI/CD:** GitHub Actions workflow for automated testing and publishing
+- **Husky + lint-staged:** Pre-commit hooks for code quality
+- **CLI Refactoring:** Separated CLI logic into modular structure (`src/cli/flags.ts`, `src/cli/parser.ts`)
+- **Config Runtime:** Logs module now uses config values (`journalSizeMB`, `logDays`) at runtime
+- **TypeScript Strictness:** Enhanced strict mode with additional checks
+
+### Changed
+
+- **Thumbnails Module:** Now only removes thumbnails older than 7 days instead of all
+- **Flatpak Cache:** Now checks multiple cache paths (`/var/cache/flatpak`, `/var/tmp/flatpak-cache`)
+- **APT Orphan Estimate:** Reduced from 50MB to 10MB per package (more accurate)
+
 ## [1.2.1] - 2026-03-27
 
 ### Fixed

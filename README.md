@@ -1,4 +1,4 @@
-# piunter
+# piunter (v1.2.2)
 
 <pre align="center">
 
@@ -11,7 +11,6 @@
 
 </pre>
 
-
 <p align="center">
   <img src=".github/preview.png" alt="piunter preview">
 </p>
@@ -23,7 +22,7 @@ CLI para limpeza e otimização de sistemas Linux.
   <img src="https://img.shields.io/badge/TypeScript-5.3-blue.svg" alt="TypeScript">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   <img src="https://img.shields.io/badge/Platform-Linux-purple.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-10-brightgreen.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-52-brightgreen.svg" alt="Tests">
 </p>
 
 <p align="center">
