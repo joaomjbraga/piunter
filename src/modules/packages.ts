@@ -68,11 +68,11 @@ export class PackagesModule {
           const count = parseInt(match[1], 10);
           items.push({
             path: 'apt-orphans',
-            size: count * 50 * 1024 * 1024,
+            size: count * 10 * 1024 * 1024,
             type: 'apt-orphans',
             description: `Pacotes órfãos APT (${count})`,
           });
-          totalSize += count * 50 * 1024 * 1024;
+          totalSize += count * 10 * 1024 * 1024;
         }
       }
     } catch {

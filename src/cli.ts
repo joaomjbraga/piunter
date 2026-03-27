@@ -16,16 +16,23 @@ const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
 async function promptYesNo(message: string): Promise<boolean> {
   return new Promise(resolve => {
+    const cleanup = () => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+      process.stdin.removeAllListeners('data');
+      process.stdin.removeAllListeners('error');
+    };
+
+    const handleInterrupt = () => {
+      cleanup();
+      console.log(chalk.dim('\nOperacao cancelada.'));
+      process.exit(0);
+    };
+
     const ask = () => {
       process.stdout.write(`${message} `);
       process.stdin.setRawMode(true);
       process.stdin.resume();
-
-      const cleanup = () => {
-        process.stdin.setRawMode(false);
-        process.stdin.pause();
-        process.stdin.removeAllListeners('data');
-      };
 
       const handler = (chunk: Buffer) => {
         cleanup();
@@ -43,6 +50,9 @@ async function promptYesNo(message: string): Promise<boolean> {
 
       process.stdin.once('data', handler);
     };
+
+    process.stdin.once('error', handleInterrupt);
+    process.on('SIGINT', handleInterrupt);
     ask();
   });
 }
@@ -109,7 +119,11 @@ function parseFlags(args: string[]): CliFlags {
     interactive: args.includes('--interactive') || args.includes('-i'),
     largeFiles: args.includes('--large-files'),
     largeFilesThreshold: validateThreshold(
-      parseInt(args.find(a => a.startsWith('--threshold='))?.split('=')[1] || '100'),
+      (() => {
+        const val = args.find(a => a.startsWith('--threshold='))?.split('=')[1];
+        const parsed = val ? parseInt(val) : NaN;
+        return isNaN(parsed) ? 100 : parsed;
+      })(),
       1,
       10000
     ),
@@ -201,7 +215,7 @@ async function interactiveMode(): Promise<string[]> {
     return [];
   }
 
-  const confirm = await promptYesNo(chalk.yellow('Continuar com a limpeza? (y/N)'));
+  const confirm = await promptYesNo(chalk.yellow('Continuar com a limpeza? (y/s/N)'));
 
   if (!confirm) {
     console.log(chalk.dim('Operacao cancelada.'));
@@ -220,7 +234,7 @@ async function analyzeMode(moduleIds?: string[]): Promise<void> {
 async function cleanMode(moduleIds: string[], options: CleanOptions): Promise<void> {
   if (!options.force && !options.dryRun) {
     console.log();
-    const proceed = await promptYesNo(chalk.red.bold('Confirmar limpeza? (y/N)'));
+    const proceed = await promptYesNo(chalk.red.bold('Confirmar limpeza? (y/s/N)'));
 
     if (!proceed) {
       console.log(chalk.dim('Operacao cancelada.'));
@@ -341,6 +355,6 @@ export async function main(): Promise<void> {
 }
 
 main().catch(error => {
-  logger.error(`Erro: ${error.message}`);
+  logger.error(`Erro: ${error.message || error}`);
   process.exit(1);
 });

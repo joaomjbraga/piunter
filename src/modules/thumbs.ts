@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, rmSync } from 'fs';
+import { existsSync, readdirSync, rmSync, statSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
@@ -63,6 +63,8 @@ export class ThumbsModule {
       return result;
     }
 
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
     for (const item of analysis.items) {
       if (!existsSync(item.path)) continue;
 
@@ -88,10 +90,17 @@ export class ThumbsModule {
           const subPath = join(item.path, subdir);
           if (existsSync(subPath)) {
             try {
-              const subSize = getDirSize(subPath);
-              rmSync(subPath, { recursive: true, force: true });
-              freedFromThis += subSize;
-              result.itemsRemoved++;
+              const subEntries = readdirSync(subPath);
+              for (const entry of subEntries) {
+                const entryPath = join(subPath, entry);
+                const stat = statSync(entryPath);
+                if (stat.mtimeMs < sevenDaysAgo) {
+                  const entrySize = stat.size;
+                  rmSync(entryPath, { force: true });
+                  freedFromThis += entrySize;
+                  result.itemsRemoved++;
+                }
+              }
             } catch {
               // Skip
             }

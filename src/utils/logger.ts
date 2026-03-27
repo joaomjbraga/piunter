@@ -20,7 +20,7 @@ class Logger {
 
   success(message: string): void {
     if (!this.enabled) return;
-    console.log(`  ${chalk.green('*')} ${chalk.green(message)}`);
+    console.log(`  ${chalk.green('*')} ${message}`);
   }
 
   warn(message: string): void {
@@ -57,21 +57,20 @@ class Logger {
 
   item(message: string, value?: string): void {
     if (!this.enabled) return;
-    const msg = value 
-      ? `${message} ${chalk.cyan(`(${value})`)}`
-      : message;
+    const msg = value ? `${message} ${chalk.cyan(`(${value})`)}` : message;
     console.log(`    ${chalk.dim('-')} ${msg}`);
   }
 
   list(items: { name: string; value: string; success?: boolean }[]): void {
     if (!this.enabled) return;
-    items.forEach((item) => {
-      const status = item.success === false 
-        ? chalk.red('x')
-        : item.success === true
-          ? chalk.green('*')
-          : chalk.dim('-');
-      
+    items.forEach(item => {
+      const status =
+        item.success === false
+          ? chalk.red('x')
+          : item.success === true
+            ? chalk.green('*')
+            : chalk.dim('-');
+
       const line = `${item.name} ${chalk.cyan(`(${item.value})`)}`;
       console.log(`    ${status} ${line}`);
     });

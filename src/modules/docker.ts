@@ -124,9 +124,11 @@ export class DockerModule {
       const containersResult = await exec('docker', ['container', 'prune', '-f']);
       if (containersResult.success) {
         logger.item(`${this.name}: Containers parados removidos`);
+      } else if (containersResult.stderr) {
+        result.errors.push(`Containers: ${containersResult.stderr}`);
       }
-    } catch {
-      result.errors.push('Falha ao limpar containers');
+    } catch (e) {
+      result.errors.push(`Falha ao limpar containers: ${(e as Error).message}`);
     }
 
     try {
@@ -134,26 +136,30 @@ export class DockerModule {
       if (networksResult.success) {
         logger.item(`${this.name}: Networks não utilizadas removidas`);
       }
-    } catch {
-      // Silent fail for networks
+    } catch (e) {
+      result.errors.push(`Falha ao limpar networks: ${(e as Error).message}`);
     }
 
     try {
       const imagesResult = await exec('docker', ['image', 'prune', '-a', '-f']);
       if (imagesResult.success) {
         logger.item(`${this.name}: Imagens não utilizadas removidas`);
+      } else if (imagesResult.stderr) {
+        result.errors.push(`Imagens: ${imagesResult.stderr}`);
       }
-    } catch {
-      // Silent fail for images
+    } catch (e) {
+      result.errors.push(`Falha ao limpar imagens: ${(e as Error).message}`);
     }
 
     try {
       const volumesResult = await exec('docker', ['volume', 'prune', '-f']);
       if (volumesResult.success) {
         logger.item(`${this.name}: Volumes não utilizados removidos`);
+      } else if (volumesResult.stderr) {
+        result.errors.push(`Volumes: ${volumesResult.stderr}`);
       }
-    } catch {
-      // Silent fail for volumes
+    } catch (e) {
+      result.errors.push(`Falha ao limpar volumes: ${(e as Error).message}`);
     }
 
     try {
@@ -161,11 +167,11 @@ export class DockerModule {
       if (systemPruneResult.success) {
         logger.item(`${this.name}: Sistema Docker completo otimizado`);
         result.success = true;
+      } else if (systemPruneResult.stderr) {
+        result.errors.push(`System prune: ${systemPruneResult.stderr}`);
       }
-    } catch {
-      result.errors.push(
-        'Falha na limpeza completa do Docker - verifique se o daemon está em execução'
-      );
+    } catch (e) {
+      result.errors.push(`Falha na limpeza completa do Docker: ${(e as Error).message}`);
     }
 
     const afterAnalysis = await this.analyze();

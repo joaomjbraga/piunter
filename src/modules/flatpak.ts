@@ -51,17 +51,21 @@ export class FlatpakModule {
   }
 
   private async getCacheSize(): Promise<number> {
-    const cachePath = '/var/tmp/flatpak-cache';
-    const cacheResult = await exec('du', ['-sb', cachePath]);
+    const cachePaths = ['/var/cache/flatpak', '/var/tmp/flatpak-cache'];
+    let totalSize = 0;
 
-    if (cacheResult.success) {
-      const match = cacheResult.stdout.match(/^(\d+)/);
-      if (match) {
-        return parseInt(match[1], 10);
+    for (const cachePath of cachePaths) {
+      const cacheResult = await exec('du', ['-sb', cachePath]);
+
+      if (cacheResult.success) {
+        const match = cacheResult.stdout.match(/^(\d+)/);
+        if (match) {
+          totalSize += parseInt(match[1], 10);
+        }
       }
     }
 
-    return 0;
+    return totalSize;
   }
 
   async clean(dryRun: boolean = false): Promise<CleaningResult> {

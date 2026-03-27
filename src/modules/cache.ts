@@ -68,10 +68,11 @@ export class CacheModule {
       errors: [],
     };
 
-    const dirsToSkip = ['thumbnails', 'thumbnail', 'icon-cache', '.cache'];
+    const dirsToSkip = ['thumbnails', 'thumbnail', 'icon-cache'];
 
     for (const item of analysis.items) {
-      const shouldSkip = dirsToSkip.some(d => item.path.includes(d));
+      const itemBasename = item.path.split('/').pop() || '';
+      const shouldSkip = dirsToSkip.some(d => itemBasename === d);
       if (shouldSkip) continue;
 
       if (!dryRun) {
