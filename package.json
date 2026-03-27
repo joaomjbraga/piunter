@@ -16,7 +16,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "npm run build && husky install",
+    "prepare": "npm run build && npx husky install",
     "prepack": "npm run build",
     "publish": "npm publish --access public"
   },
