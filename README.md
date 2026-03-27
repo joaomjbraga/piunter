@@ -1,5 +1,21 @@
 # piunter
 
+<pre align="center">
+
+██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗
+██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
+██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
+██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
+██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
+╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+</pre>
+
+
+<p align="center">
+  <img src=".github/preview.png" alt="piunter preview">
+</p>
+
 CLI para limpeza e otimização de sistemas Linux.
 
 <p align="center">
@@ -16,26 +32,36 @@ CLI para limpeza e otimização de sistemas Linux.
   <img src="https://img.shields.io/badge/DNF-Fedora-blue.svg" alt="DNF">
 </p>
 
-## Instalação
+## Uso Rápido (sem instalar)
+
+Execute diretamente com `npx`:
+
+```bash
+# Modo interativo
+npx piunter
+
+# Limpar tudo
+npx piunter --all
+
+# Limpar específicos
+npx piunter --npm --cache --logs
+
+# Simular (dry-run)
+npx piunter --all --dry-run
+```
+
+## Instalação Global (opcional)
+
+Se preferir instalar permanentemente:
 
 ```bash
 npm install -g @bforgeio/piunter
 ```
 
-## Uso Rápido
+Após instalado, use diretamente:
 
 ```bash
-# Modo interativo
-piunter
-
-# Limpar tudo
 piunter --all
-
-# Limpar específicos
-piunter --npm --cache --logs
-
-# Simular (dry-run)
-piunter --all --dry-run
 ```
 
 ## Recursos
@@ -52,33 +78,33 @@ piunter --all --dry-run
 
 ## Módulos
 
-| Módulo | Flag | Descrição |
-|--------|------|-----------|
-| Pacotes | `--packages` | Remove pacotes órfãos |
-| NPM | `--npm` | Limpa cache do npm |
-| Yarn | `--yarn` | Limpa cache do Yarn |
-| PNPM | `--pnpm` | Limpa cache do pnpm |
-| Cache | `--cache` | Limpa ~/.cache |
-| Flatpak | `--flatpak` | Remove dados órfãos |
-| Snap | `--snap` | Remove revisões antigas |
-| Docker | `--docker` | Remove containers/imagens |
-| Logs | `--logs` | Limpa logs do sistema |
+| Módulo      | Flag            | Descrição                 |
+| ----------- | --------------- | ------------------------- |
+| Pacotes     | `--packages`    | Remove pacotes órfãos     |
+| NPM         | `--npm`         | Limpa cache do npm        |
+| Yarn        | `--yarn`        | Limpa cache do Yarn       |
+| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
+| Cache       | `--cache`       | Limpa ~/.cache            |
+| Flatpak     | `--flatpak`     | Remove dados órfãos       |
+| Snap        | `--snap`        | Remove revisões antigas   |
+| Docker      | `--docker`      | Remove containers/imagens |
+| Logs        | `--logs`        | Limpa logs do sistema     |
 | Large Files | `--large-files` | Encontra arquivos grandes |
-| AppImage | `--appimage` | Gerencia AppImages |
-| Thumbs | `--thumbs` | Remove miniaturas |
-| Recent | `--recent` | Limpa arquivos recentes |
-| Analyze | `--analyze` | Analisa uso de disco |
+| AppImage    | `--appimage`    | Gerencia AppImages        |
+| Thumbs      | `--thumbs`      | Remove miniaturas         |
+| Recent      | `--recent`      | Limpa arquivos recentes   |
+| Analyze     | `--analyze`     | Analisa uso de disco      |
 
 ## Flags
 
-| Flag | Descrição |
-|------|-----------|
-| `--all` | Executa todos os módulos |
-| `--analyze` | Analisa sem limpar |
-| `--dry-run` | Simula execução |
-| `--force` | Pula confirmações |
+| Flag             | Descrição                            |
+| ---------------- | ------------------------------------ |
+| `--all`          | Executa todos os módulos             |
+| `--analyze`      | Analisa sem limpar                   |
+| `--dry-run`      | Simula execução                      |
+| `--force`        | Pula confirmações                    |
 | `--threshold=MB` | Tamanho mínimo para arquivos grandes |
-| `--config` | Arquivo de configuração customizado |
+| `--config`       | Arquivo de configuração customizado  |
 
 ## Documentação
 

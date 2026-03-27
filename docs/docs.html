@@ -92,14 +92,24 @@
     <div class="content-body">
 
       <section id="instalacao" class="doc-section">
-        <h2>Instalação</h2>
+        <h2>Uso Rápido (sem instalar)</h2>
         
+        <p>Execute diretamente com <code>npx</code>, sem necessidade de instalação:</p>
+        
+        <h3>npx (recomendado)</h3>
+        <pre><code>npx piunter</code></pre>
+
+        <h3>Verificar</h3>
+        <pre><code>npx piunter --version</code></pre>
+
         <h3>Requisitos</h3>
         <ul>
           <li><strong>Node.js</strong> 18.0.0+</li>
-          <li><strong>npm</strong>, <strong>yarn</strong> ou <strong>pnpm</strong></li>
           <li><strong>Linux</strong> (Debian, Ubuntu, Arch, Fedora)</li>
         </ul>
+
+        <h2>Instalação Global (opcional)</h2>
+        <p>Se preferir instalar permanentemente:</p>
 
         <h3>npm</h3>
         <pre><code>npm install -g @bforgeio/piunter</code></pre>
@@ -109,27 +119,24 @@
 
         <h3>pnpm</h3>
         <pre><code>pnpm add -g @bforgeio/piunter</code></pre>
-
-        <h3>Verificar</h3>
-        <pre><code>piunter --version</code></pre>
       </section>
 
       <section id="uso" class="doc-section">
         <h2>Uso</h2>
 
         <h3>Interativo</h3>
-        <pre><code>piunter</code></pre>
+        <pre><code>npx piunter</code></pre>
 
         <h3>Flags</h3>
-        <pre><code>piunter --npm
-piunter --all
-piunter --analyze</code></pre>
+        <pre><code>npx piunter --npm
+npx piunter --all
+npx piunter --analyze</code></pre>
 
         <h3>Dry-run</h3>
-        <pre><code>piunter --all --dry-run</code></pre>
+        <pre><code>npx piunter --all --dry-run</code></pre>
 
         <h3>Forçar</h3>
-        <pre><code>piunter --all --force</code></pre>
+        <pre><code>npx piunter --all --force</code></pre>
       </section>
 
       <section id="modulos" class="doc-section">
@@ -304,9 +311,9 @@ piunter --analyze</code></pre>
 }</code></pre>
 
         <h3>Comandos</h3>
-        <pre><code>piunter config init
-piunter config set threshold 500
-piunter config show</code></pre>
+        <pre><code>npx piunter config init
+npx piunter config set threshold 500
+npx piunter config show</code></pre>
       </section>
 
       <section id="plugins" class="doc-section">
@@ -325,9 +332,9 @@ export default class MeuPlugin implements Plugin {
   }
 }</code></pre>
 
-        <pre><code>piunter plugin add ./caminho
-piunter plugin list
-piunter plugin remove meu-plugin</code></pre>
+        <pre><code>npx piunter plugin add ./caminho
+npx piunter plugin list
+npx piunter plugin remove meu-plugin</code></pre>
       </section>
 
       <section id="faq" class="doc-section">
@@ -345,7 +352,7 @@ piunter plugin remove meu-plugin</code></pre>
 
         <details class="faq-item">
           <summary>Automatizar via cron?</summary>
-          <pre><code>0 3 * * 0 /usr/bin/piunter --all --force --quiet</code></pre>
+          <pre><code>0 3 * * 0 npx piunter --all --force --quiet</code></pre>
         </details>
 
         <details class="faq-item">
