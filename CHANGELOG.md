@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Inaccurate Space Calculation:** All modules now calculate real space freed using before/after analysis
 - **apt-orphans Detection:** APT module now detects orphan packages during analysis
 - **promptYesNo Recursion:** Fixed potential stack overflow with recursive calls
+- **Sudo Password Input:** Fixed stdin interference with inquirer, now properly accepts password input
 
 ### Changed
 

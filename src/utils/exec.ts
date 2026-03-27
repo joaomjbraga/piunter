@@ -1,4 +1,4 @@
-import { execFileSync } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
 import chalk from 'chalk';
 import type { CommandResult } from '../types/index.js';
 
@@ -12,29 +12,29 @@ export async function requestSudo(): Promise<boolean> {
   if (sudoPassword) return true;
 
   return new Promise((resolve) => {
-    const password: string[] = [];
-    let cursorPos = 0;
+    process.stdout.write(chalk.yellow('  Senha sudo: '));
 
-    const cleanup = () => {
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
-      process.stdin.removeAllListeners('data');
-    };
+    const child = spawn('bash', ['-c', 'read -s -p "" pass && echo "$pass"'], {
+      stdio: ['inherit', 'pipe', 'inherit'],
+      windowsHide: true,
+    });
 
+    let password = '';
     const timeoutId = setTimeout(() => {
-      cleanup();
-      process.stdout.write('\n');
+      child.kill();
       console.log(chalk.red('  Timeout. Operacoes que requerem sudo serao puladas.'));
       resolve(false);
     }, 30000);
 
-    const finish = () => {
+    child.stdout?.on('data', (data: Buffer) => {
+      password += data.toString();
+    });
+
+    child.on('close', () => {
       clearTimeout(timeoutId);
-      cleanup();
-      process.stdout.write('\n');
-      
-      const pass = password.join('');
-      if (!pass) {
+      password = password.trim();
+
+      if (!password) {
         console.log(chalk.red('  Senha vazia. Operacoes que requerem sudo serao puladas.'));
         resolve(false);
         return;
@@ -42,66 +42,23 @@ export async function requestSudo(): Promise<boolean> {
 
       try {
         execFileSync('sudo', ['-S', 'true'], {
-          input: pass + '\n',
+          input: password + '\n',
           timeout: 10000,
         });
-        sudoPassword = pass;
+        sudoPassword = password;
         console.log(chalk.green('  Sudo confirmado.'));
         resolve(true);
       } catch {
         console.log(chalk.red('  Senha incorreta.'));
         resolve(false);
       }
-    };
+    });
 
-    const handleInput = (chunk: Buffer) => {
-      const char = chunk.toString();
-      
-      if (char === '\x03') {
-        clearTimeout(timeoutId);
-        cleanup();
-        process.stdout.write('^C\n');
-        process.exit(0);
-      }
-
-      if (char === '\r' || char === '\n') {
-        finish();
-        return;
-      }
-
-      if (char === '\x7f') {
-        if (cursorPos > 0) {
-          password.splice(--cursorPos, 1);
-          process.stdout.write('\b \b');
-        }
-        return;
-      }
-
-      if (char === '\x1b[D') {
-        if (cursorPos > 0) {
-          cursorPos--;
-          process.stdout.write('\x1b[D');
-        }
-        return;
-      }
-
-      if (char === '\x1b[C') {
-        if (cursorPos < password.length) {
-          cursorPos++;
-          process.stdout.write('\x1b[C');
-        }
-        return;
-      }
-
-      password.splice(cursorPos, 0, char);
-      cursorPos++;
-      process.stdout.write('*');
-    };
-
-    process.stdout.write(chalk.yellow('  Senha sudo: '));
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-    process.stdin.once('data', handleInput);
+    child.on('error', () => {
+      clearTimeout(timeoutId);
+      console.log(chalk.red('  Erro ao pedir senha.'));
+      resolve(false);
+    });
   });
 }
 
