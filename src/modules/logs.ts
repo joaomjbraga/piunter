@@ -2,6 +2,7 @@ import { existsSync } from 'fs';
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
+import { loadConfig } from '../utils/config.js';
 
 export class LogsModule {
   readonly id = 'logs';
@@ -69,6 +70,10 @@ export class LogsModule {
   }
 
   async clean(dryRun: boolean = false): Promise<CleaningResult> {
+    const config = loadConfig();
+    const journalSizeMB = config.thresholds.journalSizeMB;
+    const logDays = config.thresholds.logDays;
+
     const analysis = await this.analyze();
     const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
@@ -85,26 +90,30 @@ export class LogsModule {
       return result;
     }
 
-    const vacuumResult = await exec('journalctl', ['--vacuum-size=500M'], { sudo: true });
+    const vacuumResult = await exec('journalctl', [`--vacuum-size=${journalSizeMB}M`], {
+      sudo: true,
+    });
     if (vacuumResult.success) {
-      logger.item(`${this.name}: Journal limpo (limite 500MB)`);
+      logger.item(`${this.name}: Journal limpo (limite ${journalSizeMB}MB)`);
       result.itemsRemoved++;
     } else {
       result.errors.push('Falha ao limpar journalctl (verifique se tem privilégios sudo)');
     }
 
-    const vacuumTimeResult = await exec('journalctl', ['--vacuum-time=7d'], { sudo: true });
+    const vacuumTimeResult = await exec('journalctl', [`--vacuum-time=${logDays}d`], {
+      sudo: true,
+    });
     if (vacuumTimeResult.success) {
-      logger.item(`${this.name}: Logs anteriores a 7 dias removidos`);
+      logger.item(`${this.name}: Logs anteriores a ${logDays} dias removidos`);
     }
 
     const oldLogsResult = await exec(
       'find',
-      ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', '+30', '-delete'],
+      ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', `+${logDays}`, '-delete'],
       { sudo: true }
     );
     if (oldLogsResult.success) {
-      logger.item(`${this.name}: Logs antigos (>30 dias) removidos`);
+      logger.item(`${this.name}: Logs antigos (>${logDays} dias) removidos`);
     }
 
     const afterAnalysis = await this.analyze();
@@ -113,7 +122,10 @@ export class LogsModule {
     return result;
   }
 
-  async cleanOldLogs(days: number = 30, dryRun: boolean = false): Promise<CleaningResult> {
+  async cleanOldLogs(days?: number, dryRun: boolean = false): Promise<CleaningResult> {
+    const config = loadConfig();
+    const logDays = days ?? config.thresholds.logDays;
+
     const beforeAnalysis = await this.analyze();
     const beforeSize = beforeAnalysis.totalSize;
     const result: CleaningResult = {

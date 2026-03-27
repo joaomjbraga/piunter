@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { parseFlags, getModulesFromFlags } from './cli.js';
+import { parseFlags, getModulesFromFlags } from './cli/index.js';
 
 describe('CLI Flags', () => {
   describe('parseFlags', () => {

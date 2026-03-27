@@ -5,14 +5,12 @@ import inquirer from 'inquirer';
 import { createAnalyzer, createCleaner } from './core/index.js';
 import { getAvailableModules } from './modules/index.js';
 import type { CleanOptions, CliFlags } from './types/index.js';
-import { validateThreshold } from './utils/config.js';
 import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
 import { requestSudo, hasSudoPassword } from './utils/exec.js';
+import { parseFlags, getModulesFromFlags, requiresSudo } from './cli/index.js';
 
 const VERSION = '1.2.1';
-
-const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
 async function promptYesNo(message: string): Promise<boolean> {
   return new Promise(resolve => {
@@ -69,68 +67,6 @@ function padEnd(str: string, len: number): string {
   const width = getTerminalWidth();
   const maxLen = Math.min(len, width - 10);
   return str.length >= maxLen ? str.substring(0, maxLen - 3) + '...' : str.padEnd(maxLen);
-}
-
-function requiresSudo(moduleIds: string[]): boolean {
-  return moduleIds.some(id => MODULES_REQUIRING_SUDO.includes(id));
-}
-
-export function getModulesFromFlags(flags: CliFlags): string[] {
-  const modules: string[] = [];
-
-  if (flags.all) {
-    return getAvailableModules()
-      .filter(m => m.available)
-      .map(m => m.id);
-  }
-
-  if (flags.cache) modules.push('cache');
-  if (flags.npm) modules.push('npm');
-  if (flags.yarn) modules.push('yarn');
-  if (flags.pnpm) modules.push('pnpm');
-  if (flags.flatpak) modules.push('flatpak');
-  if (flags.snap) modules.push('snap');
-  if (flags.docker) modules.push('docker');
-  if (flags.logs) modules.push('logs');
-  if (flags.packages) modules.push('packages');
-  if (flags.largeFiles) modules.push('large-files');
-  if (flags.appimage) modules.push('appimage');
-  if (flags.thumbs) modules.push('thumbs');
-  if (flags.recent) modules.push('recent');
-
-  return modules;
-}
-
-export function parseFlags(args: string[]): CliFlags {
-  return {
-    all: args.includes('--all') || args.includes('-a'),
-    cache: args.includes('--cache'),
-    npm: args.includes('--npm'),
-    yarn: args.includes('--yarn'),
-    pnpm: args.includes('--pnpm'),
-    flatpak: args.includes('--flatpak'),
-    snap: args.includes('--snap'),
-    docker: args.includes('--docker'),
-    logs: args.includes('--logs'),
-    packages: args.includes('--packages'),
-    analyze: args.includes('--analyze'),
-    dryRun: args.includes('--dry-run') || args.includes('-n'),
-    force: args.includes('--force') || args.includes('-f'),
-    interactive: args.includes('--interactive') || args.includes('-i'),
-    largeFiles: args.includes('--large-files'),
-    largeFilesThreshold: validateThreshold(
-      (() => {
-        const val = args.find(a => a.startsWith('--threshold='))?.split('=')[1];
-        const parsed = val ? parseInt(val) : NaN;
-        return isNaN(parsed) ? 100 : parsed;
-      })(),
-      1,
-      10000
-    ),
-    appimage: args.includes('--appimage'),
-    thumbs: args.includes('--thumbs'),
-    recent: args.includes('--recent'),
-  };
 }
 
 function line(char: string = '─', len?: number): string {
