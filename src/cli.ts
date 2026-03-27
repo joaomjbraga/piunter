@@ -75,7 +75,7 @@ function requiresSudo(moduleIds: string[]): boolean {
   return moduleIds.some(id => MODULES_REQUIRING_SUDO.includes(id));
 }
 
-function getModulesFromFlags(flags: CliFlags): string[] {
+export function getModulesFromFlags(flags: CliFlags): string[] {
   const modules: string[] = [];
 
   if (flags.all) {
@@ -101,7 +101,7 @@ function getModulesFromFlags(flags: CliFlags): string[] {
   return modules;
 }
 
-function parseFlags(args: string[]): CliFlags {
+export function parseFlags(args: string[]): CliFlags {
   return {
     all: args.includes('--all') || args.includes('-a'),
     cache: args.includes('--cache'),
