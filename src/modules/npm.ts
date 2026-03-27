@@ -6,226 +6,124 @@ import { exec, isCommandAvailable } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 import { getDirSize } from '../utils/fs.js';
 
-export class NpmModule {
+abstract class PackageCacheModule {
+  abstract readonly id: string;
+  abstract readonly name: string;
+  abstract readonly description: string;
+  abstract getCachePaths(): string[];
+
+  isAvailable(): boolean {
+    return isCommandAvailable(this.id);
+  }
+
+  async analyze(): Promise<AnalysisResult> {
+    const items: AnalysisResult['items'] = [];
+    let totalSize = 0;
+
+    for (const cachePath of this.getCachePaths()) {
+      if (existsSync(cachePath)) {
+        try {
+          const size = getDirSize(cachePath);
+          items.push({
+            path: cachePath,
+            size,
+            type: 'directory',
+            description: `Cache do ${this.name} (${cachePath})`,
+          });
+          totalSize += size;
+        } catch {
+          // Not accessible
+        }
+      }
+    }
+
+    return { module: this.id, items, totalSize };
+  }
+
+  abstract getCleanCommand(): string[];
+
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
+    const analysis = await this.analyze();
+    const result: CleaningResult = {
+      module: this.id,
+      success: true,
+      spaceFreed: 0,
+      itemsRemoved: 0,
+      errors: [],
+    };
+
+    if (analysis.totalSize === 0) {
+      return result;
+    }
+
+    if (dryRun) {
+      logger.info(
+        `[DRY-RUN] Limparía ${logger.formatBytes(analysis.totalSize)} do cache ${this.name.toLowerCase()}`
+      );
+      result.spaceFreed = analysis.totalSize;
+      return result;
+    }
+
+    const commandResult = await exec(this.id, this.getCleanCommand());
+
+    if (commandResult.success) {
+      result.success = true;
+      result.spaceFreed = analysis.totalSize;
+      result.itemsRemoved = 1;
+      logger.item(`${this.name}: Cache limpo`, logger.formatBytes(analysis.totalSize));
+    } else {
+      result.success = false;
+      result.errors.push(commandResult.stderr || `Falha ao limpar cache ${this.name}`);
+    }
+
+    return result;
+  }
+}
+
+export class NpmModule extends PackageCacheModule {
   readonly id = 'npm';
   readonly name = 'NPM';
   readonly description = 'Limpa cache do npm';
 
-  isAvailable(): boolean {
-    return isCommandAvailable('npm');
+  getCachePaths(): string[] {
+    return [join(getHomeDir(), '.npm')];
   }
 
-  async analyze(): Promise<AnalysisResult> {
-    const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
-
-    const npmCachePath = join(getHomeDir(), '.npm');
-
-    if (existsSync(npmCachePath)) {
-      try {
-        const size = getDirSize(npmCachePath);
-        items.push({
-          path: npmCachePath,
-          size,
-          type: 'directory',
-          description: 'Cache do npm (~/.npm)',
-        });
-        totalSize = size;
-      } catch {
-        // Not accessible
-      }
-    }
-
-    return { module: this.id, items, totalSize };
-  }
-
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
-    const analysis = await this.analyze();
-    const result: CleaningResult = {
-      module: this.id,
-      success: true,
-      spaceFreed: 0,
-      itemsRemoved: 0,
-      errors: [],
-    };
-
-    if (analysis.totalSize === 0) {
-      return result;
-    }
-
-    if (dryRun) {
-      logger.info(`[DRY-RUN] Limparía ${logger.formatBytes(analysis.totalSize)} do cache npm`);
-      result.spaceFreed = analysis.totalSize;
-      return result;
-    }
-
-    const commandResult = await exec('npm', ['cache', 'clean', '--force']);
-
-    if (commandResult.success) {
-      result.success = true;
-      result.spaceFreed = analysis.totalSize;
-      result.itemsRemoved = 1;
-      logger.item(`${this.name}: Cache limpo`, logger.formatBytes(analysis.totalSize));
-    } else {
-      result.success = false;
-      result.errors.push(commandResult.stderr || 'Falha ao limpar cache npm');
-    }
-
-    return result;
+  getCleanCommand(): string[] {
+    return ['cache', 'clean', '--force'];
   }
 }
 
-export class YarnModule {
+export class YarnModule extends PackageCacheModule {
   readonly id = 'yarn';
   readonly name = 'Yarn';
   readonly description = 'Limpa cache do Yarn';
 
-  isAvailable(): boolean {
-    return isCommandAvailable('yarn');
+  getCachePaths(): string[] {
+    return [join(getHomeDir(), '.yarn', 'cache')];
   }
 
-  async analyze(): Promise<AnalysisResult> {
-    const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
-
-    const yarnCachePath = join(getHomeDir(), '.yarn', 'cache');
-
-    if (existsSync(yarnCachePath)) {
-      try {
-        const size = getDirSize(yarnCachePath);
-        items.push({
-          path: yarnCachePath,
-          size,
-          type: 'directory',
-          description: 'Cache do Yarn (~/.yarn/cache)',
-        });
-        totalSize = size;
-      } catch {
-        // Not accessible
-      }
-    }
-
-    return { module: this.id, items, totalSize };
-  }
-
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
-    const analysis = await this.analyze();
-    const result: CleaningResult = {
-      module: this.id,
-      success: true,
-      spaceFreed: 0,
-      itemsRemoved: 0,
-      errors: [],
-    };
-
-    if (analysis.totalSize === 0) {
-      return result;
-    }
-
-    if (dryRun) {
-      logger.info(`[DRY-RUN] Limparía ${logger.formatBytes(analysis.totalSize)} do cache yarn`);
-      result.spaceFreed = analysis.totalSize;
-      return result;
-    }
-
-    const commandResult = await exec('yarn', ['cache', 'clean']);
-
-    if (commandResult.success) {
-      result.success = true;
-      result.spaceFreed = analysis.totalSize;
-      result.itemsRemoved = 1;
-      logger.item(`${this.name}: Cache limpo`, logger.formatBytes(analysis.totalSize));
-    } else {
-      result.success = false;
-      result.errors.push(commandResult.stderr || 'Falha ao limpar cache yarn');
-    }
-
-    return result;
+  getCleanCommand(): string[] {
+    return ['cache', 'clean'];
   }
 }
 
-export class PnpmModule {
+export class PnpmModule extends PackageCacheModule {
   readonly id = 'pnpm';
   readonly name = 'PNPM';
   readonly description = 'Limpa cache do PNPM';
 
-  isAvailable(): boolean {
-    return isCommandAvailable('pnpm');
+  getCachePaths(): string[] {
+    const paths = [join(getHomeDir(), '.pnpm-store')];
+    const localPath = join(getHomeDir(), '.local', 'share', 'pnpm', 'cache');
+    if (existsSync(localPath)) {
+      paths.push(localPath);
+    }
+    return paths;
   }
 
-  async analyze(): Promise<AnalysisResult> {
-    const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
-
-    const pnpmCachePath = join(getHomeDir(), '.pnpm-store');
-
-    if (existsSync(pnpmCachePath)) {
-      try {
-        const size = getDirSize(pnpmCachePath);
-        items.push({
-          path: pnpmCachePath,
-          size,
-          type: 'directory',
-          description: 'Cache do PNPM (~/.pnpm-store)',
-        });
-        totalSize = size;
-      } catch {
-        // Not accessible
-      }
-    }
-
-    const pnpmCachePath2 = join(getHomeDir(), '.local', 'share', 'pnpm', 'cache');
-    if (existsSync(pnpmCachePath2)) {
-      try {
-        const size = getDirSize(pnpmCachePath2);
-        items.push({
-          path: pnpmCachePath2,
-          size,
-          type: 'directory',
-          description: 'Cache do PNPM (local)',
-        });
-        totalSize += size;
-      } catch {
-        // Not accessible
-      }
-    }
-
-    return { module: this.id, items, totalSize };
-  }
-
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
-    const analysis = await this.analyze();
-    const result: CleaningResult = {
-      module: this.id,
-      success: true,
-      spaceFreed: 0,
-      itemsRemoved: 0,
-      errors: [],
-    };
-
-    if (analysis.totalSize === 0) {
-      return result;
-    }
-
-    if (dryRun) {
-      logger.info(`[DRY-RUN] Limparía ${logger.formatBytes(analysis.totalSize)} do cache pnpm`);
-      result.spaceFreed = analysis.totalSize;
-      return result;
-    }
-
-    const commandResult = await exec('pnpm', ['store', 'prune']);
-
-    if (commandResult.success) {
-      result.success = true;
-      result.spaceFreed = analysis.totalSize;
-      result.itemsRemoved = 1;
-      logger.item(`${this.name}: Cache limpo`, logger.formatBytes(analysis.totalSize));
-    } else {
-      result.success = false;
-      result.errors.push(commandResult.stderr || 'Falha ao limpar cache pnpm');
-    }
-
-    return result;
+  getCleanCommand(): string[] {
+    return ['store', 'prune'];
   }
 }
 

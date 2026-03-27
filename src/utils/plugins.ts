@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { getHomeDir } from './os.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
@@ -41,7 +41,15 @@ class PluginManager {
   }
 
   private saveConfig(): void {
-    // Config is saved automatically on change
+    try {
+      const configDir = join(getHomeDir(), '.piunter');
+      if (!existsSync(configDir)) {
+        mkdirSync(configDir, { recursive: true });
+      }
+      writeFileSync(PLUGIN_CONFIG_FILE, JSON.stringify(this.config, null, 2), 'utf-8');
+    } catch {
+      // Silently fail if config cannot be saved
+    }
   }
 
   isPluginEnabled(pluginId: string): boolean {

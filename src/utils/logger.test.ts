@@ -1,16 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getDistroInfo } from '../utils/os.js';
 import { logger } from '../utils/logger.js';
-
-describe('OS Utils', () => {
-  it('should get distro info', () => {
-    const distro = getDistroInfo();
-    expect(distro).toBeDefined();
-    expect(distro.id).toBeDefined();
-    expect(distro.name).toBeDefined();
-    expect(distro.packageManager).toBeDefined();
-  });
-});
 
 describe('Logger', () => {
   it('should format bytes correctly', () => {

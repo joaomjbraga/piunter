@@ -10,12 +10,12 @@ import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
 import { requestSudo, hasSudoPassword } from './utils/exec.js';
 
-const VERSION = '1.0.0';
+const VERSION = '1.2.1';
 
 const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
 
 async function promptYesNo(message: string): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const ask = () => {
       process.stdout.write(`${message} `);
       process.stdin.setRawMode(true);
@@ -31,7 +31,7 @@ async function promptYesNo(message: string): Promise<boolean> {
         cleanup();
         const char = chunk.toString().toLowerCase();
         process.stdout.write(char + '\n');
-        
+
         if (char === 'y' || char === 's') {
           resolve(true);
         } else if (char === 'n') {
@@ -133,11 +133,11 @@ function printHeader(): void {
 
 function printHelp(): void {
   printHeader();
-  
+
   console.log(`  ${chalk.bold('USO')}`);
   console.log(`    ${chalk.dim('piunter')} ${chalk.cyan('[opcoes]')}`);
   console.log();
-  
+
   console.log(`  ${chalk.bold('OPCOES DE EXECUCAO')}`);
   console.log(`    ${chalk.cyan('--all')}            ${chalk.dim('Executa todos os modulos')}`);
   console.log(`    ${chalk.cyan('--analyze')}        ${chalk.dim('Analisa sem limpar')}`);
@@ -145,7 +145,7 @@ function printHelp(): void {
   console.log(`    ${chalk.cyan('--force')}          ${chalk.dim('Pula confirmacoes')}`);
   console.log(`    ${chalk.cyan('--interactive')}    ${chalk.dim('Modo interativo')}`);
   console.log();
-  
+
   console.log(`  ${chalk.bold('MODULOS')}`);
   console.log(`    ${chalk.cyan('--cache')}         ${chalk.dim('Cache do usuario')}`);
   console.log(`    ${chalk.cyan('--npm')}            ${chalk.dim('Cache do NPM')}`);
@@ -161,14 +161,14 @@ function printHelp(): void {
   console.log(`    ${chalk.cyan('--thumbs')}         ${chalk.dim('Miniaturas em cache')}`);
   console.log(`    ${chalk.cyan('--recent')}         ${chalk.dim('Arquivos recentes')}`);
   console.log();
-  
+
   console.log(`  ${chalk.bold('OUTRAS OPCOES')}`);
   console.log(`    ${chalk.cyan('--threshold=100')}   ${chalk.dim('Tamanho minimo (MB)')}`);
   console.log(`    ${chalk.cyan('--help')}            ${chalk.dim('Mostra esta ajuda')}`);
   console.log(`    ${chalk.cyan('--version')}         ${chalk.dim('Mostra a versao')}`);
   console.log(`    ${chalk.cyan('--list')}            ${chalk.dim('Lista modulos disponiveis')}`);
   console.log();
-  
+
   console.log(`  ${chalk.bold('EXEMPLOS')}`);
   console.log(`    ${chalk.dim('piunter --all')}`);
   console.log(`    ${chalk.dim('piunter --npm --cache')}`);
@@ -178,7 +178,7 @@ function printHelp(): void {
 
 async function interactiveMode(): Promise<string[]> {
   const availableModules = getAvailableModules();
-  
+
   const choices = availableModules.map(m => ({
     name: `${m.name} - ${m.description}`,
     value: m.id,
@@ -262,7 +262,7 @@ export async function main(): Promise<void> {
   }
 
   const distro = getDistroInfo();
-  
+
   if (flags.analyze) {
     const modules = getModulesFromFlags(flags);
     printHeader();
@@ -278,7 +278,7 @@ export async function main(): Promise<void> {
     console.log(chalk.dim(`  Sistema: ${distro.name}`));
     console.log(chalk.dim(`  Gerenciador: ${distro.packageManager}`));
     console.log();
-    
+
     const selectedModules = await interactiveMode();
 
     if (selectedModules.length === 0) {
@@ -340,7 +340,7 @@ export async function main(): Promise<void> {
   });
 }
 
-main().catch((error) => {
+main().catch(error => {
   logger.error(`Erro: ${error.message}`);
   process.exit(1);
 });

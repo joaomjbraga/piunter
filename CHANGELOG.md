@@ -7,10 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.1] - 2026-03-27
 
+### Fixed
+
+- **Plugin Config Persistence:** `saveConfig()` now properly saves plugin configuration to disk (was empty before)
+- **Docker itemsRemoved Calculation:** Fixed potential negative values when new Docker items are created during cleanup
+- **Unused Variable:** Removed unused `totalSize` variable in `packages.ts`
+- **Unused Module:** Removed unused `DiskUsageModule` class
+- **Duplicate Tests:** Removed duplicate `getDistroInfo` tests in `logger.test.ts`
+
 ### Changed
 
 - **Usage Model:** Changed from requiring global install to using `npx` for immediate execution without installation
-- Updated documentation to reflect `npx @bforgeio/piunter` as the primary usage method
+- **Refactored npm/yarn/pnpm Modules:** Created `PackageCacheModule` base class to eliminate code duplication
+- **Centralized parseSize():** Moved to `utils/fs.ts` to avoid duplication in `flatpak.ts` and `disk.ts`
+- **Fixed Race Condition:** `LargeFilesModule` now uses local threshold variable instead of instance state
+- **Security Enhancement:** Sudo password is now cleared from memory on process exit
+- **Version Sync:** CLI version updated to match package.json (1.0.1)
+- **Cleaner API:** Removed unused `_force` parameter from all module `clean()` methods
+- Updated documentation to reflect `npx piunter` as the primary usage method
+- Added ASCII art banner to README
 
 ## [1.2.0] - 2026-03-26
 

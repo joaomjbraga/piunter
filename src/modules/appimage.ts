@@ -56,7 +56,7 @@ export class AppImageModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -72,7 +72,9 @@ export class AppImageModule {
     }
 
     if (dryRun) {
-      logger.info(`[DRY-RUN] AppImage: limparía ${analysis.items.length} arquivos (${logger.formatBytes(analysis.totalSize)})`);
+      logger.info(
+        `[DRY-RUN] AppImage: limparía ${analysis.items.length} arquivos (${logger.formatBytes(analysis.totalSize)})`
+      );
       result.spaceFreed = analysis.totalSize;
       return result;
     }

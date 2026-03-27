@@ -20,9 +20,6 @@ export class PackagesModule {
   }
 
   async analyze(): Promise<AnalysisResult> {
-    const items: AnalysisResult['items'] = [];
-    const totalSize = 0;
-
     switch (this.packageManager) {
       case 'apt':
         return this.analyzeApt();
@@ -31,7 +28,7 @@ export class PackagesModule {
       case 'dnf':
         return this.analyzeDnf();
       default:
-        return { module: this.id, items, totalSize };
+        return { module: this.id, items: [], totalSize: 0 };
     }
   }
 
@@ -144,7 +141,7 @@ export class PackagesModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -224,7 +221,10 @@ export class PackagesModule {
     try {
       const orphansResult = await exec('pacman', ['-Qtdq']);
       if (orphansResult.success && orphansResult.stdout.trim()) {
-        const orphanPackages = orphansResult.stdout.trim().split('\n').filter(p => p);
+        const orphanPackages = orphansResult.stdout
+          .trim()
+          .split('\n')
+          .filter(p => p);
         for (const pkg of orphanPackages) {
           const removeResult = await exec('pacman', ['-Rns', pkg, '--noconfirm'], { sudo: true });
           if (removeResult.success) {

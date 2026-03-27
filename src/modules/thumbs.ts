@@ -47,7 +47,7 @@ export class ThumbsModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,
@@ -100,7 +100,9 @@ export class ThumbsModule {
 
         result.spaceFreed += freedFromThis;
         if (freedFromThis > 0) {
-          logger.item(`${this.name}: ${item.path.split('/').pop()} (${logger.formatBytes(freedFromThis)})`);
+          logger.item(
+            `${this.name}: ${item.path.split('/').pop()} (${logger.formatBytes(freedFromThis)})`
+          );
         }
       } catch {
         result.errors.push(`Falha ao limpar ${item.path}`);

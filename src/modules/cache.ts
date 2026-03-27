@@ -58,7 +58,7 @@ export class CacheModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const result: CleaningResult = {
       module: this.id,

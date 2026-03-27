@@ -16,7 +16,11 @@ export class DockerModule {
     const items: AnalysisResult['items'] = [];
     let totalSize = 0;
 
-    const imagesResult = await exec('docker', ['images', '--format', '{{.Size}}\t{{.Repository}}:{{.Tag}}']);
+    const imagesResult = await exec('docker', [
+      'images',
+      '--format',
+      '{{.Size}}\t{{.Repository}}:{{.Tag}}',
+    ]);
     if (imagesResult.success) {
       const lines = imagesResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
@@ -37,7 +41,12 @@ export class DockerModule {
       }
     }
 
-    const containersResult = await exec('docker', ['ps', '-a', '--format', '{{.Size}}\t{{.Names}}']);
+    const containersResult = await exec('docker', [
+      'ps',
+      '-a',
+      '--format',
+      '{{.Size}}\t{{.Names}}',
+    ]);
     if (containersResult.success) {
       const lines = containersResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
@@ -87,7 +96,7 @@ export class DockerModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -154,12 +163,14 @@ export class DockerModule {
         result.success = true;
       }
     } catch {
-      result.errors.push('Falha na limpeza completa do Docker - verifique se o daemon está em execução');
+      result.errors.push(
+        'Falha na limpeza completa do Docker - verifique se o daemon está em execução'
+      );
     }
 
     const afterAnalysis = await this.analyze();
     result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
-    result.itemsRemoved = beforeAnalysis.items.length - afterAnalysis.items.length;
+    result.itemsRemoved = Math.max(0, beforeAnalysis.items.length - afterAnalysis.items.length);
 
     return result;
   }

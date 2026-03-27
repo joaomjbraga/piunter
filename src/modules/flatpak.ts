@@ -1,6 +1,7 @@
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
+import { parseSize } from '../utils/fs.js';
 
 export class FlatpakModule {
   readonly id = 'flatpak';
@@ -16,13 +17,13 @@ export class FlatpakModule {
     let totalSize = 0;
 
     const listResult = await exec('flatpak', ['list', '--app', '--columns=size,name']);
-    
+
     if (listResult.success) {
       const lines = listResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
         const parts = line.split('\t');
         if (parts.length >= 2) {
-          const size = this.parseSize(parts[0]);
+          const size = parseSize(parts[0]);
           const name = parts[1];
           items.push({
             path: name,
@@ -49,38 +50,21 @@ export class FlatpakModule {
     return { module: this.id, items, totalSize };
   }
 
-  private parseSize(sizeStr: string): number {
-    const match = sizeStr.match(/([\d.]+)\s*([A-Z]+)/i);
-    if (!match) return 0;
-    
-    const num = parseFloat(match[1]);
-    const unit = match[2].toUpperCase();
-    
-    const multipliers: Record<string, number> = {
-      'B': 1,
-      'KB': 1024,
-      'MB': 1024 * 1024,
-      'GB': 1024 * 1024 * 1024,
-    };
-    
-    return num * (multipliers[unit] || 1);
-  }
-
   private async getCacheSize(): Promise<number> {
     const cachePath = '/var/tmp/flatpak-cache';
     const cacheResult = await exec('du', ['-sb', cachePath]);
-    
+
     if (cacheResult.success) {
       const match = cacheResult.stdout.match(/^(\d+)/);
       if (match) {
         return parseInt(match[1], 10);
       }
     }
-    
+
     return 0;
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const result: CleaningResult = {
       module: this.id,
       success: true,
@@ -105,7 +89,9 @@ export class FlatpakModule {
     }
 
     try {
-      const uninstallResult = await exec('flatpak', ['uninstall', '--unused', '-y'], { sudo: true });
+      const uninstallResult = await exec('flatpak', ['uninstall', '--unused', '-y'], {
+        sudo: true,
+      });
       if (uninstallResult.success) {
         const match = uninstallResult.stdout.match(/(\d+)/);
         if (match) {

@@ -4,6 +4,14 @@ import type { CommandResult } from '../types/index.js';
 
 let sudoPassword: string | null = null;
 
+process.on('exit', () => {
+  sudoPassword = null;
+});
+
+export function clearSudoPassword(): void {
+  sudoPassword = null;
+}
+
 export function hasSudoPassword(): boolean {
   return sudoPassword !== null;
 }
@@ -11,7 +19,7 @@ export function hasSudoPassword(): boolean {
 export async function requestSudo(): Promise<boolean> {
   if (sudoPassword) return true;
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     process.stdout.write(chalk.yellow('  Senha sudo: '));
 
     const child = spawn('bash', ['-c', 'read -s -p "" pass && echo "$pass"'], {
@@ -100,7 +108,7 @@ export async function exec(
     };
   } catch (error: unknown) {
     const err = error as { status?: number; message?: string; signal?: string };
-    
+
     if (err.signal === 'SIGTERM' || err.message?.includes('sudo')) {
       return {
         success: false,

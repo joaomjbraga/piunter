@@ -18,7 +18,10 @@ export class SnapModule {
     try {
       const listResult = await exec('snap', ['list']);
       if (listResult.success) {
-        const lines = listResult.stdout.split('\n').filter(l => l.trim() && !l.startsWith('Name')).slice(0, 10);
+        const lines = listResult.stdout
+          .split('\n')
+          .filter(l => l.trim() && !l.startsWith('Name'))
+          .slice(0, 10);
         for (const line of lines) {
           const parts = line.trim().split(/\s+/);
           if (parts.length >= 2) {
@@ -57,7 +60,7 @@ export class SnapModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const result: CleaningResult = {
       module: this.id,
       success: true,

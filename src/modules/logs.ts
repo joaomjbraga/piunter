@@ -34,7 +34,15 @@ export class LogsModule {
     const logDirs = ['/var/log', '/var/log.old'];
     for (const logDir of logDirs) {
       if (existsSync(logDir)) {
-        const findResult = await exec('find', [logDir, '-type', 'f', '-name', '*.log', '-size', '+1M']);
+        const findResult = await exec('find', [
+          logDir,
+          '-type',
+          'f',
+          '-name',
+          '*.log',
+          '-size',
+          '+1M',
+        ]);
         if (findResult.success) {
           const files = findResult.stdout.split('\n').filter(l => l.trim());
           for (const file of files) {
@@ -60,7 +68,7 @@ export class LogsModule {
     return { module: this.id, items, totalSize };
   }
 
-  async clean(dryRun: boolean = false, _force: boolean = false): Promise<CleaningResult> {
+  async clean(dryRun: boolean = false): Promise<CleaningResult> {
     const analysis = await this.analyze();
     const beforeSize = analysis.totalSize;
     const result: CleaningResult = {
@@ -90,7 +98,11 @@ export class LogsModule {
       logger.item(`${this.name}: Logs anteriores a 7 dias removidos`);
     }
 
-    const oldLogsResult = await exec('find', ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', '+30', '-delete'], { sudo: true });
+    const oldLogsResult = await exec(
+      'find',
+      ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', '+30', '-delete'],
+      { sudo: true }
+    );
     if (oldLogsResult.success) {
       logger.item(`${this.name}: Logs antigos (>30 dias) removidos`);
     }
@@ -113,7 +125,15 @@ export class LogsModule {
     };
 
     if (dryRun) {
-      const findResult = await exec('find', ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', `+${days}`]);
+      const findResult = await exec('find', [
+        '/var/log',
+        '-type',
+        'f',
+        '-name',
+        '*.log',
+        '-mtime',
+        `+${days}`,
+      ]);
       if (findResult.success) {
         const files = findResult.stdout.split('\n').filter(l => l.trim());
         logger.info(`[DRY-RUN] Removería ${files.length} logs com mais de ${days} dias`);
@@ -122,7 +142,16 @@ export class LogsModule {
       return result;
     }
 
-    const cleanResult = await exec('find', ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', `+${days}`, '-delete']);
+    const cleanResult = await exec('find', [
+      '/var/log',
+      '-type',
+      'f',
+      '-name',
+      '*.log',
+      '-mtime',
+      `+${days}`,
+      '-delete',
+    ]);
     if (cleanResult.success) {
       logger.item(`${this.name}: Logs com mais de ${days} dias removidos`);
       result.success = true;
