@@ -10,7 +10,7 @@ import { getDistroInfo } from './utils/os.js';
 import { requestSudo, hasSudoPassword } from './utils/exec.js';
 import { parseFlags, getModulesFromFlags, requiresSudo } from './cli/index.js';
 
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 
 async function promptYesNo(message: string): Promise<boolean> {
   return new Promise(resolve => {
