@@ -37,16 +37,16 @@ Execute diretamente com `npx`:
 
 ```bash
 # Modo interativo
-npx piunter
+npx @bforgeio/piunter
 
 # Limpar tudo
-npx piunter --all
+npx @bforgeio/piunter --all
 
 # Limpar específicos
-npx piunter --npm --cache --logs
+npx @bforgeio/piunter --npm --cache --logs
 
 # Simular (dry-run)
-npx piunter --all --dry-run
+npx @bforgeio/piunter --all --dry-run
 ```
 
 ## Instalação Global (opcional)
@@ -123,6 +123,20 @@ npm test
 
 # Lint
 npm run lint
+```
+
+## Instalação Global (opcional)
+
+Se preferir instalar permanentemente:
+
+```bash
+npm install -g @bforgeio/piunter
+```
+
+Após instalado, use diretamente:
+
+```bash
+piunter --all
 ```
 
 ## Segurança

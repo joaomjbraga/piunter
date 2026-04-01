@@ -97,10 +97,10 @@
         <p>Execute diretamente com <code>npx</code>, sem necessidade de instalação:</p>
         
         <h3>npx (recomendado)</h3>
-        <pre><code>npx piunter</code></pre>
+        <pre><code>npx @bforgeio/piunter</code></pre>
 
         <h3>Verificar</h3>
-        <pre><code>npx piunter --version</code></pre>
+        <pre><code>npx @bforgeio/piunter --version</code></pre>
 
         <h3>Requisitos</h3>
         <ul>
@@ -125,18 +125,18 @@
         <h2>Uso</h2>
 
         <h3>Interativo</h3>
-        <pre><code>npx piunter</code></pre>
+        <pre><code>npx @bforgeio/piunter</code></pre>
 
         <h3>Flags</h3>
-        <pre><code>npx piunter --npm
-npx piunter --all
-npx piunter --analyze</code></pre>
+        <pre><code>npx @bforgeio/piunter --npm
+npx @bforgeio/piunter --all
+npx @bforgeio/piunter --analyze</code></pre>
 
         <h3>Dry-run</h3>
-        <pre><code>npx piunter --all --dry-run</code></pre>
+        <pre><code>npx @bforgeio/piunter --all --dry-run</code></pre>
 
         <h3>Forçar</h3>
-        <pre><code>npx piunter --all --force</code></pre>
+        <pre><code>npx @bforgeio/piunter --all --force</code></pre>
       </section>
 
       <section id="modulos" class="doc-section">
@@ -311,9 +311,9 @@ npx piunter --analyze</code></pre>
 }</code></pre>
 
         <h3>Comandos</h3>
-        <pre><code>npx piunter config init
-npx piunter config set threshold 500
-npx piunter config show</code></pre>
+        <pre><code>npx @bforgeio/piunter config init
+npx @bforgeio/piunter config set threshold 500
+npx @bforgeio/piunter config show</code></pre>
       </section>
 
       <section id="plugins" class="doc-section">
@@ -332,9 +332,9 @@ export default class MeuPlugin implements Plugin {
   }
 }</code></pre>
 
-        <pre><code>npx piunter plugin add ./caminho
-npx piunter plugin list
-npx piunter plugin remove meu-plugin</code></pre>
+        <pre><code>npx @bforgeio/piunter plugin add ./caminho
+npx @bforgeio/piunter plugin list
+npx @bforgeio/piunter plugin remove meu-plugin</code></pre>
       </section>
 
       <section id="faq" class="doc-section">
@@ -352,7 +352,7 @@ npx piunter plugin remove meu-plugin</code></pre>
 
         <details class="faq-item">
           <summary>Automatizar via cron?</summary>
-          <pre><code>0 3 * * 0 npx piunter --all --force --quiet</code></pre>
+          <pre><code>0 3 * * 0 npx @bforgeio/piunter --all --force --quiet</code></pre>
         </details>
 
         <details class="faq-item">
