@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Cleaner, createCleaner } from './cleaner.js';
+import { createCleaner } from './cleaner.js';
 import type { Module } from '../modules/index.js';
 
 vi.mock('../modules/index.js', () => ({
@@ -26,8 +26,6 @@ vi.mock('../modules/index.js', () => ({
 }));
 
 describe('Cleaner', () => {
-  let cleaner: Cleaner;
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -38,7 +36,6 @@ describe('Cleaner', () => {
   });
 
   it('should clean modules and collect results', async () => {
-    const { getModuleByIds } = await import('../modules/index.js');
     const cleaner = createCleaner(['test'], { dryRun: false, force: false, modules: ['test'] });
     const report = await cleaner.clean();
 
@@ -95,10 +92,10 @@ describe('Cleaner', () => {
   it('should respect dryRun option', async () => {
     const { getModuleByIds } = await import('../modules/index.js');
     const cleaner = createCleaner(['test'], { dryRun: true, force: false, modules: ['test'] });
-    const report = await cleaner.clean();
+    await cleaner.clean();
 
     const mockModules = vi.mocked(getModuleByIds).mock.results[0].value;
     const module = mockModules[0] as unknown as Module;
-    expect(module.clean).toHaveBeenCalledWith(true, false);
+    expect(module.clean).toHaveBeenCalledWith(true);
   });
 });

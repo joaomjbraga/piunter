@@ -1,5 +1,7 @@
 import type { CliFlags } from '../types/index.js';
-import { getDefaultFlags, DEFAULT_THRESHOLD, MIN_THRESHOLD, MAX_THRESHOLD } from './flags.js';
+import { getDefaultFlags, MIN_THRESHOLD, MAX_THRESHOLD } from './flags.js';
+
+const THRESHOLD_REGEX = /^\d+$/;
 
 export function parseFlags(args: string[]): CliFlags {
   const flags = getDefaultFlags();
@@ -26,8 +28,10 @@ export function parseFlags(args: string[]): CliFlags {
   const thresholdArg = args.find(a => a.startsWith('--threshold='));
   if (thresholdArg) {
     const val = thresholdArg.split('=')[1];
-    const parsed = val ? parseInt(val) : NaN;
-    flags.largeFilesThreshold = isNaN(parsed) ? DEFAULT_THRESHOLD : clampThreshold(parsed);
+    if (val && THRESHOLD_REGEX.test(val)) {
+      const parsed = parseInt(val, 10);
+      flags.largeFilesThreshold = clampThreshold(parsed);
+    }
   }
 
   return flags;
@@ -40,39 +44,25 @@ function clampThreshold(value: number): number {
 }
 
 export function getModulesFromFlags(flags: CliFlags): string[] {
-  const modules: string[] = [];
+  const moduleFlags = [
+    { flag: flags.cache, id: 'cache' },
+    { flag: flags.npm, id: 'npm' },
+    { flag: flags.yarn, id: 'yarn' },
+    { flag: flags.pnpm, id: 'pnpm' },
+    { flag: flags.flatpak, id: 'flatpak' },
+    { flag: flags.snap, id: 'snap' },
+    { flag: flags.docker, id: 'docker' },
+    { flag: flags.logs, id: 'logs' },
+    { flag: flags.packages, id: 'packages' },
+    { flag: flags.largeFiles, id: 'large-files' },
+    { flag: flags.appimage, id: 'appimage' },
+    { flag: flags.thumbs, id: 'thumbs' },
+    { flag: flags.recent, id: 'recent' },
+  ];
 
   if (flags.all) {
-    return [
-      'packages',
-      'cache',
-      'npm',
-      'yarn',
-      'pnpm',
-      'flatpak',
-      'snap',
-      'docker',
-      'logs',
-      'large-files',
-      'appimage',
-      'thumbs',
-      'recent',
-    ];
+    return moduleFlags.map(m => m.id);
   }
 
-  if (flags.cache) modules.push('cache');
-  if (flags.npm) modules.push('npm');
-  if (flags.yarn) modules.push('yarn');
-  if (flags.pnpm) modules.push('pnpm');
-  if (flags.flatpak) modules.push('flatpak');
-  if (flags.snap) modules.push('snap');
-  if (flags.docker) modules.push('docker');
-  if (flags.logs) modules.push('logs');
-  if (flags.packages) modules.push('packages');
-  if (flags.largeFiles) modules.push('large-files');
-  if (flags.appimage) modules.push('appimage');
-  if (flags.thumbs) modules.push('thumbs');
-  if (flags.recent) modules.push('recent');
-
-  return modules;
+  return moduleFlags.filter(m => m.flag).map(m => m.id);
 }

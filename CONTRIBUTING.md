@@ -5,22 +5,26 @@ Thank you for your interest in contributing to piunter!
 ## Development Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/joaomjbraga/piunter.git
 cd piunter
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Build the project:
+
 ```bash
 npm run build
 ```
 
 4. Run tests:
+
 ```bash
 npm test
 ```
@@ -28,9 +32,12 @@ npm test
 ## Coding Standards
 
 - Use TypeScript for all new code
-- Run `npm run lint` before committing
+- TypeScript strict mode is enabled - all code must pass strict type checking
+- Run `npm run lint` before committing (0 errors required)
 - Run `npm run format` to format code
 - Write tests for new features
+- All tests must pass (`npm test`)
+- No unused imports or variables allowed
 
 ## Project Structure
 
@@ -46,16 +53,19 @@ src/
 ## Submitting Changes
 
 1. Create a feature branch:
+
 ```bash
 git checkout -b feature/my-feature
 ```
 
 2. Make your changes and commit:
+
 ```bash
 git commit -m "feat: add new feature"
 ```
 
 3. Push to your fork:
+
 ```bash
 git push origin feature/my-feature
 ```

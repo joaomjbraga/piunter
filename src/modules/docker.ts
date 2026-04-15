@@ -14,13 +14,15 @@ export class DockerModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
+
+    const [imagesResult, containersResult, volumesResult] = await Promise.all([
+      exec('docker', ['images', '--format', '{{.Size}}\t{{.Repository}}:{{.Tag}}']),
+      exec('docker', ['ps', '-a', '--format', '{{.Size}}\t{{.Names}}']),
+      exec('docker', ['volume', 'ls', '--format', '{{.Name}}']),
+    ]);
+
     let totalSize = 0;
 
-    const imagesResult = await exec('docker', [
-      'images',
-      '--format',
-      '{{.Size}}\t{{.Repository}}:{{.Tag}}',
-    ]);
     if (imagesResult.success) {
       const lines = imagesResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
@@ -41,12 +43,6 @@ export class DockerModule {
       }
     }
 
-    const containersResult = await exec('docker', [
-      'ps',
-      '-a',
-      '--format',
-      '{{.Size}}\t{{.Names}}',
-    ]);
     if (containersResult.success) {
       const lines = containersResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
@@ -65,7 +61,6 @@ export class DockerModule {
       }
     }
 
-    const volumesResult = await exec('docker', ['volume', 'ls', '--format', '{{.Name}}']);
     if (volumesResult.success) {
       const lines = volumesResult.stdout.split('\n').filter(l => l.trim());
       for (const line of lines) {
@@ -120,58 +115,40 @@ export class DockerModule {
       return result;
     }
 
-    try {
-      const containersResult = await exec('docker', ['container', 'prune', '-f']);
-      if (containersResult.success) {
-        logger.item(`${this.name}: Containers parados removidos`);
-      } else if (containersResult.stderr) {
-        result.errors.push(`Containers: ${containersResult.stderr}`);
-      }
-    } catch (e) {
-      result.errors.push(`Falha ao limpar containers: ${(e as Error).message}`);
-    }
+    const pruneCommands = [
+      { cmd: ['container', 'prune', '-f'], name: 'Containers', key: 'containers' },
+      { cmd: ['network', 'prune', '-f'], name: 'Networks', key: 'networks' },
+      { cmd: ['image', 'prune', '-a', '-f'], name: 'Imagens', key: 'images' },
+      { cmd: ['volume', 'prune', '-f'], name: 'Volumes', key: 'volumes' },
+    ];
 
-    try {
-      const networksResult = await exec('docker', ['network', 'prune', '-f']);
-      if (networksResult.success) {
-        logger.item(`${this.name}: Networks não utilizadas removidas`);
-      }
-    } catch (e) {
-      result.errors.push(`Falha ao limpar networks: ${(e as Error).message}`);
-    }
+    const pruneResults = await Promise.all(
+      pruneCommands.map(async ({ cmd, name, key }) => {
+        try {
+          const cmdResult = await exec('docker', cmd);
+          if (cmdResult.success) {
+            logger.item(`${this.name}: ${name} não utilizados removidos`);
+            return { success: true, key, count: 1 };
+          } else {
+            logger.debug(`${this.name}: Falha ao limpar ${name}: ${cmdResult.stderr}`);
+            return { success: false, key, error: cmdResult.stderr, count: 0 };
+          }
+        } catch (e) {
+          return { success: false, key, error: (e as Error).message, count: 0 };
+        }
+      })
+    );
 
-    try {
-      const imagesResult = await exec('docker', ['image', 'prune', '-a', '-f']);
-      if (imagesResult.success) {
-        logger.item(`${this.name}: Imagens não utilizadas removidas`);
-      } else if (imagesResult.stderr) {
-        result.errors.push(`Imagens: ${imagesResult.stderr}`);
-      }
-    } catch (e) {
-      result.errors.push(`Falha ao limpar imagens: ${(e as Error).message}`);
-    }
+    result.itemsRemoved = pruneResults.reduce((sum, r) => sum + r.count, 0);
 
-    try {
-      const volumesResult = await exec('docker', ['volume', 'prune', '-f']);
-      if (volumesResult.success) {
-        logger.item(`${this.name}: Volumes não utilizados removidos`);
-      } else if (volumesResult.stderr) {
-        result.errors.push(`Volumes: ${volumesResult.stderr}`);
+    const failures = pruneResults.filter(r => !r.success);
+    if (failures.length > 0) {
+      for (const pruneResult of failures) {
+        result.errors.push(`${pruneResult.key}: ${pruneResult.error}`);
       }
-    } catch (e) {
-      result.errors.push(`Falha ao limpar volumes: ${(e as Error).message}`);
-    }
-
-    try {
-      const systemPruneResult = await exec('docker', ['system', 'prune', '-a', '-f']);
-      if (systemPruneResult.success) {
-        logger.item(`${this.name}: Sistema Docker completo otimizado`);
-        result.success = true;
-      } else if (systemPruneResult.stderr) {
-        result.errors.push(`System prune: ${systemPruneResult.stderr}`);
+      if (failures.length === pruneResults.length) {
+        result.success = false;
       }
-    } catch (e) {
-      result.errors.push(`Falha na limpeza completa do Docker: ${(e as Error).message}`);
     }
 
     const afterAnalysis = await this.analyze();

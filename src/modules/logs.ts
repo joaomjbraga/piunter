@@ -15,7 +15,6 @@ export class LogsModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
 
     const journalResult = await exec('du', ['-sb', '/var/log/journal']);
     if (journalResult.success) {
@@ -28,13 +27,15 @@ export class LogsModule {
           type: 'journal',
           description: 'Logs do systemd journal',
         });
-        totalSize += size;
       }
     }
 
     const logDirs = ['/var/log', '/var/log.old'];
-    for (const logDir of logDirs) {
-      if (existsSync(logDir)) {
+
+    const dirResults = await Promise.all(
+      logDirs.map(async logDir => {
+        if (!existsSync(logDir)) return { files: [], sizes: [] };
+
         const findResult = await exec('find', [
           logDir,
           '-type',
@@ -44,25 +45,39 @@ export class LogsModule {
           '-size',
           '+1M',
         ]);
-        if (findResult.success) {
-          const files = findResult.stdout.split('\n').filter(l => l.trim());
-          for (const file of files) {
+
+        if (!findResult.success) return { files: [], sizes: [] };
+
+        const files = findResult.stdout.split('\n').filter(l => l.trim());
+        if (files.length === 0) return { files: [], sizes: [] };
+
+        const sizeResults = await Promise.all(
+          files.map(async file => {
             const sizeResult = await exec('du', ['-sb', file]);
             if (sizeResult.success) {
               const match = sizeResult.stdout.match(/^(\d+)/);
-              if (match) {
-                const size = parseInt(match[1], 10);
-                items.push({
-                  path: file,
-                  size,
-                  type: 'log-file',
-                  description: `Arquivo de log: ${file}`,
-                });
-                totalSize += size;
-              }
+              return match ? parseInt(match[1], 10) : 0;
             }
-          }
-        }
+            return 0;
+          })
+        );
+
+        return { files, sizes: sizeResults };
+      })
+    );
+
+    let totalSize = 0;
+    for (const result of dirResults) {
+      for (let i = 0; i < result.files.length; i++) {
+        const file = result.files[i];
+        const size = result.sizes[i];
+        items.push({
+          path: file,
+          size,
+          type: 'log-file',
+          description: `Arquivo de log: ${file}`,
+        });
+        totalSize += size;
       }
     }
 
@@ -90,9 +105,16 @@ export class LogsModule {
       return result;
     }
 
-    const vacuumResult = await exec('journalctl', [`--vacuum-size=${journalSizeMB}M`], {
-      sudo: true,
-    });
+    const [vacuumResult, vacuumTimeResult, oldLogsResult] = await Promise.all([
+      exec('journalctl', [`--vacuum-size=${journalSizeMB}M`], { sudo: true }),
+      exec('journalctl', [`--vacuum-time=${logDays}d`], { sudo: true }),
+      exec(
+        'find',
+        ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', `+${logDays}`, '-delete'],
+        { sudo: true }
+      ),
+    ]);
+
     if (vacuumResult.success) {
       logger.item(`${this.name}: Journal limpo (limite ${journalSizeMB}MB)`);
       result.itemsRemoved++;
@@ -100,18 +122,10 @@ export class LogsModule {
       result.errors.push('Falha ao limpar journalctl (verifique se tem privilégios sudo)');
     }
 
-    const vacuumTimeResult = await exec('journalctl', [`--vacuum-time=${logDays}d`], {
-      sudo: true,
-    });
     if (vacuumTimeResult.success) {
       logger.item(`${this.name}: Logs anteriores a ${logDays} dias removidos`);
     }
 
-    const oldLogsResult = await exec(
-      'find',
-      ['/var/log', '-type', 'f', '-name', '*.log', '-mtime', `+${logDays}`, '-delete'],
-      { sudo: true }
-    );
     if (oldLogsResult.success) {
       logger.item(`${this.name}: Logs antigos (>${logDays} dias) removidos`);
     }
@@ -144,11 +158,11 @@ export class LogsModule {
         '-name',
         '*.log',
         '-mtime',
-        `+${days}`,
+        `+${logDays}`,
       ]);
       if (findResult.success) {
         const files = findResult.stdout.split('\n').filter(l => l.trim());
-        logger.info(`[DRY-RUN] Removería ${files.length} logs com mais de ${days} dias`);
+        logger.info(`[DRY-RUN] Removería ${files.length} logs com mais de ${logDays} dias`);
       }
       result.spaceFreed = beforeSize;
       return result;
@@ -161,11 +175,11 @@ export class LogsModule {
       '-name',
       '*.log',
       '-mtime',
-      `+${days}`,
+      `+${logDays}`,
       '-delete',
     ]);
     if (cleanResult.success) {
-      logger.item(`${this.name}: Logs com mais de ${days} dias removidos`);
+      logger.item(`${this.name}: Logs com mais de ${logDays} dias removidos`);
       result.success = true;
     } else {
       result.errors.push('Falha ao limpar logs antigos');

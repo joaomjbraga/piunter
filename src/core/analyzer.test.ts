@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Analyzer, createAnalyzer } from './analyzer.js';
-import type { Module } from '../modules/index.js';
+import { createAnalyzer } from './analyzer.js';
 
 describe('Analyzer', () => {
-  let analyzer: Analyzer;
-
   beforeEach(() => {
     vi.clearAllMocks();
   });

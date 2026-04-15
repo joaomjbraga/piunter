@@ -34,8 +34,8 @@ export class SnapModule {
           }
         }
       }
-    } catch {
-      // Snap command failed
+    } catch (e) {
+      logger.debug(`Snap command failed: ${(e as Error).message}`);
     }
 
     try {
@@ -86,6 +86,16 @@ export class SnapModule {
     }
 
     try {
+      const cacheCleanResult = await exec('snap', ['clean-cache']);
+      if (cacheCleanResult.success) {
+        logger.item(`${this.name}: Cache limpo`);
+        result.itemsRemoved++;
+      }
+    } catch {
+      logger.debug('Cache do snap não pode ser limpo');
+    }
+
+    try {
       const refreshResult = await exec('snap', ['refresh', '--list']);
       if (refreshResult.success) {
         const lines = refreshResult.stdout.split('\n').filter(l => l.trim() && !l.includes('Name'));
@@ -101,6 +111,9 @@ export class SnapModule {
     }
 
     logger.info(`${this.name}: Use 'snap remove <nome>' para remover snaps não utilizados`);
+
+    const afterAnalysis = await this.analyze();
+    result.spaceFreed = Math.max(0, beforeSize - afterAnalysis.totalSize);
 
     return result;
   }

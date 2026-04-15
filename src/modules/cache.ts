@@ -1,9 +1,10 @@
-import { readdirSync, statSync, existsSync, rmSync } from 'fs';
+import { existsSync, rmSync } from 'fs';
+import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getCacheDir } from '../utils/os.js';
 import { logger } from '../utils/logger.js';
-import { getDirSize } from '../utils/fs.js';
+import { getDirSizeAsync } from '../utils/fs.js';
 
 export class CacheModule {
   readonly id = 'cache';
@@ -24,35 +25,53 @@ export class CacheModule {
     }
 
     try {
-      const entries = readdirSync(cacheDir);
-      for (const entry of entries) {
-        const fullPath = join(cacheDir, entry);
-        try {
-          const stat = statSync(fullPath);
-          if (stat.isDirectory()) {
-            const size = getDirSize(fullPath);
-            items.push({
-              path: fullPath,
-              size,
-              type: 'directory',
-              description: `Diretório de cache: ${entry}`,
-            });
-            totalSize += size;
-          } else {
-            items.push({
-              path: fullPath,
-              size: stat.size,
-              type: 'file',
-              description: `Arquivo de cache: ${entry}`,
-            });
-            totalSize += stat.size;
+      const entries = await readdir(cacheDir);
+      const stats = await Promise.all(
+        entries.map(async entry => {
+          const fullPath = join(cacheDir, entry);
+          try {
+            const statInfo = await stat(fullPath);
+            return { entry, fullPath, statInfo, error: null };
+          } catch {
+            return { entry, fullPath, statInfo: null, error: true };
           }
-        } catch {
-          // Skip inaccessible entries
+        })
+      );
+
+      const dirPromises = stats
+        .filter(s => !s.error && s.statInfo?.isDirectory())
+        .map(async s => {
+          const size = await getDirSizeAsync(s.fullPath);
+          return { ...s, size, type: 'directory' as const };
+        });
+
+      const fileStats = stats.filter(s => !s.error && s.statInfo && !s.statInfo.isDirectory());
+
+      const dirsWithSize = await Promise.all(dirPromises);
+
+      for (const dir of dirsWithSize) {
+        items.push({
+          path: dir.fullPath,
+          size: dir.size,
+          type: 'directory',
+          description: `Diretório de cache: ${dir.entry}`,
+        });
+        totalSize += dir.size;
+      }
+
+      for (const file of fileStats) {
+        if (file.statInfo) {
+          items.push({
+            path: file.fullPath,
+            size: file.statInfo.size,
+            type: 'file',
+            description: `Arquivo de cache: ${file.entry}`,
+          });
+          totalSize += file.statInfo.size;
         }
       }
-    } catch {
-      // Cache dir might not be readable
+    } catch (e) {
+      logger.debug(`Cache dir not readable: ${(e as Error).message}`);
     }
 
     return { module: this.id, items, totalSize };

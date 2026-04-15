@@ -1,35 +1,81 @@
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, statSync } from 'fs';
 import type { DistroInfo, PackageManager } from '../types/index.js';
+
+let cachedDistroInfo: DistroInfo | null = null;
+let cachedDistroMtime: number | null = null;
+let distroPromise: Promise<DistroInfo> | null = null;
 
 export function getDistroInfo(): DistroInfo {
   const osReleasePath = '/etc/os-release';
 
-  if (!existsSync(osReleasePath)) {
-    return {
-      id: 'unknown',
-      name: 'Unknown',
-      version: 'unknown',
-      packageManager: 'unknown',
-    };
-  }
+  if (existsSync(osReleasePath)) {
+    try {
+      const stat = statSync(osReleasePath);
+      const currentMtime = stat.mtimeMs;
 
-  const content = readFileSync(osReleasePath, 'utf-8');
-  const lines = content.split('\n');
-  const info: Record<string, string> = {};
+      if (cachedDistroInfo && cachedDistroMtime === currentMtime) {
+        return cachedDistroInfo;
+      }
 
-  for (const line of lines) {
-    const [key, ...valueParts] = line.split('=');
-    if (key && valueParts.length > 0) {
-      info[key] = valueParts.join('=').replace(/^"|"$/g, '');
+      const content = readFileSync(osReleasePath, 'utf-8');
+      const lines = content.split('\n');
+      const info: Record<string, string> = {};
+
+      for (const line of lines) {
+        const [key, ...valueParts] = line.split('=');
+        if (key && valueParts.length > 0) {
+          info[key] = valueParts.join('=').replace(/^"|"$/g, '');
+        }
+      }
+
+      const id = info.ID || 'unknown';
+      const name = info.NAME || info.PRETTY_NAME || 'Unknown';
+      const version = info.VERSION_ID || info.VERSION || 'unknown';
+      const packageManager = detectPackageManager(id);
+
+      cachedDistroInfo = { id, name, version, packageManager };
+      cachedDistroMtime = currentMtime;
+      return cachedDistroInfo;
+    } catch {
+      cachedDistroInfo = {
+        id: 'unknown',
+        name: 'Unknown',
+        version: 'unknown',
+        packageManager: 'unknown',
+      };
+      cachedDistroMtime = null;
+      return cachedDistroInfo;
     }
   }
 
-  const id = info.ID || 'unknown';
-  const name = info.NAME || info.PRETTY_NAME || 'Unknown';
-  const version = info.VERSION_ID || info.VERSION || 'unknown';
-  const packageManager = detectPackageManager(id);
+  cachedDistroInfo = {
+    id: 'unknown',
+    name: 'Unknown',
+    version: 'unknown',
+    packageManager: 'unknown',
+  };
+  cachedDistroMtime = null;
+  return cachedDistroInfo;
+}
 
-  return { id, name, version, packageManager };
+export function getDistroInfoAsync(): Promise<DistroInfo> {
+  if (distroPromise) {
+    return distroPromise;
+  }
+
+  distroPromise = Promise.resolve().then(() => {
+    const result = getDistroInfo();
+    distroPromise = null;
+    return result;
+  });
+
+  return distroPromise;
+}
+
+export function clearDistroCache(): void {
+  cachedDistroInfo = null;
+  cachedDistroMtime = null;
+  distroPromise = null;
 }
 
 function detectPackageManager(distroId: string): PackageManager {
@@ -55,7 +101,29 @@ function detectPackageManager(distroId: string): PackageManager {
 }
 
 export function getHomeDir(): string {
-  return process.env.HOME || '/root';
+  const home = process.env.HOME || process.env.USERPROFILE;
+  if (home && existsSync(home)) {
+    return home;
+  }
+  if (existsSync('/root')) {
+    return '/root';
+  }
+  const passwd = '/etc/passwd';
+  if (existsSync(passwd)) {
+    try {
+      const content = readFileSync(passwd, 'utf-8');
+      const lines = content.split('\n');
+      for (const line of lines) {
+        const parts = line.split(':');
+        if (parts[0] === process.env.USER && parts[5]) {
+          return parts[5];
+        }
+      }
+    } catch {
+      // ignore read errors, fallback below
+    }
+  }
+  return '/tmp';
 }
 
 export function getUsername(): string {

@@ -9,31 +9,72 @@ import { logger } from './utils/logger.js';
 import { getDistroInfo } from './utils/os.js';
 import { requestSudo, hasSudoPassword } from './utils/exec.js';
 import { parseFlags, getModulesFromFlags, requiresSudo } from './cli/index.js';
+import { VERSION } from './utils/config.js';
+import { formatError } from './utils/errors.js';
 
-const VERSION = '1.2.2';
+function isInteractive(): boolean {
+  return process.stdin.isTTY && !process.env.CI && !process.env.NO_INTERACTIVE;
+}
 
 async function promptYesNo(message: string): Promise<boolean> {
+  if (!isInteractive()) {
+    return true;
+  }
+
   return new Promise(resolve => {
+    let isCleanedUp = false;
+    let stdinHandler: ((chunk: Buffer) => void) | null = null;
+
     const cleanup = () => {
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
-      process.stdin.removeAllListeners('data');
-      process.stdin.removeAllListeners('error');
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      if (stdinHandler) {
+        try {
+          process.stdin.removeListener('data', stdinHandler);
+        } catch {
+          /* ignore */
+        }
+        stdinHandler = null;
+      }
+      try {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+      } catch {
+        /* ignore */
+      }
     };
 
     const handleInterrupt = () => {
       cleanup();
+      removeSignalListeners();
       console.log(chalk.dim('\nOperacao cancelada.'));
       process.exit(0);
     };
 
-    const ask = () => {
-      process.stdout.write(`${message} `);
-      process.stdin.setRawMode(true);
-      process.stdin.resume();
+    const onSigint = () => handleInterrupt();
+    const onSigterm = () => handleInterrupt();
 
-      const handler = (chunk: Buffer) => {
+    const removeSignalListeners = () => {
+      process.removeListener('SIGINT', onSigint);
+      process.removeListener('SIGTERM', onSigterm);
+    };
+
+    process.on('SIGINT', onSigint);
+    process.on('SIGTERM', onSigterm);
+
+    const ask = () => {
+      try {
+        process.stdout.write(`${message} `);
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+      } catch {
+        resolve(false);
+        return;
+      }
+
+      stdinHandler = (chunk: Buffer) => {
         cleanup();
+        removeSignalListeners();
         const char = chunk.toString().toLowerCase();
         process.stdout.write(char + '\n');
 
@@ -46,11 +87,9 @@ async function promptYesNo(message: string): Promise<boolean> {
         }
       };
 
-      process.stdin.once('data', handler);
+      process.stdin.once('data', stdinHandler);
     };
 
-    process.stdin.once('error', handleInterrupt);
-    process.on('SIGINT', handleInterrupt);
     ask();
   });
 }
@@ -60,13 +99,16 @@ function getTerminalWidth(): number {
 }
 
 function isRoot(): boolean {
-  return process.getuid?.() === 0 || process.env.USER === 'root';
+  return (
+    process.getuid?.() === 0 || process.geteuid?.() === 0 || process.env.SUDO_COMMAND !== undefined
+  );
 }
 
 function padEnd(str: string, len: number): string {
   const width = getTerminalWidth();
-  const maxLen = Math.min(len, width - 10);
-  return str.length >= maxLen ? str.substring(0, maxLen - 3) + '...' : str.padEnd(maxLen);
+  const maxLen = Math.min(len, Math.max(width - 10, 5));
+  const effectiveLen = Math.max(maxLen - 3, 2);
+  return str.length >= maxLen ? str.substring(0, effectiveLen) + '...' : str.padEnd(maxLen);
 }
 
 function line(char: string = '─', len?: number): string {
@@ -89,11 +131,19 @@ function printHelp(): void {
   console.log();
 
   console.log(`  ${chalk.bold('OPCOES DE EXECUCAO')}`);
-  console.log(`    ${chalk.cyan('--all')}            ${chalk.dim('Executa todos os modulos')}`);
+  console.log(
+    `    ${chalk.cyan('--all')} ${chalk.dim('-a')}         ${chalk.dim('Executa todos os modulos')}`
+  );
   console.log(`    ${chalk.cyan('--analyze')}        ${chalk.dim('Analisa sem limpar')}`);
-  console.log(`    ${chalk.cyan('--dry-run')}         ${chalk.dim('Simula a execucao')}`);
-  console.log(`    ${chalk.cyan('--force')}          ${chalk.dim('Pula confirmacoes')}`);
-  console.log(`    ${chalk.cyan('--interactive')}    ${chalk.dim('Modo interativo')}`);
+  console.log(
+    `    ${chalk.cyan('--dry-run')} ${chalk.dim('-n')}       ${chalk.dim('Simula a execucao')}`
+  );
+  console.log(
+    `    ${chalk.cyan('--force')} ${chalk.dim('-f')}         ${chalk.dim('Pula confirmacoes')}`
+  );
+  console.log(
+    `    ${chalk.cyan('--interactive')} ${chalk.dim('-i')}  ${chalk.dim('Modo interativo')}`
+  );
   console.log();
 
   console.log(`  ${chalk.bold('MODULOS')}`);
@@ -124,6 +174,22 @@ function printHelp(): void {
   console.log(`    ${chalk.dim('piunter --npm --cache')}`);
   console.log(`    ${chalk.dim('piunter --all --dry-run')}`);
   console.log();
+}
+
+async function checkSudoForModules(moduleIds: string[]): Promise<boolean> {
+  if (!requiresSudo(moduleIds) || isRoot() || hasSudoPassword()) {
+    return true;
+  }
+
+  console.log();
+  console.log(chalk.yellow('  Alguns modulos requerem privilegios de administrador.'));
+  const sudoOk = await requestSudo();
+  if (!sudoOk) {
+    console.log(chalk.dim('  Modulos que requerem sudo serao pulados.'));
+  }
+  console.log();
+
+  return sudoOk;
 }
 
 async function interactiveMode(): Promise<string[]> {
@@ -161,8 +227,8 @@ async function interactiveMode(): Promise<string[]> {
   return modules;
 }
 
-async function analyzeMode(moduleIds?: string[]): Promise<void> {
-  const analyzer = createAnalyzer(moduleIds);
+async function analyzeMode(moduleIds?: string[], threshold?: number): Promise<void> {
+  const analyzer = createAnalyzer(moduleIds, { threshold });
   const results = await analyzer.analyze();
   analyzer.printAnalysis(results);
 }
@@ -192,7 +258,7 @@ export async function main(): Promise<void> {
     return;
   }
 
-  if (args.includes('--version') || args.includes('-V')) {
+  if (args.includes('--version') || args.includes('-v')) {
     console.log(chalk.cyan(`piunter v${VERSION}`));
     return;
   }
@@ -219,7 +285,7 @@ export async function main(): Promise<void> {
     console.log(chalk.dim(`  Sistema: ${distro.name}`));
     console.log(chalk.dim(`  Gerenciador: ${distro.packageManager}`));
     console.log();
-    await analyzeMode(modules.length > 0 ? modules : undefined);
+    await analyzeMode(modules.length > 0 ? modules : undefined, flags.largeFilesThreshold);
     return;
   }
 
@@ -236,15 +302,7 @@ export async function main(): Promise<void> {
       return;
     }
 
-    if (requiresSudo(selectedModules) && !isRoot() && !hasSudoPassword()) {
-      console.log();
-      console.log(chalk.yellow('  Alguns modulos requerem privilegios de administrador.'));
-      const sudoOk = await requestSudo();
-      if (!sudoOk) {
-        console.log(chalk.dim('  Modulos que requerem sudo serao pulados.'));
-      }
-      console.log();
-    }
+    await checkSudoForModules(selectedModules);
 
     await cleanMode(selectedModules, {
       dryRun: flags.dryRun,
@@ -273,15 +331,7 @@ export async function main(): Promise<void> {
     console.log();
   }
 
-  if (requiresSudo(selectedModules) && !isRoot() && !hasSudoPassword()) {
-    console.log();
-    console.log(chalk.yellow('  Alguns modulos requerem privilegios de administrador.'));
-    const sudoOk = await requestSudo();
-    if (!sudoOk) {
-      console.log(chalk.dim('  Modulos que requerem sudo serao pulados.'));
-    }
-    console.log();
-  }
+  await checkSudoForModules(selectedModules);
 
   await cleanMode(selectedModules, {
     dryRun: flags.dryRun,
@@ -291,6 +341,6 @@ export async function main(): Promise<void> {
 }
 
 main().catch(error => {
-  logger.error(`Erro: ${error.message || error}`);
+  logger.error(`Erro: ${formatError(error)}`);
   process.exit(1);
 });

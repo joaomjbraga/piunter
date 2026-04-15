@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { join } from 'path';
 import { getHomeDir } from './os.js';
 
@@ -19,8 +19,10 @@ export interface PiunterConfig {
   };
 }
 
+export const VERSION = '1.2.3';
+
 const DEFAULT_CONFIG: PiunterConfig = {
-  version: '1.0.0',
+  version: VERSION,
   defaults: {
     dryRun: false,
     force: false,
@@ -40,20 +42,58 @@ export function getConfigPath(): string {
   return join(getHomeDir(), '.piunter.json');
 }
 
+let cachedConfig: PiunterConfig | null = null;
+let cachedConfigMtime: number | null = null;
+let configLoadPromise: Promise<PiunterConfig> | null = null;
+
 export function loadConfig(): PiunterConfig {
   const configPath = getConfigPath();
 
-  if (!existsSync(configPath)) {
-    return DEFAULT_CONFIG;
+  try {
+    if (existsSync(configPath)) {
+      const stat = statSync(configPath);
+      const currentMtime = stat.mtimeMs;
+
+      if (cachedConfig && cachedConfigMtime === currentMtime) {
+        return cachedConfig;
+      }
+
+      const content = readFileSync(configPath, 'utf-8');
+      const config = JSON.parse(content);
+      cachedConfig = { ...DEFAULT_CONFIG, ...config } as PiunterConfig;
+      cachedConfigMtime = currentMtime;
+      return cachedConfig;
+    }
+  } catch {
+    cachedConfig = DEFAULT_CONFIG;
+    cachedConfigMtime = null;
   }
 
-  try {
-    const content = readFileSync(configPath, 'utf-8');
-    const config = JSON.parse(content);
-    return { ...DEFAULT_CONFIG, ...config };
-  } catch {
-    return DEFAULT_CONFIG;
+  if (!cachedConfig) {
+    cachedConfig = DEFAULT_CONFIG;
+    cachedConfigMtime = null;
   }
+  return cachedConfig;
+}
+
+export async function loadConfigAsync(): Promise<PiunterConfig> {
+  if (configLoadPromise) {
+    return configLoadPromise;
+  }
+
+  configLoadPromise = Promise.resolve().then(() => {
+    const result = loadConfig();
+    configLoadPromise = null;
+    return result;
+  });
+
+  return configLoadPromise;
+}
+
+export function clearConfigCache(): void {
+  cachedConfig = null;
+  cachedConfigMtime = null;
+  configLoadPromise = null;
 }
 
 export function saveConfig(config: PiunterConfig): void {

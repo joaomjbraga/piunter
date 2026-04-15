@@ -1,9 +1,9 @@
-import { existsSync, readdirSync, rmSync, statSync } from 'fs';
+import { existsSync, rmSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
 import { logger } from '../utils/logger.js';
-import { getDirSize } from '../utils/fs.js';
+import { getDirSizeAsync, getDirSize } from '../utils/fs.js';
 
 export class ThumbsModule {
   readonly id = 'thumbs';
@@ -25,22 +25,29 @@ export class ThumbsModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
+
+    const results = await Promise.all(
+      this.getThumbsDirs().map(async dir => {
+        if (!existsSync(dir)) return null;
+        try {
+          const size = await getDirSizeAsync(dir);
+          return { dir, size };
+        } catch {
+          return null;
+        }
+      })
+    );
+
     let totalSize = 0;
-
-    for (const dir of this.getThumbsDirs()) {
-      if (!existsSync(dir)) continue;
-
-      try {
-        const size = getDirSize(dir);
+    for (const result of results) {
+      if (result) {
         items.push({
-          path: dir,
-          size,
+          path: result.dir,
+          size: result.size,
           type: 'thumbs-cache',
-          description: `Miniaturas: ${dir.split('/').pop()}`,
+          description: `Miniaturas: ${result.dir.split('/').pop()}`,
         });
-        totalSize += size;
-      } catch {
-        // Skip inaccessible directories
+        totalSize += result.size;
       }
     }
 

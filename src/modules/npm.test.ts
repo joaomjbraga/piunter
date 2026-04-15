@@ -1,10 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NpmModule, YarnModule, PnpmModule } from './npm.js';
 import * as fs from 'fs';
 import * as path from 'path';
-import { exec, isCommandAvailable } from '../utils/exec.js';
-import { getHomeDir } from '../utils/os.js';
-import { getDirSize } from '../utils/fs.js';
 
 const HOME_DIR = '/home/testuser';
 
@@ -20,6 +17,12 @@ vi.mock('../utils/os.js', () => ({
 
 vi.mock('../utils/fs.js', () => ({
   getDirSize: vi.fn((p: string) => {
+    if (p.includes('.npm')) return 1000000;
+    if (p.includes('.yarn')) return 500000;
+    if (p.includes('.pnpm')) return 300000;
+    return 0;
+  }),
+  getDirSizeAsync: vi.fn(async (p: string) => {
     if (p.includes('.npm')) return 1000000;
     if (p.includes('.yarn')) return 500000;
     if (p.includes('.pnpm')) return 300000;

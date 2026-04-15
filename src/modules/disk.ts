@@ -1,7 +1,8 @@
-import { statSync } from 'fs';
+import { stat } from 'fs/promises';
 import { exec } from '../utils/exec.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { logger } from '../utils/logger.js';
+import { loadConfig } from '../utils/config.js';
 
 export class LargeFilesModule {
   readonly id = 'large-files';
@@ -12,17 +13,17 @@ export class LargeFilesModule {
     return true;
   }
 
-  async analyze(directory: string = '/home', thresholdMB: number = 100): Promise<AnalysisResult> {
-    const threshold = thresholdMB * 1024 * 1024;
+  async analyze(thresholdMB?: number): Promise<AnalysisResult> {
+    const config = loadConfig();
+    const threshold = thresholdMB ?? config.thresholds.largeFilesMB;
     const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
 
     const findResult = await exec('find', [
-      directory,
+      '/home',
       '-type',
       'f',
       '-size',
-      `+${Math.floor(threshold / (1024 * 1024))}M`,
+      `+${threshold}M`,
       '-not',
       '-path',
       '*/proc/*',
@@ -31,21 +32,31 @@ export class LargeFilesModule {
       '*/sys/*',
     ]);
 
+    let totalSize = 0;
+
     if (findResult.success && findResult.stdout) {
       const files = findResult.stdout.split('\n').filter(l => l.trim());
 
-      for (const file of files) {
-        try {
-          const stat = statSync(file);
+      const fileStats = await Promise.all(
+        files.map(async file => {
+          try {
+            const statInfo = await stat(file);
+            return { file, size: statInfo.size };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      for (const fileStat of fileStats) {
+        if (fileStat) {
           items.push({
-            path: file,
-            size: stat.size,
+            path: fileStat.file,
+            size: fileStat.size,
             type: 'large-file',
-            description: `Arquivo grande: ${file.split('/').pop()}`,
+            description: `Arquivo grande: ${fileStat.file.split('/').pop()}`,
           });
-          totalSize += stat.size;
-        } catch {
-          // Skip inaccessible files
+          totalSize += fileStat.size;
         }
       }
     }
@@ -76,7 +87,18 @@ export class LargeFilesModule {
       return result;
     }
 
-    logger.warn('Use o modo interativo para selecionar arquivos específicos para remoção');
+    logger.info(
+      `${analysis.items.length} arquivo(s) grande(s) encontrado(s). Remocao manual necessaria.`
+    );
+    logger.space();
+    for (const item of analysis.items.slice(0, 5)) {
+      logger.item(item.path, logger.formatBytes(item.size));
+    }
+    if (analysis.items.length > 5) {
+      logger.info(`  ... e mais ${analysis.items.length - 5} arquivo(s)`);
+    }
+    logger.space();
+    logger.info(`Total: ${logger.formatBytes(analysis.totalSize)}`);
 
     return result;
   }

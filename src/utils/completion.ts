@@ -1,5 +1,8 @@
-import { exec, isCommandAvailable } from './exec.js';
+import { isCommandAvailable } from './exec.js';
 import { logger } from './logger.js';
+import { writeFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
+import { getHomeDir } from './os.js';
 
 const BASH_COMPLETION = `#!/bin/bash
 
@@ -9,7 +12,7 @@ _piunter_completion() {
     cur="\${COMP_WORDS[COMP_CWORD]}"
     prev="\${COMP_WORDS[COMP_CWORD-1]}"
 
-    opts="--all --cache --npm --yarn --pnpm --flatpak --docker --logs --packages --large-files --analyze --dry-run --force --interactive --help --threshold="
+    opts="--all --cache --npm --yarn --pnpm --flatpak --snap --docker --logs --packages --large-files --appimage --thumbs --recent --analyze --dry-run --force --interactive --help --threshold="
 
     case "\${prev}" in
         --threshold)
@@ -41,15 +44,21 @@ _piunter() {
         '--yarn[Limpar cache do Yarn]'
         '--pnpm[Limpar cache do PNPM]'
         '--flatpak[Limpar Flatpak]'
+        '--snap[Limpar Snap]'
         '--docker[Limpar Docker]'
         '--logs[Limpar logs do sistema]'
         '--packages[Limpar gerenciador de pacotes]'
         '--large-files[Detectar arquivos grandes]'
+        '--appimage[Limpar AppImages]'
+        '--thumbs[Limpar miniaturas]'
+        '--recent[Arquivos recentes]'
         '--analyze[Apenas analisar]'
         '--dry-run[Simular limpeza]'
         '--force[Pular confirmação]'
         '--interactive[Modo interativo]'
         '--help[Mostrar ajuda]'
+        '--version[Versão]'
+        '--list[Listar módulos]'
         '--threshold[Threshold para arquivos grandes]:threshold (10 50 100 500 1000)'
     )
 
@@ -66,17 +75,24 @@ export async function installBashCompletion(): Promise<boolean> {
   }
 
   const bashCompletionDir = '/etc/bash_completion.d';
+  const completionPath = join(bashCompletionDir, 'piunter');
 
   try {
-    await exec('bash', ['-c', `echo '${BASH_COMPLETION}' | sudo tee ${bashCompletionDir}/piunter > /dev/null && sudo chmod +x ${bashCompletionDir}/piunter`]);
+    writeFileSync(completionPath, BASH_COMPLETION, { mode: 0o755 });
     logger.success('Completion para Bash instalada em ' + bashCompletionDir);
     return true;
   } catch {
-    const userCompletionDir = `${process.env.HOME}/.bash_completion.d`;
-    await exec('bash', ['-c', `mkdir -p ${userCompletionDir} && echo '${BASH_COMPLETION}' > ${userCompletionDir}/piunter`]);
-    logger.info('Completion para Bash instalada em ' + userCompletionDir);
-    logger.info('Adicione ao seu ~/.bashrc: source ' + userCompletionDir + '/piunter');
-    return true;
+    const userCompletionDir = join(getHomeDir(), '.bash_completion.d');
+    try {
+      mkdirSync(userCompletionDir, { recursive: true });
+      writeFileSync(join(userCompletionDir, 'piunter'), BASH_COMPLETION, { mode: 0o644 });
+      logger.info('Completion para Bash instalada em ' + userCompletionDir);
+      logger.info('Adicione ao seu ~/.bashrc: source ' + userCompletionDir + '/piunter');
+      return true;
+    } catch (err) {
+      logger.error('Falha ao instalar completion: ' + (err as Error).message);
+      return false;
+    }
   }
 }
 
@@ -86,14 +102,16 @@ export async function installZshCompletion(): Promise<boolean> {
     return false;
   }
 
-  const zshCompletionDir = `${process.env.HOME}/.zsh/completion`;
+  const zshCompletionDir = join(getHomeDir(), '.zsh', 'completion');
 
   try {
-    await exec('bash', ['-c', `mkdir -p ${zshCompletionDir} && echo '${ZSH_COMPLETION}' > ${zshCompletionDir}/_piunter`]);
+    mkdirSync(zshCompletionDir, { recursive: true });
+    writeFileSync(join(zshCompletionDir, '_piunter'), ZSH_COMPLETION, { mode: 0o644 });
     logger.success('Completion para Zsh instalada');
     logger.info('Adicione ao seu ~/.zshrc: fpath+=(' + zshCompletionDir + ')');
     return true;
-  } catch {
+  } catch (err) {
+    logger.error('Falha ao instalar completion: ' + (err as Error).message);
     return false;
   }
 }
@@ -104,7 +122,7 @@ Shell Completion
 ================
 
 Para instalar completion no Bash:
-  sudo cp <(piunter --completion bash) /etc/bash_completion.d/piunter
+  sudo piunter --completion bash > /etc/bash_completion.d/piunter
 
 Ou para o usuário:
   piunter --completion bash >> ~/.bashrc

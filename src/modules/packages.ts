@@ -225,14 +225,14 @@ export class PackagesModule {
           .trim()
           .split('\n')
           .filter(p => p);
-        for (const pkg of orphanPackages) {
-          const removeResult = await exec('pacman', ['-Rns', pkg, '--noconfirm'], { sudo: true });
-          if (removeResult.success) {
-            result.itemsRemoved++;
-          }
-        }
         if (orphanPackages.length > 0) {
-          logger.item(`Pacman: ${orphanPackages.length} pacotes órfãos removidos`);
+          const removeResult = await exec('pacman', ['-Rcsn', ...orphanPackages, '--noconfirm'], {
+            sudo: true,
+          });
+          if (removeResult.success) {
+            logger.item(`Pacman: ${orphanPackages.length} pacotes órfãos removidos`);
+            result.itemsRemoved += orphanPackages.length;
+          }
         }
       }
     } catch {

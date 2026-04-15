@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { getHomeDir } from './os.js';
+import { logger } from './logger.js';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 
 export interface Plugin {
@@ -121,13 +122,13 @@ class PluginManager {
             if (plugin.default) {
               this.registerPlugin(plugin.default);
             }
-          } catch {
-            // Skip invalid plugins
+          } catch (e) {
+            logger.debug(`Plugin ${file} skipped: ${(e as Error).message}`);
           }
         }
       }
-    } catch {
-      // Plugin directory not accessible
+    } catch (e) {
+      logger.debug(`Plugin directory not accessible: ${(e as Error).message}`);
     }
   }
 

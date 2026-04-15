@@ -3,31 +3,38 @@ import type { AnalysisResult } from '../types/index.js';
 import { getAvailableModules, getModuleByIds, type Module } from '../modules/index.js';
 import { logger } from '../utils/logger.js';
 
+export interface AnalyzerOptions {
+  threshold?: number;
+}
+
 export class Analyzer {
   private modules: Module[];
+  private threshold?: number;
 
-  constructor(moduleIds?: string[]) {
-    this.modules = moduleIds ? getModuleByIds(moduleIds) : getModuleByIds(getAvailableModules().map(m => m.id));
+  constructor(moduleIds?: string[], options?: AnalyzerOptions) {
+    this.modules = moduleIds
+      ? getModuleByIds(moduleIds)
+      : getModuleByIds(getAvailableModules().map(m => m.id));
+    this.threshold = options?.threshold;
   }
 
   async analyze(): Promise<AnalysisResult[]> {
-    const results: AnalysisResult[] = [];
+    const availableModules = this.modules.filter(m => m.isAvailable());
 
-    for (const module of this.modules) {
-      if (!module.isAvailable()) {
-        logger.debug(`${module.name} nao disponivel`);
-        continue;
-      }
-
-      try {
-        const result = await module.analyze();
-        results.push(result);
-      } catch (error) {
-        logger.debug(`Erro: ${(error as Error).message}`);
-      }
+    if (availableModules.length === 0) {
+      return [];
     }
 
-    return results;
+    const results = await Promise.all(
+      availableModules.map(m =>
+        m.analyze(this.threshold).catch(error => {
+          logger.debug(`${m.name}: ${(error as Error).message}`);
+          return null;
+        })
+      )
+    );
+
+    return results.filter((r): r is AnalysisResult => r !== null);
   }
 
   getSummary(results: AnalysisResult[]): {
@@ -56,13 +63,15 @@ export class Analyzer {
 
     console.log(`  ${chalk.bold('Analise de espaco recuperavel')}`);
     console.log();
-    
-    results.forEach((result) => {
+
+    results.forEach(result => {
       const size = logger.formatBytes(result.totalSize);
       const count = result.items.length > 0 ? `${result.items.length} itens` : '';
-      
+
       if (result.items.length > 0) {
-        console.log(`    ${chalk.dim('-')} ${result.module.padEnd(12)} ${chalk.cyan(size)} ${chalk.dim(`(${count})`)}`);
+        console.log(
+          `    ${chalk.dim('-')} ${result.module.padEnd(12)} ${chalk.cyan(size)} ${chalk.dim(`(${count})`)}`
+        );
       } else {
         console.log(`    ${chalk.dim('-')} ${result.module.padEnd(12)} ${chalk.dim('0 B')}`);
       }
@@ -70,9 +79,9 @@ export class Analyzer {
 
     logger.space();
     console.log(`  ${chalk.dim('─'.repeat(Math.min(process.stdout.columns || 60, 40) - 4))}`);
-    
+
     const totalSize = logger.formatBytes(summary.totalSize);
-    
+
     console.log();
     console.log(`  ${chalk.bold('Total')}`);
     console.log(`    ${chalk.dim('-')} ${chalk.white('Espaco:')} ${chalk.green.bold(totalSize)}`);
@@ -81,6 +90,6 @@ export class Analyzer {
   }
 }
 
-export function createAnalyzer(moduleIds?: string[]): Analyzer {
-  return new Analyzer(moduleIds);
+export function createAnalyzer(moduleIds?: string[], options?: AnalyzerOptions): Analyzer {
+  return new Analyzer(moduleIds, options);
 }

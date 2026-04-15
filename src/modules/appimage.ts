@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, statSync } from 'fs';
+import { existsSync } from 'fs';
+import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
@@ -14,7 +15,6 @@ export class AppImageModule {
       join(getHomeDir(), 'Applications'),
       join(getHomeDir(), 'Downloads'),
       join(getHomeDir(), '.local', 'bin'),
-      '/usr/local/bin',
     ];
   }
 
@@ -24,32 +24,48 @@ export class AppImageModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
 
-    for (const dir of this.getAppImageDirs()) {
-      if (!existsSync(dir)) continue;
+    const results = await Promise.all(
+      this.getAppImageDirs().map(async dir => {
+        if (!existsSync(dir)) return [];
 
-      try {
-        const files = readdirSync(dir);
-        for (const file of files) {
-          if (file.endsWith('.AppImage') || file.endsWith('.appimage')) {
-            const fullPath = join(dir, file);
-            try {
-              const stat = statSync(fullPath);
-              items.push({
-                path: fullPath,
-                size: stat.size,
-                type: 'appimage',
-                description: `AppImage: ${file}`,
-              });
-              totalSize += stat.size;
-            } catch {
-              // Skip inaccessible files
-            }
-          }
+        try {
+          const files = await readdir(dir);
+          const appimageFiles = files.filter(
+            f => f.endsWith('.AppImage') || f.endsWith('.appimage')
+          );
+
+          const fileStats = await Promise.all(
+            appimageFiles.map(async file => {
+              const fullPath = join(dir, file);
+              try {
+                const statInfo = await stat(fullPath);
+                return { fullPath, size: statInfo.size, file };
+              } catch {
+                return null;
+              }
+            })
+          );
+
+          return fileStats.filter(
+            (f): f is { fullPath: string; size: number; file: string } => f !== null
+          );
+        } catch {
+          return [];
         }
-      } catch {
-        // Skip inaccessible directories
+      })
+    );
+
+    let totalSize = 0;
+    for (const dirFiles of results) {
+      for (const file of dirFiles) {
+        items.push({
+          path: file.fullPath,
+          size: file.size,
+          type: 'appimage',
+          description: `AppImage: ${file.file}`,
+        });
+        totalSize += file.size;
       }
     }
 
@@ -79,10 +95,12 @@ export class AppImageModule {
       return result;
     }
 
-    logger.warn('AppImages encontrados. Remoção manual recomendada:');
+    logger.info(`${analysis.items.length} AppImage(s) encontrados. Remocao manual necessaria:`);
     for (const item of analysis.items) {
       logger.item(item.path, logger.formatBytes(item.size));
     }
+    logger.space();
+    logger.info(`Para remover: rm "${analysis.items[0]?.path || '<arquivo>'}..."`);
 
     return result;
   }

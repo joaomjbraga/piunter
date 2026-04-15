@@ -28,8 +28,8 @@ export interface Module {
   name: string;
   description: string;
   isAvailable(): boolean;
-  analyze(): Promise<import('../types/index.js').AnalysisResult>;
-  clean(dryRun?: boolean, force?: boolean): Promise<import('../types/index.js').CleaningResult>;
+  analyze(threshold?: number): Promise<import('../types/index.js').AnalysisResult>;
+  clean(dryRun?: boolean): Promise<import('../types/index.js').CleaningResult>;
 }
 
 export const modules: Module[] = [
@@ -48,19 +48,64 @@ export const modules: Module[] = [
   recentFilesModule,
 ];
 
+let cachedModules: ModuleInfo[] | null = null;
+let moduleCacheTime = 0;
+let cachePromise: Promise<ModuleInfo[]> | null = null;
+const MODULE_CACHE_TTL = 5000;
+
 export function getAvailableModules(): ModuleInfo[] {
-  return modules.map(m => ({
+  const now = Date.now();
+  if (cachedModules && now - moduleCacheTime < MODULE_CACHE_TTL) {
+    return cachedModules;
+  }
+
+  cachedModules = modules.map(m => ({
     id: m.id,
     name: m.name,
     description: m.description,
     available: m.isAvailable(),
   }));
+  moduleCacheTime = now;
+  return cachedModules;
 }
 
+export function getAvailableModulesAsync(): Promise<ModuleInfo[]> {
+  if (cachePromise) {
+    return cachePromise;
+  }
+
+  cachePromise = Promise.resolve().then(() => {
+    const now = Date.now();
+    if (cachedModules && now - moduleCacheTime < MODULE_CACHE_TTL) {
+      return cachedModules;
+    }
+
+    cachedModules = modules.map(m => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      available: m.isAvailable(),
+    }));
+    moduleCacheTime = now;
+    cachePromise = null;
+    return cachedModules;
+  });
+
+  return cachePromise;
+}
+
+export function clearModuleCache(): void {
+  cachedModules = null;
+  moduleCacheTime = 0;
+  cachePromise = null;
+}
+
+const moduleMap = new Map(modules.map(m => [m.id, m]));
+
 export function getModule(id: string): Module | undefined {
-  return modules.find(m => m.id === id);
+  return moduleMap.get(id);
 }
 
 export function getModuleByIds(ids: string[]): Module[] {
-  return modules.filter(m => ids.includes(m.id));
+  return ids.map(id => moduleMap.get(id)).filter((m): m is Module => m !== undefined);
 }

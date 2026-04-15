@@ -1,4 +1,5 @@
-import { existsSync, statSync, rmSync } from 'fs';
+import { existsSync, rmSync } from 'fs';
+import { stat } from 'fs/promises';
 import { join } from 'path';
 import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
@@ -25,22 +26,29 @@ export class RecentFilesModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
+
+    const results = await Promise.all(
+      this.getRecentFilesDirs().map(async filePath => {
+        if (!existsSync(filePath)) return null;
+        try {
+          const statInfo = await stat(filePath);
+          return { filePath, size: statInfo.size };
+        } catch {
+          return null;
+        }
+      })
+    );
+
     let totalSize = 0;
-
-    for (const path of this.getRecentFilesDirs()) {
-      if (!existsSync(path)) continue;
-
-      try {
-        const stat = statSync(path);
+    for (const result of results) {
+      if (result) {
         items.push({
-          path,
-          size: stat.size,
+          path: result.filePath,
+          size: result.size,
           type: 'recent-files',
-          description: `Arquivos recentes: ${path.split('/').pop()}`,
+          description: `Arquivos recentes: ${result.filePath.split('/').pop()}`,
         });
-        totalSize += stat.size;
-      } catch {
-        // Skip
+        totalSize += result.size;
       }
     }
 

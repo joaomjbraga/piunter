@@ -44,7 +44,18 @@ export class ProgressBar {
     this.total = total;
   }
 
+  private clearLine(): void {
+    const columns = process.stdout.columns || 80;
+    process.stdout.write(`\r${' '.repeat(columns)}\r`);
+  }
+
   render(): void {
+    if (this.total === 0) {
+      const spinner = cliSpinners.dots.frames[this.spinnerIndex];
+      process.stdout.write(`\r${spinner} ${this.text}`);
+      return;
+    }
+
     const filled = Math.round((this.current / this.total) * this.width);
     const empty = this.width - filled;
     const bar = '█'.repeat(filled) + '░'.repeat(empty);
@@ -60,7 +71,7 @@ export class ProgressBar {
       this.interval = null;
     }
     const text = message || `${this.text} - Concluído`;
-    process.stdout.write(`\r${' '.repeat(80)}\r`);
+    this.clearLine();
     console.log(`  ${text}`);
   }
 
@@ -70,7 +81,7 @@ export class ProgressBar {
       this.interval = null;
     }
     const text = message || `${this.text} - Falhou`;
-    process.stdout.write(`\r${' '.repeat(80)}\r`);
+    this.clearLine();
     console.log(`  ✗ ${text}`);
   }
 }

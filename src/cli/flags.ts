@@ -50,7 +50,7 @@ export const MODULE_FLAG_MAP: Record<keyof CliFlags, string | null> = {
   recent: 'recent',
 };
 
-export const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak'];
+export const MODULES_REQUIRING_SUDO = ['packages', 'logs', 'flatpak', 'docker'];
 
 export function requiresSudo(moduleIds: string[]): boolean {
   return moduleIds.some(id => MODULES_REQUIRING_SUDO.includes(id));

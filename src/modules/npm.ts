@@ -4,7 +4,7 @@ import type { AnalysisResult, CleaningResult } from '../types/index.js';
 import { getHomeDir } from '../utils/os.js';
 import { exec, isCommandAvailable } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
-import { getDirSize } from '../utils/fs.js';
+import { getDirSizeAsync } from '../utils/fs.js';
 
 abstract class PackageCacheModule {
   abstract readonly id: string;
@@ -18,22 +18,29 @@ abstract class PackageCacheModule {
 
   async analyze(): Promise<AnalysisResult> {
     const items: AnalysisResult['items'] = [];
-    let totalSize = 0;
 
-    for (const cachePath of this.getCachePaths()) {
-      if (existsSync(cachePath)) {
+    const results = await Promise.all(
+      this.getCachePaths().map(async cachePath => {
+        if (!existsSync(cachePath)) return null;
         try {
-          const size = getDirSize(cachePath);
-          items.push({
-            path: cachePath,
-            size,
-            type: 'directory',
-            description: `Cache do ${this.name} (${cachePath})`,
-          });
-          totalSize += size;
+          const size = await getDirSizeAsync(cachePath);
+          return { cachePath, size };
         } catch {
-          // Not accessible
+          return null;
         }
+      })
+    );
+
+    let totalSize = 0;
+    for (const result of results) {
+      if (result) {
+        items.push({
+          path: result.cachePath,
+          size: result.size,
+          type: 'directory',
+          description: `Cache do ${this.name} (${result.cachePath})`,
+        });
+        totalSize += result.size;
       }
     }
 
@@ -100,7 +107,7 @@ export class YarnModule extends PackageCacheModule {
   readonly description = 'Limpa cache do Yarn';
 
   getCachePaths(): string[] {
-    return [join(getHomeDir(), '.yarn', 'cache')];
+    return [join(getHomeDir(), '.cache', 'yarn'), join(getHomeDir(), '.yarn', 'cache')];
   }
 
   getCleanCommand(): string[] {
