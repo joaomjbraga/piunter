@@ -44,7 +44,7 @@ func (m *PackagesModule) IsAvailable() bool {
 func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	result := &types.AnalysisResult{
 		Module:    m.id,
-		Items:     []types.CleanableItem{},
+		Items:    []types.CleanableItem{},
 		TotalSize: 0,
 	}
 
@@ -63,13 +63,16 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		args = []string{"autoremove", "--assumeno", "--verbose"}
 	}
 
-	execResult := utils.Exec(cmd, args...)
+	executor := utils.GetExecutor()
+	execResult := executor.Exec(cmd, args...)
 	if !execResult.Success && execResult.Code != 1 {
-		return result, nil
+		return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf(execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")
 	orphanCount := 0
+	config, _ := utils.LoadConfig()
+	avgSize := config.PackageSizes.OrphanPackageMB * utils.MB
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -102,7 +105,9 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		}
 	}
 
-	result.TotalSize = int64(orphanCount) * 10 * 1024 * 1024
+	if orphanCount > 0 {
+		result.TotalSize = int64(orphanCount) * avgSize
+	}
 
 	return result, nil
 }

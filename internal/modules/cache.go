@@ -29,8 +29,8 @@ func (m *CacheModule) IsAvailable() bool {
 func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	cacheDir := utils.GetCacheDir()
 	result := &types.AnalysisResult{
-		Module: m.id,
-		Items:  []types.CleanableItem{},
+		Module:    m.id,
+		Items:    []types.CleanableItem{},
 		TotalSize: 0,
 	}
 
@@ -40,7 +40,7 @@ func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
-		return result, nil
+		return result, utils.NewAnalysisError(m.id, "falha ao ler diretório de cache", err)
 	}
 
 	skipDirs := map[string]bool{

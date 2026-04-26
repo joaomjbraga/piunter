@@ -10,15 +10,18 @@ import (
 )
 
 type Cleaner struct {
-	modules []modules.Module
-	dryRun  bool
+	modules  []modules.Module
+	dryRun   bool
+	parallel bool
 }
 
 func NewCleaner(moduleIds []string, dryRun bool) *Cleaner {
 	mods := modules.GetModulesByIds(moduleIds)
+	cfg, _ := utils.LoadConfig()
 	return &Cleaner{
-		modules: mods,
-		dryRun:  dryRun,
+		modules:  mods,
+		dryRun:   dryRun,
+		parallel: cfg.Parallel,
 	}
 }
 
@@ -26,23 +29,10 @@ func (c *Cleaner) Clean() (*types.Report, error) {
 	startTime := time.Now()
 	var results []types.CleaningResult
 
-	for _, m := range c.modules {
-		if !m.IsAvailable() {
-			continue
-		}
-
-		result, err := m.Clean(c.dryRun)
-		if err != nil {
-			results = append(results, types.CleaningResult{
-				Module:       m.ID(),
-				Success:      false,
-				SpaceFreed:   0,
-				ItemsRemoved: 0,
-				Errors:       []string{fmt.Sprintf("%s: %s", m.Name(), err.Error())},
-			})
-			continue
-		}
-		results = append(results, *result)
+	if c.parallel {
+		results = c.cleanParallel()
+	} else {
+		results = c.cleanSequential()
 	}
 
 	endTime := time.Now()
@@ -65,6 +55,86 @@ func (c *Cleaner) Clean() (*types.Report, error) {
 		TotalItemsRemoved: totalItemsRemoved,
 		Errors:           errors,
 	}, nil
+}
+
+func (c *Cleaner) cleanSequential() []types.CleaningResult {
+	var results []types.CleaningResult
+
+	for _, m := range c.modules {
+		if !m.IsAvailable() {
+			continue
+		}
+
+		result, err := m.Clean(c.dryRun)
+		if err != nil {
+			results = append(results, types.CleaningResult{
+				Module:       m.ID(),
+				Success:      false,
+				SpaceFreed:   0,
+				ItemsRemoved: 0,
+				Errors:       []string{fmt.Sprintf("%s: %s", m.Name(), err.Error())},
+			})
+			continue
+		}
+		results = append(results, *result)
+	}
+
+	return results
+}
+
+func (c *Cleaner) cleanParallel() []types.CleaningResult {
+	results := make([]types.CleaningResult, len(c.modules))
+	resultChan := make(chan struct {
+		index   int
+		result types.CleaningResult
+		err    error
+	}, len(c.modules))
+
+	workerCount := 4
+	if len(c.modules) < workerCount {
+		workerCount = len(c.modules)
+	}
+
+	jobChan := make(chan int, len(c.modules))
+	for i := range c.modules {
+		jobChan <- i
+	}
+	close(jobChan)
+
+	for w := 0; w < workerCount; w++ {
+		go func() {
+			for idx := range jobChan {
+				m := c.modules[idx]
+				result, err := m.Clean(c.dryRun)
+				if err != nil {
+					resultChan <- struct {
+						index   int
+						result types.CleaningResult
+						err    error
+					}{idx, types.CleaningResult{
+						Module:       m.ID(),
+						Success:      false,
+						SpaceFreed:   0,
+						ItemsRemoved: 0,
+						Errors:       []string{err.Error()},
+					}, err}
+				} else {
+					resultChan <- struct {
+						index   int
+						result types.CleaningResult
+						err    error
+					}{idx, *result, nil}
+				}
+			}
+		}()
+	}
+
+	for i := 0; i < len(c.modules); i++ {
+		res := <-resultChan
+		results[res.index] = res.result
+	}
+
+	return results
 }
 
 func (c *Cleaner) PrintReport(report *types.Report) {

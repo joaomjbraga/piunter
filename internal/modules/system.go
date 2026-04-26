@@ -31,7 +31,7 @@ func (m *LogsModule) IsAvailable() bool {
 func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	result := &types.AnalysisResult{
 		Module:    m.id,
-		Items:     []types.CleanableItem{},
+		Items:    []types.CleanableItem{},
 		TotalSize: 0,
 	}
 
@@ -40,6 +40,8 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		"/tmp",
 	}
 
+	errorHandler := utils.NewErrorHandler()
+
 	for _, logPath := range logPaths {
 		if !utils.FileExists(logPath) {
 			continue
@@ -47,6 +49,7 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 		entries, err := os.ReadDir(logPath)
 		if err != nil {
+			errorHandler.Add(utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao ler %s", logPath), err))
 			continue
 		}
 
@@ -55,7 +58,11 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 				continue
 			}
 			fullPath := filepath.Join(logPath, entry.Name())
-			size := utils.GetDirSizeAsync(fullPath)
+			size, err := utils.GetDirSize(fullPath)
+			if err != nil {
+				errorHandler.Add(utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao calcular tamanho de %s", fullPath), err))
+				continue
+			}
 			result.Items = append(result.Items, types.CleanableItem{
 				Path:        fullPath,
 				Size:        size,
@@ -64,6 +71,10 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 			})
 			result.TotalSize += size
 		}
+	}
+
+	if errorHandler.HasErrors() {
+		utils.Warn(errorHandler.Error())
 	}
 
 	return result, nil
@@ -135,17 +146,29 @@ func (m *FlatpakModule) IsAvailable() bool {
 func (m *FlatpakModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	result := &types.AnalysisResult{
 		Module:    m.id,
-		Items:     []types.CleanableItem{},
+		Items:    []types.CleanableItem{},
 		TotalSize: 0,
 	}
 
-	execResult := utils.Exec("flatpak", "list", "--app", "--columns=ref")
+	executor := utils.GetExecutor()
+	execResult := executor.Exec("flatpak", "list", "--app", "--columns=ref")
 	if !execResult.Success {
-		return result, nil
+		return result, utils.NewAnalysisError(m.id, "falha ao listar flatpaks", fmt.Errorf(execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")
-	result.TotalSize = int64(len(lines)) * 50 * 1024 * 1024
+	config, _ := utils.LoadConfig()
+	avgSize := config.PackageSizes.FlatpakAppMB * utils.MB
+
+	appCount := 0
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			appCount++
+		}
+	}
+
+	result.TotalSize = int64(appCount) * avgSize
 
 	return result, nil
 }
@@ -198,17 +221,21 @@ func (m *SnapModule) IsAvailable() bool {
 func (m *SnapModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	result := &types.AnalysisResult{
 		Module:    m.id,
-		Items:     []types.CleanableItem{},
+		Items:    []types.CleanableItem{},
 		TotalSize: 0,
 	}
 
-	execResult := utils.Exec("snap", "list", "--all")
+	executor := utils.GetExecutor()
+	execResult := executor.Exec("snap", "list", "--all")
 	if !execResult.Success {
-		return result, nil
+		return result, utils.NewAnalysisError(m.id, "falha ao listar snaps", fmt.Errorf(execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")
 	revCount := 0
+	config, _ := utils.LoadConfig()
+	avgSize := config.PackageSizes.SnapRevisionMB * utils.MB
+
 	for i, line := range lines {
 		if i == 0 || strings.TrimSpace(line) == "" {
 			continue
@@ -216,7 +243,7 @@ func (m *SnapModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		revCount++
 	}
 
-	result.TotalSize = int64(revCount) * 200 * 1024 * 1024
+	result.TotalSize = int64(revCount) * avgSize
 
 	return result, nil
 }

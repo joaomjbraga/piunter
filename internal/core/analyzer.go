@@ -11,6 +11,7 @@ import (
 type Analyzer struct {
 	modules   []modules.Module
 	threshold int
+	parallel  bool
 }
 
 func NewAnalyzer(moduleIds []string, threshold int) *Analyzer {
@@ -20,13 +21,22 @@ func NewAnalyzer(moduleIds []string, threshold int) *Analyzer {
 	} else {
 		mods = modules.GetModulesByIds(moduleIds)
 	}
+	cfg, _ := utils.LoadConfig()
 	return &Analyzer{
 		modules:   mods,
 		threshold: threshold,
+		parallel: cfg.Parallel,
 	}
 }
 
 func (a *Analyzer) Analyze() ([]*types.AnalysisResult, error) {
+	if a.parallel {
+		return a.analyzeParallel()
+	}
+	return a.analyzeSequential()
+}
+
+func (a *Analyzer) analyzeSequential() ([]*types.AnalysisResult, error) {
 	var results []*types.AnalysisResult
 	for _, m := range a.modules {
 		if !m.IsAvailable() {
@@ -40,6 +50,60 @@ func (a *Analyzer) Analyze() ([]*types.AnalysisResult, error) {
 		results = append(results, result)
 	}
 	return results, nil
+}
+
+func (a *Analyzer) analyzeParallel() ([]*types.AnalysisResult, error) {
+	results := make([]*types.AnalysisResult, len(a.modules))
+	resultChan := make(chan struct {
+		index  int
+		result *types.AnalysisResult
+		err    error
+	}, len(a.modules))
+
+	workerCount := 4
+	if len(a.modules) < workerCount {
+		workerCount = len(a.modules)
+	}
+
+	jobChan := make(chan int, len(a.modules))
+	for i := range a.modules {
+		jobChan <- i
+	}
+	close(jobChan)
+
+	for w := 0; w < workerCount; w++ {
+		go func() {
+			for idx := range jobChan {
+				m := a.modules[idx]
+				result, err := m.Analyze(a.threshold)
+				resultChan <- struct {
+					index  int
+					result *types.AnalysisResult
+					err    error
+				}{idx, result, err}
+			}
+		}()
+	}
+
+	var allErrors []error
+	for i := 0; i < len(a.modules); i++ {
+		res := <-resultChan
+		if res.err != nil {
+			utils.Debug(fmt.Sprintf("%s: %s", a.modules[res.index].Name(), res.err.Error()))
+			allErrors = append(allErrors, res.err)
+		} else {
+			results[res.index] = res.result
+		}
+	}
+
+	var finalResults []*types.AnalysisResult
+	for _, r := range results {
+		if r != nil {
+			finalResults = append(finalResults, r)
+		}
+	}
+
+	return finalResults, nil
 }
 
 func (a *Analyzer) GetSummary(results []*types.AnalysisResult) struct {
