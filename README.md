@@ -1,4 +1,4 @@
-# piunter (v1.3.0)
+# piunter (v1.4.0)
 
 <pre align="center">
 
@@ -11,7 +11,7 @@
 
 </pre>
 
-CLI para limpeza e otimização de sistemas Linux - Reescrito em Go.
+CLI para limpeza e otimização de sistemas Linux.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.21+-green.svg" alt="Go">
@@ -41,15 +41,18 @@ go install github.com/joaomjbraga/piunter@latest
 ```bash
 git clone https://github.com/joaomjbraga/piunter.git
 cd piunter/piunter-cli-go
-go build -o piunter ./cmd/main.go
+go build -o piunter ./cmd
 ./piunter --help
 ```
 
 ## Uso
 
 ```bash
-# Modo interativo
-./piunter
+# Ver help
+./piunter --help
+
+# Lista módulos disponíveis
+./piunter --list
 
 # Limpar tudo
 ./piunter --all
@@ -62,9 +65,6 @@ go build -o piunter ./cmd/main.go
 
 # Simular (dry-run)
 ./piunter --all --dry-run
-
-# Lista módulos disponíveis
-./piunter --list
 ```
 
 ## Módulos
@@ -85,20 +85,20 @@ go build -o piunter ./cmd/main.go
 | Large Files  | `--large-files` | Encontra arquivos grandes      |
 | AppImage     | `--appimage`    | Remove AppImages               |
 | Thumbs       | `--thumbs`      | Remove miniaturas              |
-| Recent      | `--recent`      | Lista arquivos recentes        |
+| Recent       | `--recent`      | Lista arquivos recentes        |
 | Trash        | `--trash`       | Esvazia a lixeira             |
 
 ## Flags
 
 | Flag             | Descrição                            |
 | ---------------- | ------------------------------------ |
-| `--all`          | Executa todos os módulos             |
+| `-a`, `--all`   | Executa todos os módulos             |
 | `--analyze`     | Analisa sem limpar                  |
-| `--dry-run`     | Simula execução                     |
-| `--force`       | Pula confirmações                   |
-| `--interactive` | Modo interativo                     |
+| `-n`, `--dry-run` | Simula execução                   |
+| `-f`, `--force` | Pula confirmações                   |
 | `--list`        | Lista módulos disponíveis           |
-| `--threshold=MB`| Tamanho mínimo para arquivos grandes|
+| `-h`, `--help`  | Mostra ajuda                        |
+| `--threshold`   | Tamanho mínimo para arquivos grandes |
 
 ## Configuração
 
@@ -134,8 +134,6 @@ snap_revision_mb: 200
 
 ## Estrutura do Projeto
 
-O projeto foi reescrito em Go com a seguinte estrutura:
-
 ```
 piunter-cli-go/
 ├── cmd/main.go           # Entry point + CLI
@@ -143,26 +141,28 @@ piunter-cli-go/
 └── internal/
     ├── core/
     │   ├── analyzer.go   # Análise de espaço
-    │   └── cleaner.go  # Limpeza
+    │   └── cleaner.go    # Limpeza
     ├── modules/
-    │   ├── index.go    # Registro de módulos
-    │   ├── module.go  # Interface base
-    │   ├── cache.go   # Cache usuário
-    │   ├── npm.go     # NPM/Yarn/PNPM
-    │   ├── nvm.go    # NVM
-    │   ├── sdkman.go # SDKMAN
-    │   ├── packages.go # Pacotes órfãos
-    │   ├── docker.go # Docker
-    │   ├── system.go # Logs/Flatpak/Snap
-    │   ├── files.go  # Large files/AppImage/Thumbs/Recent
-    │   └── trash.go # Lixeira
+    │   ├── index.go     # Registro de módulos
+    │   ├── module.go     # Interface base
+    │   ├── cache.go     # Cache usuário
+    │   ├── npm.go       # NPM/Yarn/PNPM
+    │   ├── nvm.go       # NVM
+    │   ├── sdkman.go    # SDKMAN
+    │   ├── packages.go  # Pacotes órfãos
+    │   ├── docker.go    # Docker
+    │   ├── system.go    # Logs/Flatpak/Snap
+    │   ├── files.go     # Large files/AppImage/Thumbs/Recent
+    │   ├── trash.go    # Lixeira
+    │   ├── extract.go  # Extração de arquivos
+    │   └── compress.go # Compressão de arquivos
     └── utils/
-        ├── os.go      # Utils SO
-        ├── logger.go # Logging
-        ├── config.go # Configuração
-        ├── errors.go # Tratamento de erros
+        ├── os.go        # Utils SO
+        ├── logger.go   # Logging
+        ├── config.go   # Configuração
+        ├── errors.go   # Tratamento de erros
         ├── validator.go # Validação de paths
-        ├── executor.go # Executor de comandos (testável)
+        ├── executor.go # Executor de comandos
         └── parallel.go # Execução paralela
 ```
 
