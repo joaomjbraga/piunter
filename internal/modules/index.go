@@ -18,6 +18,8 @@ func init() {
 		NewThumbsModule(),
 		NewRecentFilesModule(),
 		NewTrashModule(),
+		NewSdkmanModule(),
+		NewNvmModule(),
 	}
 }
 

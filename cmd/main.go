@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const VERSION = "1.2.3"
+const VERSION = "1.3.0"
 
 var (
 	all                bool
@@ -51,6 +51,8 @@ Execute com módulos específicos ou use --all para executar todos.`,
 	rootCmd.Flags().Bool("npm", false, "Limpa cache do NPM")
 	rootCmd.Flags().Bool("yarn", false, "Limpa cache do Yarn")
 	rootCmd.Flags().Bool("pnpm", false, "Limpa cache do PNPM")
+	rootCmd.Flags().Bool("nvm", false, "Limpa cache do NVM (Node Version Manager)")
+	rootCmd.Flags().Bool("sdkman", false, "Limpa cache do SDKMAN")
 	rootCmd.Flags().Bool("packages", false, "Remove pacotes órfãos")
 	rootCmd.Flags().Bool("docker", false, "Limpa Docker")
 	rootCmd.Flags().Bool("logs", false, "Limpa logs do sistema")
@@ -72,7 +74,7 @@ func main() {
 }
 
 var allModuleFlags = []string{
-	"cache", "npm", "yarn", "pnpm", "packages", "docker", "logs",
+	"cache", "npm", "yarn", "pnpm", "nvm", "sdkman", "packages", "docker", "logs",
 	"flatpak", "snap", "large-files", "appimage", "thumbs", "recent", "trash",
 }
 
