@@ -90,10 +90,7 @@ func (c *Cleaner) cleanParallel() []types.CleaningResult {
 		err    error
 	}, len(c.modules))
 
-	workerCount := 4
-	if len(c.modules) < workerCount {
-		workerCount = len(c.modules)
-	}
+	workerCount := utils.GetOptimalWorkers(len(c.modules))
 
 	jobChan := make(chan int, len(c.modules))
 	for i := range c.modules {

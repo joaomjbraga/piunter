@@ -60,10 +60,7 @@ func (a *Analyzer) analyzeParallel() ([]*types.AnalysisResult, error) {
 		err    error
 	}, len(a.modules))
 
-	workerCount := 4
-	if len(a.modules) < workerCount {
-		workerCount = len(a.modules)
-	}
+	workerCount := utils.GetOptimalWorkers(len(a.modules))
 
 	jobChan := make(chan int, len(a.modules))
 	for i := range a.modules {

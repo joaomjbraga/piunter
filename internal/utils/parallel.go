@@ -1,8 +1,22 @@
 package utils
 
 import (
+	"runtime"
 	"strings"
 )
+
+// GetOptimalWorkers returns the optimal number of workers based on CPU cores
+func GetOptimalWorkers(taskCount int) int {
+	cpuCount := runtime.NumCPU()
+	workers := cpuCount
+	if taskCount < workers {
+		workers = taskCount
+	}
+	if workers < 1 {
+		workers = 1
+	}
+	return workers
+}
 
 func SplitLines(s string) []string {
 	if s == "" {
@@ -124,8 +138,11 @@ type DirSizeResult struct {
 
 func GetDirSizesParallel(paths []string) []DirSizeResult {
 	results := make([]DirSizeResult, len(paths))
+	if len(paths) == 0 {
+		return results
+	}
 
-	executor := NewParallelExecutor(4)
+	executor := NewParallelExecutor(GetOptimalWorkers(len(paths)))
 	hasErrors := false
 
 	tasks := make([]func() (any, error), len(paths))
@@ -161,11 +178,7 @@ func GetDirSizesParallel(paths []string) []DirSizeResult {
 func AsyncGetDirSizes(paths []string, resultChan chan DirSizeResult, doneChan chan struct{}) {
 	defer close(doneChan)
 
-	workerCount := 4
-	if len(paths) < workerCount {
-		workerCount = len(paths)
-	}
-
+	workerCount := GetOptimalWorkers(len(paths))
 	var completed int
 
 	for _, path := range paths {
@@ -178,7 +191,7 @@ func AsyncGetDirSizes(paths []string, resultChan chan DirSizeResult, doneChan ch
 	for completed < len(paths) {
 		<-resultChan
 		completed++
-		if completed == len(paths) {
+		if completed == workerCount {
 			break
 		}
 	}

@@ -35,6 +35,35 @@ func (m *LargeFilesModule) SetThreshold(t int) {
 	m.threshold = t
 }
 
+// SkipDirs lists directories that are unlikely to contain large user files worth scanning
+var SkipDirs = []string{
+	".cache",
+	".local/share/Trash",
+	".npm",
+	".yarn",
+	".pnpm-store",
+	".cargo/registry",
+	".rustup",
+	".sdkman/candidates",
+	"node_modules",
+	".git",
+	".svn",
+	"__pycache__",
+	".gradle",
+	".m2",
+	".ivy2",
+	"vendor/bundle",
+}
+
+func shouldSkipDir(name string) bool {
+	for _, skip := range SkipDirs {
+		if name == skip || strings.Contains(name, skip) {
+			return true
+		}
+	}
+	return false
+}
+
 func (m *LargeFilesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	if threshold > 0 {
 		m.threshold = threshold
@@ -54,6 +83,10 @@ func (m *LargeFilesModule) Analyze(threshold int) (*types.AnalysisResult, error)
 			return nil
 		}
 		if info.IsDir() {
+			// Skip directories with many small files
+			if shouldSkipDir(filepath.Base(path)) {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		if info.Size() >= thresholdBytes {

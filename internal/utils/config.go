@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -45,29 +46,49 @@ const (
 	GB = MB * 1024
 )
 
+// Cached config
+var (
+	configCache     Config
+	configCacheOnce sync.Once
+	configCacheErr  error
+)
+
 func GetConfigPath() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".config", "piunter", "config.yaml")
 }
 
+// LoadConfig returns cached config, loading it only once
 func LoadConfig() (Config, error) {
+	configCacheOnce.Do(func() {
+		configCache, configCacheErr = loadConfigFromFile()
+	})
+	return configCache, configCacheErr
+}
+
+func loadConfigFromFile() (Config, error) {
 	configPath := GetConfigPath()
-	
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return DefaultConfig, nil
 	}
-	
+
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return DefaultConfig, fmt.Errorf("failed to read config: %w", err)
 	}
-	
+
 	var cfg Config
 	if err := parseConfig(string(data), &cfg); err != nil {
 		return DefaultConfig, fmt.Errorf("failed to parse config: %w", err)
 	}
-	
+
 	return cfg, nil
+}
+
+// ResetConfigCache clears the cached config (useful for testing)
+func ResetConfigCache() {
+	configCacheOnce = sync.Once{}
 }
 
 func SaveConfig(cfg Config) error {
@@ -83,6 +104,9 @@ func SaveConfig(cfg Config) error {
 	if err := os.WriteFile(configPath, []byte(data), 0644); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
 	}
+
+	// Invalidate cache on save
+	ResetConfigCache()
 
 	return nil
 }

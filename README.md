@@ -13,6 +13,10 @@
 
 CLI para limpeza e otimização de sistemas Linux.
 
+<div>
+  <img src=".github/preview.gif">
+</div>
+
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.21+-green.svg" alt="Go">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
@@ -34,15 +38,6 @@ chmod +x piunter
 
 ```bash
 go install github.com/joaomjbraga/piunter@latest
-```
-
-### Build local
-
-```bash
-git clone https://github.com/joaomjbraga/piunter.git
-cd piunter/piunter-cli-go
-go build -o piunter ./cmd
-./piunter --help
 ```
 
 ## Uso
@@ -69,36 +64,36 @@ go build -o piunter ./cmd
 
 ## Módulos
 
-| Módulo       | Flag            | Descrição                        |
-| ------------ | --------------- | -------------------------------- |
-| Pacotes      | `--packages`    | Remove pacotes órfãos           |
-| NPM          | `--npm`         | Limpa cache do npm                |
-| Yarn         | `--yarn`        | Limpa cache do Yarn              |
-| PNPM         | `--pnpm`        | Limpa cache do pnpm             |
-| NVM          | `--nvm`         | Limpa cache do NVM              |
-| SDKMAN       | `--sdkman`      | Limpa cache do SDKMAN           |
-| Cache        | `--cache`       | Limpa ~/.cache                  |
-| Flatpak      | `--flatpak`     | Remove dados órfãos            |
-| Snap         | `--snap`        | Remove revisões antigas          |
-| Docker       | `--docker`      | Remove containers/imagens       |
-| Logs         | `--logs`        | Limpa logs do sistema            |
-| Large Files  | `--large-files` | Encontra arquivos grandes      |
-| AppImage     | `--appimage`    | Remove AppImages               |
-| Thumbs       | `--thumbs`      | Remove miniaturas              |
-| Recent       | `--recent`      | Lista arquivos recentes        |
-| Trash        | `--trash`       | Esvazia a lixeira             |
+| Módulo      | Flag            | Descrição                 |
+| ----------- | --------------- | ------------------------- |
+| Pacotes     | `--packages`    | Remove pacotes órfãos     |
+| NPM         | `--npm`         | Limpa cache do npm        |
+| Yarn        | `--yarn`        | Limpa cache do Yarn       |
+| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
+| NVM         | `--nvm`         | Limpa cache do NVM        |
+| SDKMAN      | `--sdkman`      | Limpa cache do SDKMAN     |
+| Cache       | `--cache`       | Limpa ~/.cache            |
+| Flatpak     | `--flatpak`     | Remove dados órfãos       |
+| Snap        | `--snap`        | Remove revisões antigas   |
+| Docker      | `--docker`      | Remove containers/imagens |
+| Logs        | `--logs`        | Limpa logs do sistema     |
+| Large Files | `--large-files` | Encontra arquivos grandes |
+| AppImage    | `--appimage`    | Remove AppImages          |
+| Thumbs      | `--thumbs`      | Remove miniaturas         |
+| Recent      | `--recent`      | Lista arquivos recentes   |
+| Trash       | `--trash`       | Esvazia a lixeira         |
 
 ## Flags
 
-| Flag             | Descrição                            |
-| ---------------- | ------------------------------------ |
-| `-a`, `--all`   | Executa todos os módulos             |
-| `--analyze`     | Analisa sem limpar                  |
-| `-n`, `--dry-run` | Simula execução                   |
-| `-f`, `--force` | Pula confirmações                   |
-| `--list`        | Lista módulos disponíveis           |
-| `-h`, `--help`  | Mostra ajuda                        |
-| `--threshold`   | Tamanho mínimo para arquivos grandes |
+| Flag              | Descrição                            |
+| ----------------- | ------------------------------------ |
+| `-a`, `--all`     | Executa todos os módulos             |
+| `--analyze`       | Analisa sem limpar                   |
+| `-n`, `--dry-run` | Simula execução                      |
+| `-f`, `--force`   | Pula confirmações                    |
+| `--list`          | Lista módulos disponíveis            |
+| `-h`, `--help`    | Mostra ajuda                         |
+| `--threshold`     | Tamanho mínimo para arquivos grandes |
 
 ## Configuração
 
@@ -174,12 +169,6 @@ piunter-cli-go/
 - Tratamento robusto de erros
 - Validação de paths (proteção contra symlink attacks)
 - Sistema de configuração persistente
-
-## Testes
-
-```bash
-go test ./...
-```
 
 ## Licença
 
