@@ -11,10 +11,6 @@
 
 </pre>
 
-<p align="center">
-  <img src=".github/preview.png" alt="piunter preview">
-</p>
-
 CLI para limpeza e otimização de sistemas Linux - Reescrito em Go.
 
 <p align="center">
@@ -73,22 +69,22 @@ go build -o piunter ./cmd/main.go
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                     |
-| ----------- | --------------- | ----------------------------- |
-| Pacotes     | `--packages`    | Remove pacotes órfãos         |
-| NPM         | `--npm`         | Limpa cache do npm            |
-| Yarn        | `--yarn`        | Limpa cache do Yarn           |
-| PNPM        | `--pnpm`        | Limpa cache do pnpm           |
-| Cache       | `--cache`       | Limpa ~/.cache                |
-| Flatpak     | `--flatpak`     | Remove dados órfãos           |
-| Snap        | `--snap`        | Remove revisões antigas       |
-| Docker      | `--docker`      | Remove containers/imagens     |
-| Logs        | `--logs`        | Limpa logs do sistema         |
-| Large Files | `--large-files` | Encontra arquivos grandes     |
-| AppImage    | `--appimage`    | Remove AppImages              |
-| Thumbs      | `--thumbs`      | Remove miniaturas             |
-| Recent      | `--recent`      | Lista arquivos recentes       |
-| Trash       | `--trash`       | Esvazia a lixeira             |
+| Módulo      | Flag            | Descrição                 |
+| ----------- | --------------- | ------------------------- |
+| Pacotes     | `--packages`    | Remove pacotes órfãos     |
+| NPM         | `--npm`         | Limpa cache do npm        |
+| Yarn        | `--yarn`        | Limpa cache do Yarn       |
+| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
+| Cache       | `--cache`       | Limpa ~/.cache            |
+| Flatpak     | `--flatpak`     | Remove dados órfãos       |
+| Snap        | `--snap`        | Remove revisões antigas   |
+| Docker      | `--docker`      | Remove containers/imagens |
+| Logs        | `--logs`        | Limpa logs do sistema     |
+| Large Files | `--large-files` | Encontra arquivos grandes |
+| AppImage    | `--appimage`    | Remove AppImages          |
+| Thumbs      | `--thumbs`      | Remove miniaturas         |
+| Recent      | `--recent`      | Lista arquivos recentes   |
+| Trash       | `--trash`       | Esvazia a lixeira         |
 
 ## Flags
 
