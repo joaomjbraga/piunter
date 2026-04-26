@@ -4,7 +4,7 @@
 
 ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗
 ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
-█████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
+████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
 ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
 ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
 ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
@@ -55,7 +55,7 @@ go build -o piunter ./cmd/main.go
 ./piunter --all
 
 # Limpar específicos
-./piunter --npm --cache --trash
+./piunter --npm --nvm --cache --trash
 
 # Analisar sem limpar
 ./piunter --all --analyze
@@ -69,34 +69,62 @@ go build -o piunter ./cmd/main.go
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                 |
-| ----------- | --------------- | ------------------------- |
-| Pacotes     | `--packages`    | Remove pacotes órfãos     |
-| NPM         | `--npm`         | Limpa cache do npm        |
-| Yarn        | `--yarn`        | Limpa cache do Yarn       |
-| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
-| Cache       | `--cache`       | Limpa ~/.cache            |
-| Flatpak     | `--flatpak`     | Remove dados órfãos       |
-| Snap        | `--snap`        | Remove revisões antigas   |
-| Docker      | `--docker`      | Remove containers/imagens |
-| Logs        | `--logs`        | Limpa logs do sistema     |
-| Large Files | `--large-files` | Encontra arquivos grandes |
-| AppImage    | `--appimage`    | Remove AppImages          |
-| Thumbs      | `--thumbs`      | Remove miniaturas         |
-| Recent      | `--recent`      | Lista arquivos recentes   |
-| Trash       | `--trash`       | Esvazia a lixeira         |
+| Módulo       | Flag            | Descrição                        |
+| ------------ | --------------- | -------------------------------- |
+| Pacotes      | `--packages`    | Remove pacotes órfãos           |
+| NPM          | `--npm`         | Limpa cache do npm                |
+| Yarn         | `--yarn`        | Limpa cache do Yarn              |
+| PNPM         | `--pnpm`        | Limpa cache do pnpm             |
+| NVM          | `--nvm`         | Limpa cache do NVM              |
+| SDKMAN       | `--sdkman`      | Limpa cache do SDKMAN           |
+| Cache        | `--cache`       | Limpa ~/.cache                  |
+| Flatpak      | `--flatpak`     | Remove dados órfãos            |
+| Snap         | `--snap`        | Remove revisões antigas          |
+| Docker       | `--docker`      | Remove containers/imagens       |
+| Logs         | `--logs`        | Limpa logs do sistema            |
+| Large Files  | `--large-files` | Encontra arquivos grandes      |
+| AppImage     | `--appimage`    | Remove AppImages               |
+| Thumbs       | `--thumbs`      | Remove miniaturas              |
+| Recent      | `--recent`      | Lista arquivos recentes        |
+| Trash        | `--trash`       | Esvazia a lixeira             |
 
 ## Flags
 
 | Flag             | Descrição                            |
 | ---------------- | ------------------------------------ |
 | `--all`          | Executa todos os módulos             |
-| `--analyze`      | Analisa sem limpar                   |
-| `--dry-run`      | Simula execução                      |
-| `--force`        | Pula confirmações                    |
-| `--interactive`  | Modo interativo                      |
-| `--list`         | Lista módulos disponíveis            |
-| `--threshold=MB` | Tamanho mínimo para arquivos grandes |
+| `--analyze`     | Analisa sem limpar                  |
+| `--dry-run`     | Simula execução                     |
+| `--force`       | Pula confirmações                   |
+| `--interactive` | Modo interativo                     |
+| `--list`        | Lista módulos disponíveis           |
+| `--threshold=MB`| Tamanho mínimo para arquivos grandes|
+
+## Configuração
+
+O piunter suporta um arquivo de configuração em `~/.config/piunter/config.yaml`:
+
+```yaml
+# Configuração do Piunter
+version: 1.0
+threshold_mb: 100
+dry_run_default: false
+debug_enabled: false
+parallel: false
+
+# Módulos desabilitados
+disabled_modules:
+  - npm
+
+# Paths a excluir
+exclude_paths:
+  - /home/user/important
+
+# Tamanhos estimados (MB)
+orphan_package_mb: 10
+flatpak_app_mb: 50
+snap_revision_mb: 200
+```
 
 ## Compatibilidade
 
@@ -115,20 +143,27 @@ piunter-cli-go/
 └── internal/
     ├── core/
     │   ├── analyzer.go   # Análise de espaço
-    │   └── cleaner.go    # Limpeza
+    │   └── cleaner.go  # Limpeza
     ├── modules/
-    │   ├── index.go      # Registro de módulos
-    │   ├── module.go     # Interface base
-    │   ├── cache.go      # Cache usuário
-    │   ├── npm.go        # NPM/Yarn/PNPM
-    │   ├── packages.go   # Pacotes órfãos
-    │   ├── docker.go     # Docker
-    │   ├── system.go     # Logs/Flatpak/Snap
-    │   ├── files.go      # Large files/AppImage/Thumbs/Recent
-    │   └── trash.go      # Lixeira
+    │   ├── index.go    # Registro de módulos
+    │   ├── module.go  # Interface base
+    │   ├── cache.go   # Cache usuário
+    │   ├── npm.go     # NPM/Yarn/PNPM
+    │   ├── nvm.go    # NVM
+    │   ├── sdkman.go # SDKMAN
+    │   ├── packages.go # Pacotes órfãos
+    │   ├── docker.go # Docker
+    │   ├── system.go # Logs/Flatpak/Snap
+    │   ├── files.go  # Large files/AppImage/Thumbs/Recent
+    │   └── trash.go # Lixeira
     └── utils/
-        ├── os.go         # Utils SO
-        └── logger.go     # Logging
+        ├── os.go      # Utils SO
+        ├── logger.go # Logging
+        ├── config.go # Configuração
+        ├── errors.go # Tratamento de erros
+        ├── validator.go # Validação de paths
+        ├── executor.go # Executor de comandos (testável)
+        └── parallel.go # Execução paralela
 ```
 
 ## Segurança
@@ -137,6 +172,14 @@ piunter-cli-go/
 - Dry-run disponível para testar antes
 - Verifica comandos antes de executar
 - Tratamento robusto de erros
+- Validação de paths (proteção contra symlink attacks)
+- Sistema de configuração persistente
+
+## Testes
+
+```bash
+go test ./...
+```
 
 ## Licença
 
