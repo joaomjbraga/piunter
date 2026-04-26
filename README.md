@@ -1,15 +1,8 @@
 # piunter (v1.4.0)
 
-<pre align="center">
-
-██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗
-██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
-██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
-██╔══██╗██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
-██║  ██║██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
-╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
-
-</pre>
+<div>
+  <img src=".github/preview.gif">
+</div>
 
 CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 
@@ -29,6 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cl
 ```
 
 Para usuário sem sudo:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cli-go/install/install.sh | bash
 ```
@@ -45,6 +39,7 @@ piunter --help
 ```
 
 Para **arm64**:
+
 ```bash
 curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-arm64 -o piunter
 ```
@@ -91,36 +86,36 @@ piunter --large-files --threshold=500
 
 ## Módulos
 
-| Módulo       | Flag            | Descrição                        |
-| ------------ | --------------- | -------------------------------- |
-| Pacotes      | `--packages`    | Remove pacotes órfãos            |
-| NPM          | `--npm`         | Limpa cache do npm               |
-| Yarn         | `--yarn`        | Limpa cache do Yarn              |
-| PNPM         | `--pnpm`        | Limpa cache do pnpm              |
-| NVM          | `--nvm`         | Limpa cache do NVM               |
-| SDKMAN       | `--sdkman`      | Limpa cache do SDKMAN            |
-| Cache        | `--cache`       | Limpa ~/.cache                   |
-| Flatpak      | `--flatpak`     | Remove dados órfãos do Flatpak    |
-| Snap         | `--snap`        | Remove revisões antigas do Snap   |
-| Docker       | `--docker`      | Remove containers/imagens Docker  |
-| Logs         | `--logs`        | Limpa logs do sistema             |
-| Large Files  | `--large-files` | Encontra arquivos grandes         |
-| AppImage     | `--appimage`    | Remove arquivos AppImage          |
-| Thumbs       | `--thumbs`      | Remove miniaturas em cache        |
-| Recent       | `--recent`      | Lista arquivos recentes          |
-| Trash        | `--trash`       | Esvazia a lixeira do usuário      |
+| Módulo      | Flag            | Descrição                        |
+| ----------- | --------------- | -------------------------------- |
+| Pacotes     | `--packages`    | Remove pacotes órfãos            |
+| NPM         | `--npm`         | Limpa cache do npm               |
+| Yarn        | `--yarn`        | Limpa cache do Yarn              |
+| PNPM        | `--pnpm`        | Limpa cache do pnpm              |
+| NVM         | `--nvm`         | Limpa cache do NVM               |
+| SDKMAN      | `--sdkman`      | Limpa cache do SDKMAN            |
+| Cache       | `--cache`       | Limpa ~/.cache                   |
+| Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak   |
+| Snap        | `--snap`        | Remove revisões antigas do Snap  |
+| Docker      | `--docker`      | Remove containers/imagens Docker |
+| Logs        | `--logs`        | Limpa logs do sistema            |
+| Large Files | `--large-files` | Encontra arquivos grandes        |
+| AppImage    | `--appimage`    | Remove arquivos AppImage         |
+| Thumbs      | `--thumbs`      | Remove miniaturas em cache       |
+| Recent      | `--recent`      | Lista arquivos recentes          |
+| Trash       | `--trash`       | Esvazia a lixeira do usuário     |
 
 ## Flags
 
-| Flag                | Descrição                              |
-| ------------------- | -------------------------------------- |
-| `-a`, `--all`       | Executa todos os módulos               |
-| `--analyze`         | Analisa sem limpar (preview)            |
-| `-n`, `--dry-run`   | Simula execução                        |
-| `-f`, `--force`     | Pula todas as confirmações             |
-| `--list`            | Lista módulos disponíveis             |
-| `-h`, `--help`      | Mostra ajuda                           |
-| `--threshold=MB`    | Tamanho mínimo para arquivos grandes    |
+| Flag              | Descrição                            |
+| ----------------- | ------------------------------------ |
+| `-a`, `--all`     | Executa todos os módulos             |
+| `--analyze`       | Analisa sem limpar (preview)         |
+| `-n`, `--dry-run` | Simula execução                      |
+| `-f`, `--force`   | Pula todas as confirmações           |
+| `--list`          | Lista módulos disponíveis            |
+| `-h`, `--help`    | Mostra ajuda                         |
+| `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
 
 ## Configuração
 
@@ -146,11 +141,11 @@ package_sizes:
 
 ## Compatibilidade
 
-| Distribuição    | Gerenciador |
-| --------------- | ----------- |
-| Debian/Ubuntu   | APT         |
-| Arch/Manjaro    | Pacman      |
-| Fedora/RHEL     | DNF         |
+| Distribuição  | Gerenciador |
+| ------------- | ----------- |
+| Debian/Ubuntu | APT         |
+| Arch/Manjaro  | Pacman      |
+| Fedora/RHEL   | DNF         |
 
 ### Requisitos
 
