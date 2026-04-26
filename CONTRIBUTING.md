@@ -1,86 +1,94 @@
 # Contributing to piunter
 
-Thank you for your interest in contributing to piunter!
+Obrigado pelo seu interesse em contribuir para o piunter!
 
-## Development Setup
+## Desenvolvimento - Versão Go (Recomendada)
 
-1. Clone the repository:
+### Setup
 
 ```bash
+# Clone o repositório
 git clone https://github.com/joaomjbraga/piunter.git
-cd piunter
+cd piunter/piunter-cli-go
+
+# Instale dependências
+go mod download
+
+# Build
+go build -o piunter ./cmd/main.go
+
+# Execute
+./piunter --help
 ```
 
-2. Install dependencies:
+### Padrões de Código
+
+- Use Go para todo novo código
+- Execute `go fmt` antes de commitar
+- Execute `go vet` para verificar erros
+- Escreva testes para novas funcionalidades
+
+### Estrutura do Projeto
+
+```
+piunter-cli-go/
+├── cmd/main.go           # Entry point + CLI (cobra)
+├── pkg/types/types.go    # Tipos compartilhados
+└── internal/
+    ├── core/
+    │   ├── analyzer.go   # Análise de espaço
+    │   └── cleaner.go    # Limpeza
+    ├── modules/
+    │   ├── index.go      # Registro de módulos
+    │   ├── module.go     # Interface base
+    │   └── *.go          # Módulos de limpeza
+    └── utils/
+        ├── os.go         # Utils SO
+        └── logger.go     # Logging
+```
+
+## Desenvolvimento - Versão Node.js
+
+A versão TypeScript está disponível em `piunter-cli-npm/`:
 
 ```bash
+cd piunter-cli-npm
 npm install
-```
-
-3. Build the project:
-
-```bash
 npm run build
-```
-
-4. Run tests:
-
-```bash
 npm test
 ```
 
-## Coding Standards
+## Enviando Alterações
 
-- Use TypeScript for all new code
-- TypeScript strict mode is enabled - all code must pass strict type checking
-- Run `npm run lint` before committing (0 errors required)
-- Run `npm run format` to format code
-- Write tests for new features
-- All tests must pass (`npm test`)
-- No unused imports or variables allowed
-
-## Project Structure
-
-```
-src/
-├── cli.ts          # CLI entry point
-├── core/           # Core logic (analyzer, cleaner)
-├── modules/        # Cleaning modules
-├── utils/          # Utilities
-└── types/          # TypeScript types
-```
-
-## Submitting Changes
-
-1. Create a feature branch:
+1. Crie um branch de feature:
 
 ```bash
-git checkout -b feature/my-feature
+git checkout -b feature/nova-funcionalidade
 ```
 
-2. Make your changes and commit:
+2. Faça suas alterações e commite:
 
 ```bash
 git commit -m "feat: add new feature"
 ```
 
-3. Push to your fork:
+3. Push para seu fork:
 
 ```bash
-git push origin feature/my-feature
+git push origin feature/nova-funcionalidade
 ```
 
-4. Open a Pull Request
+4. Abra um Pull Request
 
-## Commit Message Format
+## Formato de Mensagens de Commit
 
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation
-- `refactor:` Code refactoring
-- `test:` Adding tests
-- `chore:` Maintenance
+- `feat:` Nova funcionalidade
+- `fix:` Correção de bug
+- `docs:` Documentação
+- `refactor:` Refatoração
+- `test:` Adicionar testes
+- `chore:` Manutenção
 
-## Questions?
+## Perguntas?
 
-Open an issue on GitHub for questions about contributing.
+Abra uma issue no GitHub para perguntas sobre contribuições.

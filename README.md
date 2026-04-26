@@ -1,10 +1,10 @@
-# piunter (v1.2.3)
+# piunter (v1.3.0)
 
 <pre align="center">
 
 ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗
 ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
-██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
+█████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
 ██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
 ██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
 ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
@@ -15,84 +15,80 @@
   <img src=".github/preview.png" alt="piunter preview">
 </p>
 
-CLI para limpeza e otimização de sistemas Linux.
+CLI para limpeza e otimização de sistemas Linux - Reescrito em Go.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node.js">
-  <img src="https://img.shields.io/badge/TypeScript-5.3-blue.svg" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Go-1.21+-green.svg" alt="Go">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   <img src="https://img.shields.io/badge/Platform-Linux-purple.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Tests-52-brightgreen.svg" alt="Tests">
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/APT-Debian-orange.svg" alt="APT">
-  <img src="https://img.shields.io/badge/Pacman-Arch-green.svg" alt="Pacman">
-  <img src="https://img.shields.io/badge/DNF-Fedora-blue.svg" alt="DNF">
-</p>
+## Instalação
 
-## Uso Rápido (sem instalar)
+### Via binary release
 
-Execute diretamente com `npx`:
+```bash
+# Baixe a versão mais recente
+curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-amd64 -o piunter
+chmod +x piunter
+./piunter --all
+```
+
+### Via Go
+
+```bash
+go install github.com/joaomjbraga/piunter@latest
+```
+
+### Build local
+
+```bash
+git clone https://github.com/joaomjbraga/piunter.git
+cd piunter/piunter-cli-go
+go build -o piunter ./cmd/main.go
+./piunter --help
+```
+
+## Uso
 
 ```bash
 # Modo interativo
-npx piunter
+./piunter
 
 # Limpar tudo
-npx piunter --all
+./piunter --all
 
 # Limpar específicos
-npx piunter --npm --cache --logs
+./piunter --npm --cache --trash
+
+# Analisar sem limpar
+./piunter --all --analyze
 
 # Simular (dry-run)
-npx piunter --all --dry-run
+./piunter --all --dry-run
+
+# Lista módulos disponíveis
+./piunter --list
 ```
-
-## Instalação Global (opcional)
-
-Se preferir instalar permanentemente:
-
-```bash
-npm install -g piunter
-```
-
-Após instalado, use diretamente:
-
-```bash
-piunter --all
-```
-
-## Recursos
-
-- Detecção automática de distribuição (Debian, Ubuntu, Arch, Fedora)
-- Suporte a APT, Pacman e DNF
-- 14 módulos de limpeza
-- Modo interativo com seleção por checkbox
-- Dry-run para simular antes de executar
-- Confirmação obrigatória para operações destrutivas
-- Sistema de plugins
-- Shell completion (bash/zsh)
-- Config file personalizável
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                 |
-| ----------- | --------------- | ------------------------- |
-| Pacotes     | `--packages`    | Remove pacotes órfãos     |
-| NPM         | `--npm`         | Limpa cache do npm        |
-| Yarn        | `--yarn`        | Limpa cache do Yarn       |
-| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
-| Cache       | `--cache`       | Limpa ~/.cache            |
-| Flatpak     | `--flatpak`     | Remove dados órfãos       |
-| Snap        | `--snap`        | Remove revisões antigas   |
-| Docker      | `--docker`      | Remove containers/imagens |
-| Logs        | `--logs`        | Limpa logs do sistema     |
-| Large Files | `--large-files` | Encontra arquivos grandes |
-| AppImage    | `--appimage`    | Gerencia AppImages        |
-| Thumbs      | `--thumbs`      | Remove miniaturas         |
-| Recent      | `--recent`      | Limpa arquivos recentes   |
-| Analyze     | `--analyze`     | Analisa uso de disco      |
+| Módulo      | Flag            | Descrição                     |
+| ----------- | --------------- | ----------------------------- |
+| Pacotes     | `--packages`    | Remove pacotes órfãos         |
+| NPM         | `--npm`         | Limpa cache do npm            |
+| Yarn        | `--yarn`        | Limpa cache do Yarn           |
+| PNPM        | `--pnpm`        | Limpa cache do pnpm           |
+| Cache       | `--cache`       | Limpa ~/.cache                |
+| Flatpak     | `--flatpak`     | Remove dados órfãos           |
+| Snap        | `--snap`        | Remove revisões antigas       |
+| Docker      | `--docker`      | Remove containers/imagens     |
+| Logs        | `--logs`        | Limpa logs do sistema         |
+| Large Files | `--large-files` | Encontra arquivos grandes     |
+| AppImage    | `--appimage`    | Remove AppImages              |
+| Thumbs      | `--thumbs`      | Remove miniaturas             |
+| Recent      | `--recent`      | Lista arquivos recentes       |
+| Trash       | `--trash`       | Esvazia a lixeira             |
 
 ## Flags
 
@@ -102,41 +98,41 @@ piunter --all
 | `--analyze`      | Analisa sem limpar                   |
 | `--dry-run`      | Simula execução                      |
 | `--force`        | Pula confirmações                    |
+| `--interactive`  | Modo interativo                      |
+| `--list`         | Lista módulos disponíveis            |
 | `--threshold=MB` | Tamanho mínimo para arquivos grandes |
-| `--config`       | Arquivo de configuração customizado  |
 
-## Documentação
+## Compatibilidade
 
-Documentação completa disponível em: **[https://joaomjbraga.github.io/piunter/docs.html](https://joaomjbraga.github.io/piunter/docs.html)**
+- Debian/Ubuntu (APT)
+- Arch/Manjaro (Pacman)
+- Fedora/RHEL (DNF)
 
-## Desenvolvimento
+## Estrutura do Projeto
 
-```bash
-# Instalar dependências
-npm install
+O projeto foi reescrito em Go com a seguinte estrutura:
 
-# Build
-npm run build
-
-# Testes
-npm test
-
-# Lint
-npm run lint
 ```
-
-## Instalação Global (opcional)
-
-Se preferir instalar permanentemente:
-
-```bash
-npm install -g piunter
-```
-
-Após instalado, use diretamente:
-
-```bash
-piunter --all
+piunter-cli-go/
+├── cmd/main.go           # Entry point + CLI
+├── pkg/types/types.go    # Tipos compartilhados
+└── internal/
+    ├── core/
+    │   ├── analyzer.go   # Análise de espaço
+    │   └── cleaner.go    # Limpeza
+    ├── modules/
+    │   ├── index.go      # Registro de módulos
+    │   ├── module.go     # Interface base
+    │   ├── cache.go      # Cache usuário
+    │   ├── npm.go        # NPM/Yarn/PNPM
+    │   ├── packages.go   # Pacotes órfãos
+    │   ├── docker.go     # Docker
+    │   ├── system.go     # Logs/Flatpak/Snap
+    │   ├── files.go      # Large files/AppImage/Thumbs/Recent
+    │   └── trash.go      # Lixeira
+    └── utils/
+        ├── os.go         # Utils SO
+        └── logger.go     # Logging
 ```
 
 ## Segurança
@@ -145,30 +141,6 @@ piunter --all
 - Dry-run disponível para testar antes
 - Verifica comandos antes de executar
 - Tratamento robusto de erros
-- Cálculo preciso de espaço liberado (antes/depois)
-- Timeout de 30s para prompts de senha sudo
-- Sem command injection (pacotes processados de forma segura)
-
-## Config File
-
-Crie `~/.piunter.json`:
-
-```json
-{
-  "threshold": 100,
-  "modules": {
-    "npm": true,
-    "cache": true,
-    "logs": true
-  }
-}
-```
-
-## Compatibilidade
-
-- Debian/Ubuntu (APT)
-- Arch/Manjaro (Pacman)
-- Fedora/RHEL (DNF)
 
 ## Licença
 
