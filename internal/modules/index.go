@@ -20,6 +20,8 @@ func init() {
 		NewTrashModule(),
 		NewSdkmanModule(),
 		NewNvmModule(),
+		NewExtractModule(),
+		NewCompressModule(),
 	}
 }
 

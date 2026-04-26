@@ -80,10 +80,17 @@ type CliFlags struct {
 }
 
 type Report struct {
-	StartTime      string
-	EndTime        string
-	Modules        []CleaningResult
-	TotalSpaceFreed int64
+	StartTime        string
+	EndTime          string
+	Modules          []CleaningResult
+	TotalSpaceFreed  int64
 	TotalItemsRemoved int
-	Errors         []string
+	Errors           []string
+}
+
+type ExtractResult struct {
+	FilesExtracted int
+	TotalSize   int64
+	OutputDirs  []string
+	Errors     []string
 }
