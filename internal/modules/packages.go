@@ -66,7 +66,7 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	executor := utils.GetExecutor()
 	execResult := executor.Exec(cmd, args...)
 	if !execResult.Success && execResult.Code != 1 {
-		return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf(execResult.Stderr))
+		return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf("%s", execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")

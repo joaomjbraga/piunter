@@ -153,7 +153,7 @@ func (m *FlatpakModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	executor := utils.GetExecutor()
 	execResult := executor.Exec("flatpak", "list", "--app", "--columns=ref")
 	if !execResult.Success {
-		return result, utils.NewAnalysisError(m.id, "falha ao listar flatpaks", fmt.Errorf(execResult.Stderr))
+		return result, utils.NewAnalysisError(m.id, "falha ao listar flatpaks", fmt.Errorf("%s", execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")
@@ -228,7 +228,7 @@ func (m *SnapModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	executor := utils.GetExecutor()
 	execResult := executor.Exec("snap", "list", "--all")
 	if !execResult.Success {
-		return result, utils.NewAnalysisError(m.id, "falha ao listar snaps", fmt.Errorf(execResult.Stderr))
+		return result, utils.NewAnalysisError(m.id, "falha ao listar snaps", fmt.Errorf("%s", execResult.Stderr))
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")

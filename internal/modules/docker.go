@@ -95,7 +95,7 @@ func (m *DockerModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		utils.Item(m.Name(), "Docker limpo")
 	} else {
 		result.Success = false
-		result.Errors = append(result.Errors, utils.NewCleaningError(m.Name(), "falha ao limpar Docker", fmt.Errorf(execResult.Stderr)).Error())
+		result.Errors = append(result.Errors, utils.NewCleaningError(m.Name(), "falha ao limpar Docker", fmt.Errorf("%s", execResult.Stderr)).Error())
 	}
 
 	return result, nil
