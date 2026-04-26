@@ -2,7 +2,7 @@
 
 Obrigado pelo seu interesse em contribuir para o piunter!
 
-## Desenvolvimento - Versão Go (Recomendada)
+## Começando
 
 ### Setup
 
@@ -15,80 +15,158 @@ cd piunter/piunter-cli-go
 go mod download
 
 # Build
-go build -o piunter ./cmd/main.go
+go build -o piunter ./cmd
 
 # Execute
 ./piunter --help
 ```
 
-### Padrões de Código
+### Requisitos
 
-- Use Go para todo novo código
-- Execute `go fmt` antes de commitar
-- Execute `go vet` para verificar erros
-- Escreva testes para novas funcionalidades
+- Go 1.26+
+- Linux (amd64 ou arm64)
 
-### Estrutura do Projeto
+### Verificações antes de commit
+
+```bash
+# Formatar código
+go fmt ./...
+
+# Verificar erros
+go vet ./...
+
+# Executar testes
+go test ./...
+
+# Build final
+go build -o piunter ./cmd
+```
+
+## Estrutura do Projeto
 
 ```
 piunter-cli-go/
-├── cmd/main.go           # Entry point + CLI (cobra)
-├── pkg/types/types.go    # Tipos compartilhados
+├── cmd/main.go              # Entry point + CLI (Cobra)
+├── pkg/types/types.go        # Tipos compartilhados
+├── install/install.sh        # Script de instalação
+├── .github/workflows/       # GitHub Actions
 └── internal/
     ├── core/
-    │   ├── analyzer.go   # Análise de espaço
-    │   └── cleaner.go    # Limpeza
+    │   ├── analyzer.go      # Análise de espaço
+    │   └── cleaner.go       # Limpeza
     ├── modules/
-    │   ├── index.go      # Registro de módulos
-    │   ├── module.go     # Interface base
-    │   └── *.go          # Módulos de limpeza
+    │   ├── index.go         # Registro de módulos
+    │   ├── module.go        # Interface base
+    │   └── *.go            # Módulos de limpeza
     └── utils/
-        ├── os.go         # Utils SO
-        └── logger.go     # Logging
+        ├── os.go            # Utils SO
+        ├── config.go        # Configuração
+        ├── executor.go      # Executor de comandos
+        ├── parallel.go      # Execução paralela
+        └── ...
 ```
 
-## Desenvolvimento - Versão Node.js
+## Adicionando um Novo Módulo
 
-A versão TypeScript está disponível em `piunter-cli-npm/`:
+1. Crie o arquivo em `internal/modules/`:
 
+```go
+package modules
+
+type MyModule struct {
+    BaseModule
+}
+
+func NewMyModule() *MyModule {
+    return &MyModule{
+        BaseModule: BaseModule{
+            id:          "my-module",
+            name:        "Meu Módulo",
+            description: "Descrição do módulo",
+        },
+    }
+}
+
+func (m *MyModule) IsAvailable() bool {
+    // Verifica se o módulo pode ser usado
+    return utils.IsCommandAvailable("comando-necessario")
+}
+
+func (m *MyModule) Analyze(threshold int) (*types.AnalysisResult, error) {
+    // Analisa o que pode ser limpo
+    return result, nil
+}
+
+func (m *MyModule) Clean(dryRun bool) (*types.CleaningResult, error) {
+    // Executa a limpeza
+    return result, nil
+}
+```
+
+2. Registre no `internal/modules/index.go`.
+
+3. Adicione a flag em `cmd/main.go`.
+
+4. Adicione ao changelog.
+
+## Formato de Mensagens de Commit
+
+Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
+
+| Tipo     | Descrição                        |
+|----------| -------------------------------- |
+| `feat`   | Nova funcionalidade              |
+| `fix`    | Correção de bug                 |
+| `docs`   | Documentação                    |
+| `refactor` | Refatoração                   |
+| `perf`   | Melhoria de performance         |
+| `test`   | Adicionar/editar testes         |
+| `chore`  | Manutenção, deps, CI/CD         |
+| `ci`     | Configuração de CI/CD           |
+
+Exemplos:
 ```bash
-cd piunter-cli-npm
-npm install
-npm run build
-npm test
+feat: add module for cleaning cargo cache
+fix: correct error handling in docker module
+docs: update installation instructions
+perf: optimize parallel execution
 ```
 
 ## Enviando Alterações
 
-1. Crie um branch de feature:
+1. Fork o repositório
 
+2. Clone seu fork:
 ```bash
-git checkout -b feature/nova-funcionalidade
+git clone https://github.com/SEU-USUARIO/piunter.git
+cd piunter/piunter-cli-go
 ```
 
-2. Faça suas alterações e commite:
+3. Crie um branch:
+```bash
+git checkout -b feat/nova-funcionalidade
+```
 
+4. Faça suas alterações e commite:
 ```bash
 git commit -m "feat: add new feature"
 ```
 
-3. Push para seu fork:
-
+5. Push para seu fork:
 ```bash
-git push origin feature/nova-funcionalidade
+git push origin feat/nova-funcionalidade
 ```
 
-4. Abra um Pull Request
+6. Abra um Pull Request no repositório original
 
-## Formato de Mensagens de Commit
+## Diretrizes de Código
 
-- `feat:` Nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Documentação
-- `refactor:` Refatoração
-- `test:` Adicionar testes
-- `chore:` Manutenção
+- Código deve passar em `go vet ./...` sem erros
+- Código deve ser testado quando possível
+- Preferir `fmt.Errorf("%s", err)` em vez de `fmt.Errorf(err)` (segurança)
+- Usar `GetOptimalWorkers()` para workers paralelos
+- Config deve ser cacheado com `sync.Once`
 
 ## Perguntas?
 
-Abra uma issue no GitHub para perguntas sobre contribuições.
+Abra uma issue no GitHub para dúvidas ou sugestões!

@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-26
+
+### Added
+
+- **Script de instalação:** Script shell para instalação automática (`install/install.sh`)
+- **GitHub Actions:** Workflow para build e release automático em `amd64` e `arm64`
+- **Módulo NVM:** Suporte para limpar cache do Node Version Manager
+- **Módulo SDKMAN:** Suporte para limpar cache do SDKMAN
+- **Módulo Extract:** Extração de arquivos (`.zip`, `.tar`, `.tar.gz`, `.rar`, `.7z`, etc.)
+- **Módulo Compress:** Compressão de arquivos (`.zip`, `.tar.gz`)
+
+### Changed
+
+- **Removido modo interativo:** CLI agora é puramente flag-based com help integrado
+- **Performance otimizada:** Workers dinâmicos baseados em `runtime.NumCPU()`
+- **Config cacheado:** Config carregado uma única vez por execução (`sync.Once`)
+- **Large files otimizado:** Pula diretórios comuns (`.cache`, `node_modules`, `.git`, etc.)
+
+### Fixed
+
+- **Security:** Corrigido uso de `fmt.Errorf` com string não-constante (go vet)
+
 ## [1.3.0] - 2026-04-26
 
 ### Changed
@@ -30,7 +52,7 @@ git clone https://github.com/joaomjbraga/piunter.git
 cd piunter/piunter-cli-go
 
 # Build
-go build -o piunter ./cmd/main.go
+go build -o piunter ./cmd
 
 # Execute
 ./piunter --all
