@@ -4,171 +4,185 @@
 
 ██████╗ ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗
 ██╔══██╗██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
-████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
-██╔═══╝ ██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
-██║     ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
-╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+██████╔╝██║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
+██╔══██╗██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
+██║  ██║██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
+╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 
 </pre>
 
-CLI para limpeza e otimização de sistemas Linux.
-
-<div>
-  <img src=".github/preview.gif">
-</div>
+CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Go-1.21+-green.svg" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.26+-green.svg" alt="Go">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   <img src="https://img.shields.io/badge/Platform-Linux-purple.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Architecture-amd64%20%7C%20arm64-cyan.svg" alt="Architecture">
 </p>
 
 ## Instalação
 
-### Via binary release
+### Script de instalação (Recomendado)
 
 ```bash
-# Baixe a versão mais recente
+curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cli-go/install/install.sh | sudo bash
+```
+
+Para usuário sem sudo:
+```bash
+curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cli-go/install/install.sh | bash
+```
+
+### Binary release
+
+```bash
+# Baixe a versão mais recente (amd64)
 curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-amd64 -o piunter
+
 chmod +x piunter
-./piunter --all
+sudo mv piunter /usr/local/bin/
+piunter --help
+```
+
+Para **arm64**:
+```bash
+curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-arm64 -o piunter
 ```
 
 ### Via Go
 
 ```bash
-go install github.com/joaomjbraga/piunter@latest
+go install github.com/joaomjbraga/piunter/cmd@latest
+```
+
+### Build local
+
+```bash
+git clone https://github.com/joaomjbraga/piunter.git
+cd piunter/piunter-cli-go
+go build -o piunter ./cmd
+./piunter --help
 ```
 
 ## Uso
 
 ```bash
 # Ver help
-./piunter --help
-
-# Lista módulos disponíveis
-./piunter --list
+piunter --help
 
 # Limpar tudo
-./piunter --all
+piunter --all
 
 # Limpar específicos
-./piunter --npm --nvm --cache --trash
+piunter --npm --nvm --cache --trash
 
-# Analisar sem limpar
-./piunter --all --analyze
+# Analisar sem limpar (ver quanto pode recuperar)
+piunter --all --analyze
 
-# Simular (dry-run)
-./piunter --all --dry-run
+# Simular execução (não remove nada)
+piunter --all --dry-run
+
+# Pular confirmações
+piunter --all --force
+
+# Limpar arquivos grandes (threshold customizado)
+piunter --large-files --threshold=500
 ```
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                 |
-| ----------- | --------------- | ------------------------- |
-| Pacotes     | `--packages`    | Remove pacotes órfãos     |
-| NPM         | `--npm`         | Limpa cache do npm        |
-| Yarn        | `--yarn`        | Limpa cache do Yarn       |
-| PNPM        | `--pnpm`        | Limpa cache do pnpm       |
-| NVM         | `--nvm`         | Limpa cache do NVM        |
-| SDKMAN      | `--sdkman`      | Limpa cache do SDKMAN     |
-| Cache       | `--cache`       | Limpa ~/.cache            |
-| Flatpak     | `--flatpak`     | Remove dados órfãos       |
-| Snap        | `--snap`        | Remove revisões antigas   |
-| Docker      | `--docker`      | Remove containers/imagens |
-| Logs        | `--logs`        | Limpa logs do sistema     |
-| Large Files | `--large-files` | Encontra arquivos grandes |
-| AppImage    | `--appimage`    | Remove AppImages          |
-| Thumbs      | `--thumbs`      | Remove miniaturas         |
-| Recent      | `--recent`      | Lista arquivos recentes   |
-| Trash       | `--trash`       | Esvazia a lixeira         |
+| Módulo       | Flag            | Descrição                        |
+| ------------ | --------------- | -------------------------------- |
+| Pacotes      | `--packages`    | Remove pacotes órfãos            |
+| NPM          | `--npm`         | Limpa cache do npm               |
+| Yarn         | `--yarn`        | Limpa cache do Yarn              |
+| PNPM         | `--pnpm`        | Limpa cache do pnpm              |
+| NVM          | `--nvm`         | Limpa cache do NVM               |
+| SDKMAN       | `--sdkman`      | Limpa cache do SDKMAN            |
+| Cache        | `--cache`       | Limpa ~/.cache                   |
+| Flatpak      | `--flatpak`     | Remove dados órfãos do Flatpak    |
+| Snap         | `--snap`        | Remove revisões antigas do Snap   |
+| Docker       | `--docker`      | Remove containers/imagens Docker  |
+| Logs         | `--logs`        | Limpa logs do sistema             |
+| Large Files  | `--large-files` | Encontra arquivos grandes         |
+| AppImage     | `--appimage`    | Remove arquivos AppImage          |
+| Thumbs       | `--thumbs`      | Remove miniaturas em cache        |
+| Recent       | `--recent`      | Lista arquivos recentes          |
+| Trash        | `--trash`       | Esvazia a lixeira do usuário      |
 
 ## Flags
 
-| Flag              | Descrição                            |
-| ----------------- | ------------------------------------ |
-| `-a`, `--all`     | Executa todos os módulos             |
-| `--analyze`       | Analisa sem limpar                   |
-| `-n`, `--dry-run` | Simula execução                      |
-| `-f`, `--force`   | Pula confirmações                    |
-| `--list`          | Lista módulos disponíveis            |
-| `-h`, `--help`    | Mostra ajuda                         |
-| `--threshold`     | Tamanho mínimo para arquivos grandes |
+| Flag                | Descrição                              |
+| ------------------- | -------------------------------------- |
+| `-a`, `--all`       | Executa todos os módulos               |
+| `--analyze`         | Analisa sem limpar (preview)            |
+| `-n`, `--dry-run`   | Simula execução                        |
+| `-f`, `--force`     | Pula todas as confirmações             |
+| `--list`            | Lista módulos disponíveis             |
+| `-h`, `--help`      | Mostra ajuda                           |
+| `--threshold=MB`    | Tamanho mínimo para arquivos grandes    |
 
 ## Configuração
 
-O piunter suporta um arquivo de configuração em `~/.config/piunter/config.yaml`:
+O piunter lê configurações de `~/.config/piunter/config.yaml`:
 
 ```yaml
-# Configuração do Piunter
 version: 1.0
 threshold_mb: 100
 dry_run_default: false
-debug_enabled: false
 parallel: false
 
-# Módulos desabilitados
 disabled_modules:
   - npm
 
-# Paths a excluir
 exclude_paths:
-  - /home/user/important
+  - /home/user/documents
 
-# Tamanhos estimados (MB)
-orphan_package_mb: 10
-flatpak_app_mb: 50
-snap_revision_mb: 200
+package_sizes:
+  orphan_package_mb: 10
+  flatpak_app_mb: 50
+  snap_revision_mb: 200
 ```
 
 ## Compatibilidade
 
-- Debian/Ubuntu (APT)
-- Arch/Manjaro (Pacman)
-- Fedora/RHEL (DNF)
+| Distribuição    | Gerenciador |
+| --------------- | ----------- |
+| Debian/Ubuntu   | APT         |
+| Arch/Manjaro    | Pacman      |
+| Fedora/RHEL     | DNF         |
 
-## Estrutura do Projeto
+### Requisitos
 
-```
-piunter-cli-go/
-├── cmd/main.go           # Entry point + CLI
-├── pkg/types/types.go    # Tipos compartilhados
-└── internal/
-    ├── core/
-    │   ├── analyzer.go   # Análise de espaço
-    │   └── cleaner.go    # Limpeza
-    ├── modules/
-    │   ├── index.go     # Registro de módulos
-    │   ├── module.go     # Interface base
-    │   ├── cache.go     # Cache usuário
-    │   ├── npm.go       # NPM/Yarn/PNPM
-    │   ├── nvm.go       # NVM
-    │   ├── sdkman.go    # SDKMAN
-    │   ├── packages.go  # Pacotes órfãos
-    │   ├── docker.go    # Docker
-    │   ├── system.go    # Logs/Flatpak/Snap
-    │   ├── files.go     # Large files/AppImage/Thumbs/Recent
-    │   ├── trash.go    # Lixeira
-    │   ├── extract.go  # Extração de arquivos
-    │   └── compress.go # Compressão de arquivos
-    └── utils/
-        ├── os.go        # Utils SO
-        ├── logger.go   # Logging
-        ├── config.go   # Configuração
-        ├── errors.go   # Tratamento de erros
-        ├── validator.go # Validação de paths
-        ├── executor.go # Executor de comandos
-        └── parallel.go # Execução paralela
-```
+- Linux (amd64 ou arm64)
+- curl (para instalação)
+
+### Ferramentas opcionais (por módulo)
+
+- `npm`, `yarn`, `pnpm` - para limpar caches
+- `flatpak` - para módulo flatpak
+- `snap` - para módulo snap
+- `docker` - para módulo docker
 
 ## Segurança
 
-- Nunca executa operações sem confirmação (exceto com `--force`)
-- Dry-run disponível para testar antes
-- Verifica comandos antes de executar
-- Tratamento robusto de erros
+- Confirmação antes de limpar (exceto com `--force`)
+- Dry-run disponível
 - Validação de paths (proteção contra symlink attacks)
-- Sistema de configuração persistente
+- Execução paralela opcional
+
+## Desenvolvimento
+
+```bash
+# Build
+go build -o piunter ./cmd
+
+# Testes
+go test ./...
+
+# Vet
+go vet ./...
+```
 
 ## Licença
 
