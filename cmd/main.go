@@ -20,7 +20,6 @@ var (
 	analyze            bool
 	dryRun             bool
 	force              bool
-	interactive        bool
 	list               bool
 	threshold          int
 )
@@ -43,7 +42,6 @@ Execute com módulos específicos ou use --all para executar todos.`,
 	rootCmd.Flags().BoolVar(&analyze, "analyze", false, "Analisa sem limpar")
 	rootCmd.Flags().BoolVarP(&dryRun, "dry-run", "n", false, "Simula a execução")
 	rootCmd.Flags().BoolVarP(&force, "force", "f", false, "Pula confirmações")
-	rootCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Modo interativo")
 	rootCmd.Flags().BoolVar(&list, "list", false, "Lista módulos disponíveis")
 	rootCmd.Flags().IntVar(&threshold, "threshold", 100, "Tamanho mínimo para arquivos grandes (MB)")
 
@@ -121,15 +119,15 @@ func runMain(args []string, flags *pflag.FlagSet) {
 
 	moduleIds := getModuleIdsFromFlags(flags)
 
-	if analyze {
+	if len(moduleIds) == 0 {
 		printHeader(distro)
-		runAnalyze(moduleIds)
+		printList()
 		return
 	}
 
-	if interactive || len(moduleIds) == 0 {
+	if analyze {
 		printHeader(distro)
-		runInteractive(distro)
+		runAnalyze(moduleIds)
 		return
 	}
 
@@ -205,53 +203,4 @@ func runClean(moduleIds []string) {
 		return
 	}
 	cleaner.PrintReport(report)
-}
-
-func runInteractive(distro types.DistroInfo) {
-	fmt.Println("  \033[1mSelecione os módulos:\033[0m")
-	fmt.Println()
-
-	available := modules.GetAvailableModules()
-	for i, m := range available {
-		fmt.Printf("  %d) %s - %s\n", i+1, m.Name(), m.Description())
-	}
-	fmt.Println()
-
-	fmt.Print("  Digite os números separados por vírgula (ex: 1,2,3): ")
-	var input string
-	fmt.Scanln(&input)
-
-	ids := parseModuleSelection(input, available)
-	if len(ids) == 0 {
-		fmt.Println("  \033[33mNenhum módulo selecionado.\033[0m")
-		return
-	}
-
-	if !force {
-		fmt.Print("\n  Confirmar limpeza? (y/s/N) ")
-		var response string
-		fmt.Scanln(&response)
-		response = strings.ToLower(response)
-		if response != "y" && response != "s" {
-			fmt.Println("  \033[90mOperação cancelada.\033[0m")
-			return
-		}
-	}
-
-	runClean(ids)
-}
-
-func parseModuleSelection(input string, available []modules.Module) []string {
-	var ids []string
-	parts := strings.Split(input, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		var idx int
-		if _, err := fmt.Sscanf(part, "%d", &idx); err == nil {
-			if idx > 0 && idx <= len(available) {
-				ids = append(ids, available[idx-1].ID())
-			}
-		}
-	}
-	return ids
 }
