@@ -33,8 +33,6 @@ func (m *PackageCacheModule) Analyze(threshold int) (*types.AnalysisResult, erro
 		TotalSize: 0,
 	}
 
-	errorHandler := utils.NewErrorHandler()
-
 	for _, getPaths := range m.cachePaths {
 		for _, path := range getPaths() {
 			if !utils.FileExists(path) {
@@ -42,7 +40,6 @@ func (m *PackageCacheModule) Analyze(threshold int) (*types.AnalysisResult, erro
 			}
 			size, err := utils.GetDirSize(path)
 			if err != nil {
-				errorHandler.Add(utils.NewAnalysisError(m.ID(), fmt.Sprintf("falha ao calcular tamanho de %s", path), err))
 				continue
 			}
 			result.Items = append(result.Items, types.CleanableItem{
@@ -53,10 +50,6 @@ func (m *PackageCacheModule) Analyze(threshold int) (*types.AnalysisResult, erro
 			})
 			result.TotalSize += size
 		}
-	}
-
-	if errorHandler.HasErrors() {
-		utils.Warn(errorHandler.Error())
 	}
 
 	return result, nil
