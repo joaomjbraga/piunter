@@ -1,6 +1,8 @@
 # Binários
 piunter
 piunter.exe
+piunter-linux-amd64
+piunter-linux-arm64
 *.exe
 
 # Go
@@ -25,10 +27,3 @@ Thumbs.db
 .env
 .env.local
 .env.*
-
-# Node.js (para compatibilidade com piunter-cli-npm)
-node_modules/
-dist/
-coverage/
-.turbo/
-.npmrc

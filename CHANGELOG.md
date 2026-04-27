@@ -32,9 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Reescrita em Go:** O projeto foi completamente reescrito em Go para melhor performance e distribuição
-- **Nova estrutura:** Projeto agora possui duas versões:
-  - `piunter-cli-npm/` - Versão original em TypeScript/Node.js
-  - `piunter-cli-go/` - Nova versão em Go (recomendada)
+- **Estrutura simplificada:** Projeto agora em um único diretório raiz
 
 ### Added
 
@@ -49,7 +47,7 @@ A versão Go é agora a recomendada. Para migrar:
 ```bash
 # Clone o repositório
 git clone https://github.com/joaomjbraga/piunter.git
-cd piunter/piunter-cli-go
+cd piunter
 
 # Build
 go build -o piunter ./cmd

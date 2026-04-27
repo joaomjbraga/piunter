@@ -9,7 +9,7 @@ Obrigado pelo seu interesse em contribuir para o piunter!
 ```bash
 # Clone o repositório
 git clone https://github.com/joaomjbraga/piunter.git
-cd piunter/piunter-cli-go
+cd piunter
 
 # Instale dependências
 go mod download
@@ -45,11 +45,10 @@ go build -o piunter ./cmd
 ## Estrutura do Projeto
 
 ```
-piunter-cli-go/
+piunter/
 ├── cmd/main.go              # Entry point + CLI (Cobra)
 ├── pkg/types/types.go        # Tipos compartilhados
 ├── install/install.sh        # Script de instalação
-├── .github/workflows/       # GitHub Actions
 └── internal/
     ├── core/
     │   ├── analyzer.go      # Análise de espaço
@@ -139,7 +138,7 @@ perf: optimize parallel execution
 2. Clone seu fork:
 ```bash
 git clone https://github.com/SEU-USUARIO/piunter.git
-cd piunter/piunter-cli-go
+cd piunter
 ```
 
 3. Crie um branch:

@@ -18,13 +18,13 @@ CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 ### Script de instalação (Recomendado)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cli-go/install/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/install/install.sh | sudo bash
 ```
 
 Para usuário sem sudo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/piunter-cli-go/install/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/install/install.sh | bash
 ```
 
 ### Binary release
@@ -54,7 +54,7 @@ go install github.com/joaomjbraga/piunter/cmd@latest
 
 ```bash
 git clone https://github.com/joaomjbraga/piunter.git
-cd piunter/piunter-cli-go
+cd piunter
 go build -o piunter ./cmd
 ./piunter --help
 ```
