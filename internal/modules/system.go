@@ -40,8 +40,6 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		"/tmp",
 	}
 
-	errorHandler := utils.NewErrorHandler()
-
 	for _, logPath := range logPaths {
 		if !utils.FileExists(logPath) {
 			continue
@@ -49,7 +47,6 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 		entries, err := os.ReadDir(logPath)
 		if err != nil {
-			errorHandler.Add(utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao ler %s", logPath), err))
 			continue
 		}
 
@@ -60,7 +57,6 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 			fullPath := filepath.Join(logPath, entry.Name())
 			size, err := utils.GetDirSize(fullPath)
 			if err != nil {
-				errorHandler.Add(utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao calcular tamanho de %s", fullPath), err))
 				continue
 			}
 			result.Items = append(result.Items, types.CleanableItem{
@@ -71,10 +67,6 @@ func (m *LogsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 			})
 			result.TotalSize += size
 		}
-	}
-
-	if errorHandler.HasErrors() {
-		utils.Warn(errorHandler.Error())
 	}
 
 	return result, nil

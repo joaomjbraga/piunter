@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const VERSION = "1.3.0"
+const VERSION = "1.4.0"
 
 var (
 	all                bool
@@ -155,7 +155,6 @@ func printHeader(distro types.DistroInfo) {
 	fmt.Printf("  \033[90m%s\033[0m\n", strings.Repeat("─", 30))
 	fmt.Println()
 	fmt.Printf("  \033[90mSistema: %s\033[0m\n", distro.Name)
-	fmt.Printf("  \033[90mGerenciador: %s\033[0m\n", distro.PackageManager)
 	fmt.Println()
 }
 

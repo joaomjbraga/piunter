@@ -118,6 +118,7 @@ func (m *LargeFilesModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	}
 
 	utils.Info("Use --analyze para encontrar arquivos grandes primeiro")
+	utils.Item(m.Name(), "Pule este módulo")
 	return result, nil
 }
 
@@ -180,14 +181,8 @@ func (m *ThumbsModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 }
 
 func (m *ThumbsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
-	analysis, err := m.Analyze(0)
-	if err != nil {
-		return &types.CleaningResult{
-			Module:  m.id,
-			Success: false,
-			Errors:  []string{err.Error()},
-		}, err
-	}
+	home := utils.GetHomeDir()
+	thumbsPath := filepath.Join(home, ".cache", "thumbnails")
 
 	result := &types.CleaningResult{
 		Module:       m.id,
@@ -197,6 +192,15 @@ func (m *ThumbsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		Errors:       []string{},
 	}
 
+	if !utils.FileExists(thumbsPath) {
+		return result, nil
+	}
+
+	analysis, err := m.Analyze(0)
+	if err != nil {
+		return result, nil
+	}
+
 	if analysis.TotalSize == 0 {
 		return result, nil
 	}
@@ -204,22 +208,20 @@ func (m *ThumbsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	if dryRun {
 		result.SpaceFreed = analysis.TotalSize
 		result.ItemsRemoved = len(analysis.Items)
-		utils.Info(fmt.Sprintf("[DRY-RUN] Limparia %d miniaturas", len(analysis.Items)))
+		utils.Item(m.Name(), fmt.Sprintf("[DRY-RUN] %d miniaturas", len(analysis.Items)))
 		return result, nil
 	}
 
-	for _, item := range analysis.Items {
-		err := os.Remove(item.Path)
-		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("Falha ao remover %s: %s", item.Path, err.Error()))
-		} else {
-			result.SpaceFreed += item.Size
-			result.ItemsRemoved++
-		}
-	}
+	size, _ := utils.GetDirSize(thumbsPath)
 
-	if result.ItemsRemoved > 0 {
-		utils.Item(m.Name(), fmt.Sprintf("%d miniaturas removidas", result.ItemsRemoved))
+	err = os.RemoveAll(thumbsPath)
+	if err != nil {
+		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao remover miniaturas: %s", err.Error()))
+		result.Errors = append(result.Errors, "Tente manualmente: rm -rf ~/.cache/thumbnails")
+	} else {
+		result.SpaceFreed = size
+		result.ItemsRemoved = len(analysis.Items)
+		utils.Item(m.Name(), "Miniaturas limpas")
 	}
 
 	return result, nil
@@ -290,7 +292,8 @@ func (m *RecentFilesModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		Errors:       []string{},
 	}
 
-	utils.Info("Use --analyze para ver arquivos recentes primeiro")
+	utils.Info("Use --analyze para arquivos recentes")
+	utils.Item(m.Name(), "Pule este módulo")
 	return result, nil
 }
 
