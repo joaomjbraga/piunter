@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-04-27
+
+### Fixed
+
+- **Output simplificado:** Removidos erros de permissão inline no Analyze()
+- **CLI flags:** Adicionadas flags para extract e compress
+- **Thumbnails fix:** Correção para diretórios não vazios
+
+### Refactored
+
+- **Código morto:** Removido validator.go (177 linhas)
+- **npm/nvm/sdkman:** Removidos errorHandlers não usados
+
 ## [1.4.0] - 2026-04-26
 
 ### Added
