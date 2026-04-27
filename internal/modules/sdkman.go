@@ -47,8 +47,6 @@ func (m *SdkmanModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		"temp":        filepath.Join(sdkmanDir, "tmp"),
 	}
 
-	errorHandler := utils.NewErrorHandler()
-
 	for name, dir := range dirsToCheck {
 		if !utils.FileExists(dir) {
 			continue
@@ -78,10 +76,6 @@ func (m *SdkmanModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 			})
 			result.TotalSize += inactiveSize
 		}
-	}
-
-	if errorHandler.HasErrors() {
-		utils.Warn(errorHandler.Error())
 	}
 
 	return result, nil
