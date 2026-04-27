@@ -61,6 +61,8 @@ Execute com módulos específicos ou use --all para executar todos.`,
 	rootCmd.Flags().Bool("thumbs", false, "Limpa miniaturas")
 	rootCmd.Flags().Bool("recent", false, "Lista arquivos recentes")
 	rootCmd.Flags().Bool("trash", false, "Esvazia a lixeira")
+	rootCmd.Flags().Bool("extract", false, "Extrai arquivos compactados")
+	rootCmd.Flags().Bool("compress", false, "Compacta arquivos")
 
 	rootCmd.Flags().SortFlags = false
 }
@@ -73,7 +75,7 @@ func main() {
 
 var allModuleFlags = []string{
 	"cache", "npm", "yarn", "pnpm", "nvm", "sdkman", "packages", "docker", "logs",
-	"flatpak", "snap", "large-files", "appimage", "thumbs", "recent", "trash",
+	"flatpak", "snap", "large-files", "appimage", "thumbs", "recent", "trash", "extract", "compress",
 }
 
 func getModuleIdsFromFlags(flags *pflag.FlagSet) []string {

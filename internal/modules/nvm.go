@@ -40,10 +40,8 @@ func (m *NvmModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	home := utils.GetHomeDir()
 	nvmDir := filepath.Join(home, ".nvm")
 	cacheDir := filepath.Join(nvmDir, ".cache")
-	sourceDir := filepath.Join(nvmDir, "source")
+	sourceDir := filepath.Join(nvmDir, ".source")
 	versionsDir := filepath.Join(nvmDir, "versions", "node")
-
-	errorHandler := utils.NewErrorHandler()
 
 	dirsToCheck := []string{cacheDir, sourceDir}
 	for _, dir := range dirsToCheck {
@@ -52,7 +50,6 @@ func (m *NvmModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		}
 		size, err := utils.GetDirSize(dir)
 		if err != nil {
-			errorHandler.Add(utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao calcular tamanho de %s", dir), err))
 			continue
 		}
 		result.Items = append(result.Items, types.CleanableItem{
@@ -89,10 +86,6 @@ func (m *NvmModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 				}
 			}
 		}
-	}
-
-	if errorHandler.HasErrors() {
-		utils.Warn(errorHandler.Error())
 	}
 
 	return result, nil

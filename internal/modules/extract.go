@@ -138,7 +138,7 @@ func (m *ExtractModule) extractOne(archivePath string, result *types.CleaningRes
 	utils.Item("Destino", outputDir)
 	utils.Item("Arquivos", fmt.Sprintf("%d", len(filesList)))
 	utils.Item("Subarquivos", fmt.Sprintf("%d", len(archiveList)))
-utils.Item("Tamanho", utils.FormatBytes(int64(size)))
+	utils.Item("Tamanho", utils.FormatBytes(int64(size)))
 
 	return nil
 }

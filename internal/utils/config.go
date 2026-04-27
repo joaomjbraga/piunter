@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 type Config struct {
@@ -257,13 +256,13 @@ func (v *ConfigValidator) Validate() error {
 	if v.cfg.ThresholdMB < 1 || v.cfg.ThresholdMB > 100000 {
 		return fmt.Errorf("threshold_mb must be between 1 and 100000")
 	}
-	
+
 	for _, path := range v.cfg.ExcludePaths {
 		if !filepath.IsAbs(path) {
 			return fmt.Errorf("exclude_paths must be absolute paths: %s", path)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -282,7 +281,16 @@ func (v *ConfigValidator) IsPathExcluded(path string) bool {
 		return false
 	}
 	for _, excluded := range v.cfg.ExcludePaths {
-		if contains(absPath, excluded) {
+		if stringsContains(absPath, excluded) {
+			return true
+		}
+	}
+	return false
+}
+
+func stringsContains(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
 			return true
 		}
 	}
@@ -327,22 +335,4 @@ func (m *ConfigManager) IsModuleEnabled(moduleID string) bool {
 
 func (m *ConfigManager) ShouldRunParallel() bool {
 	return m.cfg.Parallel
-}
-
-type ConfigLogger struct {
-	enabled bool
-}
-
-func (l *ConfigLogger) SetEnabled(enabled bool) {
-	l.enabled = enabled
-}
-
-func (l *ConfigLogger) IsEnabled() bool {
-	return l.enabled
-}
-
-func (l *ConfigLogger) Log(msg string) {
-	if l.enabled {
-		fmt.Printf("\033[36m[CONFIG %s]\033[0m %s\n", time.Now().Format("15:04:05"), msg)
-	}
 }
