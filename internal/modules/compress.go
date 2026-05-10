@@ -97,10 +97,10 @@ func (m *CompressModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		}
 		result.ItemsRemoved++
 		stat, _ := os.Stat(outputFile)
-		result.SpaceFreed += stat.Size()
 		utils.Info("Compactado: " + filepath.Base(file))
 		utils.Item("Arquivo", outputFile)
 		if stat != nil {
+			result.SpaceFreed += stat.Size()
 			utils.Item("Tamanho", utils.FormatBytes(stat.Size()))
 		}
 	}

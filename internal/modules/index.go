@@ -6,9 +6,6 @@ func init() {
 	AllModules = []Module{
 		NewPackagesModule(),
 		NewCacheModule(),
-		NewNpmModule(),
-		NewYarnModule(),
-		NewPnpmModule(),
 		NewFlatpakModule(),
 		NewSnapModule(),
 		NewDockerModule(),
@@ -18,9 +15,6 @@ func init() {
 		NewThumbsModule(),
 		NewRecentFilesModule(),
 		NewTrashModule(),
-		NewSdkmanModule(),
-		NewNvmModule(),
-		NewMiseModule(),
 		NewExtractModule(),
 		NewCompressModule(),
 	}

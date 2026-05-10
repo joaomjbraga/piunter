@@ -9,14 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Módulo Mise:** Suporte para limpar cache do Mise (gerenciador de runtimes e ferramentas)
-  - Cache interno (`~/.cache/mise`)
-  - Downloads residuais (`~/.local/share/mise/downloads`)
-  - Versões inativas de ferramentas em `installs/`
 - **Verificador de versão:** Aviso automático quando uma nova versão do piunter é lançada
   - Consulta a GitHub Releases API
   - Cache de 24h em `~/.config/piunter/version_cache.json`
   - Silencioso em erro de rede
+
+### Removed
+
+- **Módulos removidos:** NVM, SDKMAN, Mise, NPM, Yarn e PNPM — removidos para focar no propósito principal do projeto
 
 ## [1.4.1] - 2026-04-27
 

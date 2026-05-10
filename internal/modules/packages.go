@@ -53,8 +53,8 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 	switch m.packageManager {
 	case "apt":
-		cmd = "apt"
-		args = []string{"list", "--manual-installed", "--installed"}
+		cmd = "apt-get"
+		args = []string{"--just-print", "autoremove"}
 	case "pacman":
 		cmd = "pacman"
 		args = []string{"-Qttd"}
@@ -81,17 +81,17 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		}
 		switch m.packageManager {
 		case "apt":
-			if strings.Contains(line, "[") {
+			if !strings.HasPrefix(line, "Remv") {
 				continue
 			}
 			parts := strings.Fields(line)
-			if len(parts) >= 1 {
+			if len(parts) >= 2 {
 				orphanCount++
 				result.Items = append(result.Items, types.CleanableItem{
-					Path:        parts[0],
+					Path:        parts[1],
 					Size:        0,
 					Type:        "package",
-					Description: "Pacote manual: " + parts[0],
+					Description: "Pacote órfão: " + parts[1],
 				})
 			}
 		case "pacman", "dnf":
@@ -147,7 +147,15 @@ func (m *PackagesModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	case "apt":
 		execResult = utils.Exec("sudo", "apt", "autoremove", "-y")
 	case "pacman":
-		execResult = utils.Exec("sudo", "pacman", "-R", "-s", "--nosave")
+		var pkgNames []string
+		for _, item := range analysis.Items {
+			pkgNames = append(pkgNames, item.Path)
+		}
+		if len(pkgNames) == 0 {
+			return result, nil
+		}
+		args := append([]string{"pacman", "-Rns"}, pkgNames...)
+		execResult = utils.Exec("sudo", args...)
 	case "dnf":
 		execResult = utils.Exec("sudo", "dnf", "autoremove", "-y")
 	}

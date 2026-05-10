@@ -101,23 +101,26 @@ func (m *DockerModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	return result, nil
 }
 
+var sizeUnits = []struct {
+	suffix string
+	mult   int64
+}{
+	{"TB", 1024 * 1024 * 1024 * 1024},
+	{"GB", 1024 * 1024 * 1024},
+	{"MB", 1024 * 1024},
+	{"KB", 1024},
+	{"B", 1},
+}
+
 func parseSize(s string) int64 {
 	s = strings.TrimSpace(s)
 	s = strings.ToUpper(s)
 
-	multipliers := map[string]int64{
-		"B":  1,
-		"KB": 1024,
-		"MB": 1024 * 1024,
-		"GB": 1024 * 1024 * 1024,
-		"TB": 1024 * 1024 * 1024 * 1024,
-	}
-
-	for unit, mult := range multipliers {
-		if strings.HasSuffix(s, unit) {
+	for _, u := range sizeUnits {
+		if strings.HasSuffix(s, u.suffix) {
 			var num float64
-			fmt.Sscanf(strings.TrimSuffix(s, unit), "%f", &num)
-			return int64(num * float64(mult))
+			fmt.Sscanf(strings.TrimSuffix(s, u.suffix), "%f", &num)
+			return int64(num * float64(u.mult))
 		}
 	}
 

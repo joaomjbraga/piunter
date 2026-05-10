@@ -46,12 +46,6 @@ Execute com módulos específicos ou use --all para executar todos.`,
 	rootCmd.Flags().IntVar(&threshold, "threshold", 100, "Tamanho mínimo para arquivos grandes (MB)")
 
 	rootCmd.Flags().Bool("cache", false, "Limpa cache do usuário")
-	rootCmd.Flags().Bool("npm", false, "Limpa cache do NPM")
-	rootCmd.Flags().Bool("yarn", false, "Limpa cache do Yarn")
-	rootCmd.Flags().Bool("pnpm", false, "Limpa cache do PNPM")
-	rootCmd.Flags().Bool("nvm", false, "Limpa cache do NVM (Node Version Manager)")
-	rootCmd.Flags().Bool("mise", false, "Limpa cache do Mise (gerenciador de runtimes)")
-	rootCmd.Flags().Bool("sdkman", false, "Limpa cache do SDKMAN")
 	rootCmd.Flags().Bool("packages", false, "Remove pacotes órfãos")
 	rootCmd.Flags().Bool("docker", false, "Limpa Docker")
 	rootCmd.Flags().Bool("logs", false, "Limpa logs do sistema")
@@ -75,7 +69,7 @@ func main() {
 }
 
 var allModuleFlags = []string{
-	"cache", "npm", "yarn", "pnpm", "nvm", "mise", "sdkman", "packages", "docker", "logs",
+	"cache", "packages", "docker", "logs",
 	"flatpak", "snap", "large-files", "appimage", "thumbs", "recent", "trash", "extract", "compress",
 }
 

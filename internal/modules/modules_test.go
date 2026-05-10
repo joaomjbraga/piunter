@@ -4,34 +4,6 @@ import (
 	"testing"
 )
 
-func TestNewNpmModule(t *testing.T) {
-	module := NewNpmModule()
-
-	if module.ID() != "npm" {
-		t.Errorf("expected id 'npm', got %s", module.ID())
-	}
-
-	if module.Name() != "NPM" {
-		t.Errorf("expected name 'NPM', got %s", module.Name())
-	}
-}
-
-func TestNewYarnModule(t *testing.T) {
-	module := NewYarnModule()
-
-	if module.ID() != "yarn" {
-		t.Errorf("expected id 'yarn', got %s", module.ID())
-	}
-}
-
-func TestNewPnpmModule(t *testing.T) {
-	module := NewPnpmModule()
-
-	if module.ID() != "pnpm" {
-		t.Errorf("expected id 'pnpm', got %s", module.ID())
-	}
-}
-
 func TestNewDockerModule(t *testing.T) {
 	module := NewDockerModule()
 
@@ -81,17 +53,5 @@ func TestNewSnapModule(t *testing.T) {
 
 	if module.ID() != "snap" {
 		t.Errorf("expected id 'snap', got %s", module.ID())
-	}
-}
-
-func TestNewMiseModule(t *testing.T) {
-	module := NewMiseModule()
-
-	if module.ID() != "mise" {
-		t.Errorf("expected id 'mise', got %s", module.ID())
-	}
-
-	if module.Name() != "Mise" {
-		t.Errorf("expected name 'Mise', got %s", module.Name())
 	}
 }

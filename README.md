@@ -69,7 +69,7 @@ piunter --help
 piunter --all
 
 # Limpar específicos
-piunter --npm --nvm --cache --trash
+piunter --npm --cache --trash
 
 # Analisar sem limpar (ver quanto pode recuperar)
 piunter --all --analyze
@@ -89,12 +89,6 @@ piunter --large-files --threshold=500
 | Módulo      | Flag            | Descrição                        |
 | ----------- | --------------- | -------------------------------- |
 | Pacotes     | `--packages`    | Remove pacotes órfãos            |
-| NPM         | `--npm`         | Limpa cache do npm               |
-| Yarn        | `--yarn`        | Limpa cache do Yarn              |
-| PNPM        | `--pnpm`        | Limpa cache do pnpm              |
-| Mise        | `--mise`         | Limpa cache do Mise              |
-| NVM         | `--nvm`         | Limpa cache do NVM               |
-| SDKMAN      | `--sdkman`      | Limpa cache do SDKMAN            |
 | Cache       | `--cache`       | Limpa ~/.cache                   |
 | Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak   |
 | Snap        | `--snap`        | Remove revisões antigas do Snap  |
@@ -105,6 +99,8 @@ piunter --large-files --threshold=500
 | Thumbs      | `--thumbs`      | Remove miniaturas em cache       |
 | Recent      | `--recent`      | Lista arquivos recentes          |
 | Trash       | `--trash`       | Esvazia a lixeira do usuário     |
+| Extrair     | `--extract`     | Extrai arquivos compactados      |
+| Compactar   | `--compress`    | Compacta arquivos                |
 
 ## Flags
 
@@ -116,10 +112,10 @@ piunter --large-files --threshold=500
 | `-f`, `--force`   | Pula todas as confirmações           |
 | `--list`          | Lista módulos disponíveis            |
 | `-h`, `--help`    | Mostra ajuda                         |
+| `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
 |                  |                                       |
 | **Auto-update**  |                                       |
-|                  | Verifica automaticamente no GitHub se há nova versão (cache de 24h) |
-| `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
+|                  | Verifica no GitHub se há nova versão (cache de 24h) |
 
 ## Configuração
 
@@ -130,9 +126,6 @@ version: 1.0
 threshold_mb: 100
 dry_run_default: false
 parallel: false
-
-disabled_modules:
-  - npm
 
 exclude_paths:
   - /home/user/documents
@@ -158,7 +151,6 @@ package_sizes:
 
 ### Ferramentas opcionais (por módulo)
 
-- `npm`, `yarn`, `pnpm` - para limpar caches
 - `flatpak` - para módulo flatpak
 - `snap` - para módulo snap
 - `docker` - para módulo docker
