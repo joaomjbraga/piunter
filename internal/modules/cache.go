@@ -46,7 +46,6 @@ func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	skipDirs := map[string]bool{
 		"thumbnails": true,
 		"thumbnail":  true,
-		"icon-cache": true,
 	}
 
 	for _, entry := range entries {
@@ -105,7 +104,6 @@ func (m *CacheModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	skipDirs := map[string]bool{
 		"thumbnails": true,
 		"thumbnail":  true,
-		"icon-cache": true,
 	}
 
 	for _, item := range analysis.Items {

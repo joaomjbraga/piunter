@@ -57,28 +57,6 @@ type CleanOptions struct {
 	Modules []string
 }
 
-type CliFlags struct {
-	All                bool
-	Cache              bool
-	Npm                bool
-	Yarn               bool
-	Pnpm               bool
-	Flatpak            bool
-	Snap               bool
-	Docker             bool
-	Logs               bool
-	Packages           bool
-	Analyze            bool
-	DryRun             bool
-	Force              bool
-	Interactive        bool
-	LargeFiles         bool
-	LargeFilesThreshold int
-	Appimage           bool
-	Thumbs             bool
-	Recent             bool
-}
-
 type Report struct {
 	StartTime        string
 	EndTime          string
@@ -86,11 +64,4 @@ type Report struct {
 	TotalSpaceFreed  int64
 	TotalItemsRemoved int
 	Errors           []string
-}
-
-type ExtractResult struct {
-	FilesExtracted int
-	TotalSize   int64
-	OutputDirs  []string
-	Errors     []string
 }

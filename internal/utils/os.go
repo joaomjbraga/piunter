@@ -44,13 +44,13 @@ func Exec(command string, args ...string) types.CommandResult {
 		}
 	}
 
-	output, _, _ := readOutput(stdout, stderr)
+	output, stderrOutput, _ := readOutput(stdout, stderr)
 	cmd.Wait()
 
 	return types.CommandResult{
 		Success: cmd.ProcessState.ExitCode() == 0,
 		Stdout:  output,
-		Stderr:  "",
+		Stderr:  stderrOutput,
 		Code:    cmd.ProcessState.ExitCode(),
 	}
 }
@@ -100,8 +100,10 @@ func HasSudoPassword() bool {
 }
 
 func RequestSudo() bool {
-	fmt.Print("Senha de sudo: ")
 	cmd := exec.Command("sudo", "true")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	return err == nil
 }

@@ -18,6 +18,7 @@ type Cleaner struct {
 func NewCleaner(moduleIds []string, dryRun bool) *Cleaner {
 	mods := modules.GetModulesByIds(moduleIds)
 	cfg, _ := utils.LoadConfig()
+	utils.SetDebug(cfg.DebugEnabled)
 	return &Cleaner{
 		modules:  mods,
 		dryRun:   dryRun,

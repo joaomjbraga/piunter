@@ -22,6 +22,7 @@ func NewAnalyzer(moduleIds []string, threshold int) *Analyzer {
 		mods = modules.GetModulesByIds(moduleIds)
 	}
 	cfg, _ := utils.LoadConfig()
+	utils.SetDebug(cfg.DebugEnabled)
 	return &Analyzer{
 		modules:   mods,
 		threshold: threshold,
@@ -82,12 +83,10 @@ func (a *Analyzer) analyzeParallel() ([]*types.AnalysisResult, error) {
 		}()
 	}
 
-	var allErrors []error
 	for i := 0; i < len(a.modules); i++ {
 		res := <-resultChan
 		if res.err != nil {
 			utils.Debug(fmt.Sprintf("%s: %s", a.modules[res.index].Name(), res.err.Error()))
-			allErrors = append(allErrors, res.err)
 		} else {
 			results[res.index] = res.result
 		}

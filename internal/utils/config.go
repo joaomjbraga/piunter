@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -113,16 +114,42 @@ func SaveConfig(cfg Config) error {
 func parseConfig(data string, cfg *Config) error {
 	*cfg = DefaultConfig
 	lines := parseConfigLines(data)
-	
+
+	var listKey string
 	for _, line := range lines {
-		if line == "" || contains(line, "#") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
+
+		if listKey != "" {
+			if strings.HasPrefix(trimmed, "- ") {
+				item := strings.TrimSpace(trimmed[2:])
+				switch listKey {
+				case "disabled_modules":
+					cfg.DisabledModules = append(cfg.DisabledModules, item)
+				case "exclude_paths":
+					cfg.ExcludePaths = append(cfg.ExcludePaths, item)
+				}
+				continue
+			}
+			listKey = ""
+		}
+
 		parts := splitConfigLine(line)
 		if len(parts) != 2 {
 			continue
 		}
 		key, value := parts[0], parts[1]
+
+		if value == "" {
+			switch key {
+			case "disabled_modules", "exclude_paths":
+				listKey = key
+				continue
+			}
+		}
+
 		switch key {
 		case "threshold_mb":
 			fmt.Sscanf(value, "%d", &cfg.ThresholdMB)
@@ -140,7 +167,7 @@ func parseConfig(data string, cfg *Config) error {
 			fmt.Sscanf(value, "%d", &cfg.PackageSizes.SnapRevisionMB)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -174,16 +201,7 @@ func marshalConfig(cfg Config) string {
 	lines = append(lines, fmt.Sprintf("orphan_package_mb: %d", cfg.PackageSizes.OrphanPackageMB))
 	lines = append(lines, fmt.Sprintf("flatpak_app_mb: %d", cfg.PackageSizes.FlatpakAppMB))
 	lines = append(lines, fmt.Sprintf("snap_revision_mb: %d", cfg.PackageSizes.SnapRevisionMB))
-	return stringsJoin(lines, "\n")
-}
-
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
+	return strings.Join(lines, "\n")
 }
 
 func parseConfigLines(data string) []string {
@@ -204,44 +222,13 @@ func parseConfigLines(data string) []string {
 }
 
 func splitConfigLine(line string) []string {
-	var result []string
-	var current string
-	var inList bool
-	var listContent string
-	
-	for _, r := range line {
-		if r == ':' && !inList {
-			result = append(result, current)
-			current = ""
-			continue
-		}
-		if r == '-' && inList {
-			listContent += string(r)
-			continue
-		}
-		if r == '\n' {
-			continue
-		}
-		current += string(r)
+	idx := strings.Index(line, ":")
+	if idx < 0 {
+		return []string{strings.TrimSpace(line)}
 	}
-	result = append(result, current)
-	
-	if len(result) > 1 && contains(result[1], "-") {
-		inList = true
-	}
-	
-	return result
-}
-
-func stringsJoin(slice []string, sep string) string {
-	var result string
-	for i, s := range slice {
-		if i > 0 {
-			result += sep
-		}
-		result += s
-	}
-	return result
+	key := strings.TrimSpace(line[:idx])
+	value := strings.TrimSpace(line[idx+1:])
+	return []string{key, value}
 }
 
 type ConfigValidator struct {
@@ -281,58 +268,9 @@ func (v *ConfigValidator) IsPathExcluded(path string) bool {
 		return false
 	}
 	for _, excluded := range v.cfg.ExcludePaths {
-		if stringsContains(absPath, excluded) {
+		if strings.Contains(absPath, excluded) {
 			return true
 		}
 	}
 	return false
-}
-
-func stringsContains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
-type ConfigManager struct {
-	cfg Config
-}
-
-func NewConfigManager() (*ConfigManager, error) {
-	cfg, err := LoadConfig()
-	if err != nil {
-		return nil, err
-	}
-	return &ConfigManager{cfg: cfg}, nil
-}
-
-func (m *ConfigManager) Get() Config {
-	return m.cfg
-}
-
-func (m *ConfigManager) Update(updateFn func(*Config)) {
-	updateFn(&m.cfg)
-}
-
-func (m *ConfigManager) Save() error {
-	return SaveConfig(m.cfg)
-}
-
-func (m *ConfigManager) GetThresholdMB() int {
-	if m.cfg.ThresholdMB == 0 {
-		return DefaultConfig.ThresholdMB
-	}
-	return m.cfg.ThresholdMB
-}
-
-func (m *ConfigManager) IsModuleEnabled(moduleID string) bool {
-	validator := NewConfigValidator(m.cfg)
-	return !validator.IsModuleDisabled(moduleID)
-}
-
-func (m *ConfigManager) ShouldRunParallel() bool {
-	return m.cfg.Parallel
 }

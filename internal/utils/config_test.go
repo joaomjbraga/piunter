@@ -128,50 +128,6 @@ func TestConfigValidator_IsPathExcluded(t *testing.T) {
 	}
 }
 
-func TestConfigManager_GetThresholdMB(t *testing.T) {
-	tests := []struct {
-		name        string
-		cfg         Config
-		want        int
-	}{
-		{
-			name:        "custom threshold",
-			cfg:         Config{ThresholdMB: 500},
-			want:        500,
-		},
-		{
-			name:        "zero uses default",
-			cfg:         Config{ThresholdMB: 0},
-			want:        100,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &ConfigManager{cfg: tt.cfg}
-			if got := m.GetThresholdMB(); got != tt.want {
-				t.Errorf("GetThresholdMB() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigManager_IsModuleEnabled(t *testing.T) {
-	m := &ConfigManager{
-		cfg: Config{
-			DisabledModules: []string{"npm"},
-		},
-	}
-
-	if !m.IsModuleEnabled("docker") {
-		t.Error("expected docker to be enabled")
-	}
-
-	if m.IsModuleEnabled("npm") {
-		t.Error("expected npm to be disabled")
-	}
-}
-
 func TestPackageSizeConstants(t *testing.T) {
 	if KB != 1024 {
 		t.Errorf("expected KB = 1024, got %d", KB)

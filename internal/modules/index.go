@@ -15,8 +15,7 @@ func init() {
 		NewThumbsModule(),
 		NewRecentFilesModule(),
 		NewTrashModule(),
-		NewExtractModule(),
-		NewCompressModule(),
+
 	}
 }
 

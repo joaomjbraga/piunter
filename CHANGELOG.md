@@ -14,16 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cache de 24h em `~/.config/piunter/version_cache.json`
   - Silencioso em erro de rede
 
+### Changed
+
+- **SnapModule:** `Analyze` identifica revisões desactivadas (`disabled` na coluna Notes) e mede tamanho real do ficheiro `.snap`; `Clean` usa `snap remove --revision` em vez de `snap refresh --list` (que não limpava nada)
+- **LogsModule:** Remove `/tmp` da varredura; mede tamanho real do journald (`journalctl --disk-usage`) e ficheiros `.gz` antigos (>30 dias) em vez de subdiretorias inteiras
+- **FlatpakModule:** Mede tamanho real dos diretórios `/var/lib/flatpak/runtime` e `.removed` em vez de estimativa fixa de 50MB × nº de apps; `Clean` reporta espaço real em vez de 100MB fixo
+- **Config parser:** `disabled_modules` e `exclude_paths` agora são lidos corretamente (estavam a ser escritos mas ignorados na leitura)
+- **ExtractModule:** `getArchiveSize` usa `os.Stat` em vez de `xtractr.ExtractFile` (que extraía o arquivo como efeito secundário durante a análise)
+- **CacheModule:** `icon-cache` já não é ignorado — é analisado e limpo como qualquer outro diretório de cache
+
 ### Removed
 
-- **Módulos removidos:** NVM, SDKMAN, Mise, NPM, Yarn e PNPM — removidos para focar no propósito principal do projeto
+- **Módulos removidos:** NVM, SDKMAN, Mise, NPM, Yarn, PNPM, Extract e Compress — focar no propósito principal de limpeza
+- **Dependência removida:** `golift.io/xtractr` e ~25 dependências transitivas
+- **Código morto removido:** `ErrorHandler` (6 métodos), `Warn`, `List`, `ParseThreshold`, `HasPrefixCI`, `contains`, `stringsJoin`, `ConfigManager` (6 métodos), `CliFlags`, variável `allErrors` não utilizada
 
 ## [1.4.1] - 2026-04-27
 
 ### Fixed
 
 - **Output simplificado:** Removidos erros de permissão inline no Analyze()
-- **CLI flags:** Adicionadas flags para extract e compress
 - **Thumbnails fix:** Correção para diretórios não vazios
 
 ### Refactored
@@ -39,8 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **GitHub Actions:** Workflow para build e release automático em `amd64` e `arm64`
 - **Módulo NVM:** Suporte para limpar cache do Node Version Manager
 - **Módulo SDKMAN:** Suporte para limpar cache do SDKMAN
-- **Módulo Extract:** Extração de arquivos (`.zip`, `.tar`, `.tar.gz`, `.rar`, `.7z`, etc.)
-- **Módulo Compress:** Compressão de arquivos (`.zip`, `.tar.gz`)
+- **Módulo Extract:** Extração de arquivos (removido em 1.4.2)
+- **Módulo Compress:** Compressão de arquivos (removido em 1.4.2)
 
 ### Changed
 

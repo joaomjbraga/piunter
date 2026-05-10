@@ -59,11 +59,12 @@ piunter/
     │   └── *.go            # Módulos de limpeza
     └── utils/
         ├── os.go            # Utils SO
-        ├── config.go        # Configuração
-        ├── executor.go      # Executor de comandos
+        ├── config.go        # Configuração + validação
+        ├── executor.go      # Executor de comandos (mock para testes)
+        ├── logger.go        # Formatação de output
         ├── update.go        # Verificador de versão
         ├── parallel.go      # Execução paralela
-        └── ...
+        └── errors.go        # Tipos de erro AnalysisError/CleaningError
 ```
 
 ## Adicionando um Novo Módulo
@@ -71,22 +72,6 @@ piunter/
 1. Crie o arquivo em `internal/modules/`:
 
 ```go
-package modules
-
-type MyModule struct {
-    BaseModule
-}
-
-func NewMyModule() *MyModule {
-    return &MyModule{
-        BaseModule: BaseModule{
-            id:          "my-module",
-            name:        "Meu Módulo",
-            description: "Descrição do módulo",
-        },
-    }
-}
-
 func (m *MyModule) IsAvailable() bool {
     // Verifica se o módulo pode ser usado
     return utils.IsCommandAvailable("comando-necessario")
@@ -105,9 +90,9 @@ func (m *MyModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 
 2. Registre no `internal/modules/index.go`.
 
-3. Adicione a flag em `cmd/main.go`.
+3. Adicione a flag em `cmd/main.go` e no array `allModuleFlags`.
 
-4. Adicione ao changelog.
+4. Adicione ao changelog e à tabela de módulos no README.
 
 ## Formato de Mensagens de Commit
 

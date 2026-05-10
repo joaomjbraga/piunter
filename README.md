@@ -69,7 +69,7 @@ piunter --help
 piunter --all
 
 # Limpar específicos
-piunter --npm --cache --trash
+piunter --docker --cache --trash
 
 # Analisar sem limpar (ver quanto pode recuperar)
 piunter --all --analyze
@@ -99,8 +99,6 @@ piunter --large-files --threshold=500
 | Thumbs      | `--thumbs`      | Remove miniaturas em cache       |
 | Recent      | `--recent`      | Lista arquivos recentes          |
 | Trash       | `--trash`       | Esvazia a lixeira do usuário     |
-| Extrair     | `--extract`     | Extrai arquivos compactados      |
-| Compactar   | `--compress`    | Compacta arquivos                |
 
 ## Flags
 
@@ -114,8 +112,7 @@ piunter --large-files --threshold=500
 | `-h`, `--help`    | Mostra ajuda                         |
 | `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
 |                  |                                       |
-| **Auto-update**  |                                       |
-|                  | Verifica no GitHub se há nova versão (cache de 24h) |
+| **Auto-update**  | Verifica no GitHub se há nova versão (cache de 24h) |
 
 ## Configuração
 
@@ -125,7 +122,12 @@ O piunter lê configurações de `~/.config/piunter/config.yaml`:
 version: 1.0
 threshold_mb: 100
 dry_run_default: false
+debug_enabled: false
 parallel: false
+
+disabled_modules:
+  - flatpak
+  - snap
 
 exclude_paths:
   - /home/user/documents

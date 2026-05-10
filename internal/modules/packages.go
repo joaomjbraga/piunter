@@ -60,7 +60,7 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		args = []string{"-Qttd"}
 	case "dnf":
 		cmd = "dnf"
-		args = []string{"autoremove", "--assumeno", "--verbose"}
+		args = []string{"autoremove", "--assumeno"}
 	}
 
 	executor := utils.GetExecutor()
@@ -94,14 +94,30 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 					Description: "Pacote órfão: " + parts[1],
 				})
 			}
-		case "pacman", "dnf":
-			orphanCount++
-			result.Items = append(result.Items, types.CleanableItem{
-				Path:        line,
-				Size:        0,
-				Type:        "package",
-				Description: "Pacote órfão: " + line,
-			})
+		case "pacman":
+			parts := strings.Fields(line)
+			if len(parts) >= 1 {
+				orphanCount++
+				result.Items = append(result.Items, types.CleanableItem{
+					Path:        parts[0],
+					Size:        0,
+					Type:        "package",
+					Description: "Pacote órfão: " + parts[0],
+				})
+			}
+		case "dnf":
+			if len(line) > 0 && (line[0] == ' ' || line[0] == '\t') {
+				fields := strings.Fields(line)
+				if len(fields) >= 1 && fields[0] != "==" && fields[0] != "--" {
+					orphanCount++
+					result.Items = append(result.Items, types.CleanableItem{
+						Path:        fields[0],
+						Size:        0,
+						Type:        "package",
+						Description: "Pacote órfão: " + fields[0],
+					})
+				}
+			}
 		}
 	}
 
