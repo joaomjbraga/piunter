@@ -1,4 +1,4 @@
-# piunter (v1.4.2)
+# piunter (v1.5.0)
 
 <div>
   <img src=".github/preview.gif">
@@ -86,19 +86,21 @@ piunter --large-files --threshold=500
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                        |
-| ----------- | --------------- | -------------------------------- |
-| Pacotes     | `--packages`    | Remove pacotes órfãos            |
-| Cache       | `--cache`       | Limpa ~/.cache                   |
-| Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak   |
-| Snap        | `--snap`        | Remove revisões antigas do Snap  |
-| Docker      | `--docker`      | Remove containers/imagens Docker |
-| Logs        | `--logs`        | Limpa logs do sistema            |
-| Large Files | `--large-files` | Encontra arquivos grandes        |
-| AppImage    | `--appimage`    | Remove arquivos AppImage         |
-| Thumbs      | `--thumbs`      | Remove miniaturas em cache       |
-| Recent      | `--recent`      | Lista arquivos recentes          |
-| Trash       | `--trash`       | Esvazia a lixeira do usuário     |
+| Módulo           | Flag            | Descrição                        |
+| ---------------- | --------------- | -------------------------------- |
+| Cache            | `--cache`       | Limpa cache do usuário (~/.cache)|
+| Pacotes          | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF) |
+| Flatpak          | `--flatpak`     | Remove dados órfãos do Flatpak   |
+| Snap             | `--snap`        | Remove revisões desativadas do Snap |
+| Docker           | `--docker`      | Remove containers/imagens não utilizados |
+| Logs             | `--logs`        | Limpa logs antigos do sistema (journald + .gz) |
+| Large Files      | `--large-files` | Encontra arquivos grandes (> threshold) |
+| AppImage         | `--appimage`    | Remove AppImages do diretório Downloads |
+| Thumbs           | `--thumbs`      | Remove miniaturas em cache (~/.cache/thumbnails) |
+| Recent           | `--recent`      | Lista arquivos modificados nos últimos 7 dias |
+| Trash            | `--trash`       | Esvazia a lixeira do usuário     |
+
+Flags dos módulos também podem ser combinadas com `--all` para execução completa.
 
 ## Flags
 
@@ -109,10 +111,10 @@ piunter --large-files --threshold=500
 | `-n`, `--dry-run` | Simula execução                      |
 | `-f`, `--force`   | Pula todas as confirmações           |
 | `--list`          | Lista módulos disponíveis            |
+| `--threshold=MB`  | Tamanho mínimo para arquivos grandes (default: 100) |
 | `-h`, `--help`    | Mostra ajuda                         |
-| `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
-|                  |                                       |
-| **Auto-update**  | Verifica no GitHub se há nova versão (cache de 24h) |
+
+**Auto-update**: O piunter verifica automaticamente no GitHub se há uma nova versão (cache de 24h em `~/.config/piunter/version_cache.json`). A notificação aparece no cabeçalho ao executar o comando.
 
 ## Configuração
 
@@ -149,7 +151,7 @@ package_sizes:
 ### Requisitos
 
 - Linux (amd64 ou arm64)
-- curl (para instalação)
+- curl (para instalação via script)
 
 ### Ferramentas opcionais (por módulo)
 
@@ -160,9 +162,9 @@ package_sizes:
 ## Segurança
 
 - Confirmação antes de limpar (exceto com `--force`)
-- Dry-run disponível
-- Validação de paths (proteção contra symlink attacks)
-- Execução paralela opcional
+- Dry-run disponível para simulação
+- Execução paralela opcional (configurável em `config.yaml`)
+- Módulos que requerem sudo solicitam elevação de privilégio automaticamente
 
 ## Desenvolvimento
 
