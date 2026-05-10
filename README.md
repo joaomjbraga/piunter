@@ -1,4 +1,4 @@
-# piunter (v1.4.1)
+# piunter (v1.4.2)
 
 <div>
   <img src=".github/preview.gif">
@@ -92,6 +92,7 @@ piunter --large-files --threshold=500
 | NPM         | `--npm`         | Limpa cache do npm               |
 | Yarn        | `--yarn`        | Limpa cache do Yarn              |
 | PNPM        | `--pnpm`        | Limpa cache do pnpm              |
+| Mise        | `--mise`         | Limpa cache do Mise              |
 | NVM         | `--nvm`         | Limpa cache do NVM               |
 | SDKMAN      | `--sdkman`      | Limpa cache do SDKMAN            |
 | Cache       | `--cache`       | Limpa ~/.cache                   |
@@ -115,6 +116,9 @@ piunter --large-files --threshold=500
 | `-f`, `--force`   | Pula todas as confirmações           |
 | `--list`          | Lista módulos disponíveis            |
 | `-h`, `--help`    | Mostra ajuda                         |
+|                  |                                       |
+| **Auto-update**  |                                       |
+|                  | Verifica automaticamente no GitHub se há nova versão (cache de 24h) |
 | `--threshold=MB`  | Tamanho mínimo para arquivos grandes |
 
 ## Configuração

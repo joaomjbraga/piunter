@@ -50,6 +50,7 @@ Execute com módulos específicos ou use --all para executar todos.`,
 	rootCmd.Flags().Bool("yarn", false, "Limpa cache do Yarn")
 	rootCmd.Flags().Bool("pnpm", false, "Limpa cache do PNPM")
 	rootCmd.Flags().Bool("nvm", false, "Limpa cache do NVM (Node Version Manager)")
+	rootCmd.Flags().Bool("mise", false, "Limpa cache do Mise (gerenciador de runtimes)")
 	rootCmd.Flags().Bool("sdkman", false, "Limpa cache do SDKMAN")
 	rootCmd.Flags().Bool("packages", false, "Remove pacotes órfãos")
 	rootCmd.Flags().Bool("docker", false, "Limpa Docker")
@@ -74,7 +75,7 @@ func main() {
 }
 
 var allModuleFlags = []string{
-	"cache", "npm", "yarn", "pnpm", "nvm", "sdkman", "packages", "docker", "logs",
+	"cache", "npm", "yarn", "pnpm", "nvm", "mise", "sdkman", "packages", "docker", "logs",
 	"flatpak", "snap", "large-files", "appimage", "thumbs", "recent", "trash", "extract", "compress",
 }
 
@@ -154,6 +155,12 @@ func runMain(args []string, flags *pflag.FlagSet) {
 func printHeader(distro types.DistroInfo) {
 	fmt.Println()
 	fmt.Printf("  \033[36;1mpiunter\033[0m \033[90m· CLI para Linux\033[0m\n")
+
+	if latest, err := utils.CheckForUpdate(VERSION); err == nil && latest != "" {
+		fmt.Printf("  \033[33m!\033[0m Nova versão: \033[36m%s\033[0m\n", latest)
+		fmt.Printf("  \033[90m  https://github.com/joaomjbraga/piunter/releases\033[0m\n")
+	}
+
 	fmt.Printf("  \033[90m%s\033[0m\n", strings.Repeat("─", 30))
 	fmt.Println()
 	fmt.Printf("  \033[90mSistema: %s\033[0m\n", distro.Name)

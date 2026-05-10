@@ -83,3 +83,15 @@ func TestNewSnapModule(t *testing.T) {
 		t.Errorf("expected id 'snap', got %s", module.ID())
 	}
 }
+
+func TestNewMiseModule(t *testing.T) {
+	module := NewMiseModule()
+
+	if module.ID() != "mise" {
+		t.Errorf("expected id 'mise', got %s", module.ID())
+	}
+
+	if module.Name() != "Mise" {
+		t.Errorf("expected name 'Mise', got %s", module.Name())
+	}
+}

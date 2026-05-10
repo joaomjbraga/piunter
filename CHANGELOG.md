@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-05-10
+
+### Added
+
+- **Módulo Mise:** Suporte para limpar cache do Mise (gerenciador de runtimes e ferramentas)
+  - Cache interno (`~/.cache/mise`)
+  - Downloads residuais (`~/.local/share/mise/downloads`)
+  - Versões inativas de ferramentas em `installs/`
+- **Verificador de versão:** Aviso automático quando uma nova versão do piunter é lançada
+  - Consulta a GitHub Releases API
+  - Cache de 24h em `~/.config/piunter/version_cache.json`
+  - Silencioso em erro de rede
+
 ## [1.4.1] - 2026-04-27
 
 ### Fixed

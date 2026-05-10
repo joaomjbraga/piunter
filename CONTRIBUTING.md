@@ -61,6 +61,7 @@ piunter/
         ├── os.go            # Utils SO
         ├── config.go        # Configuração
         ├── executor.go      # Executor de comandos
+        ├── update.go        # Verificador de versão
         ├── parallel.go      # Execução paralela
         └── ...
 ```
