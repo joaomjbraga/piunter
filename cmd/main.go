@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const VERSION = "1.4.2"
+const VERSION = "1.5.0"
 
 var (
 	all                bool
