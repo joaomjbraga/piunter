@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 )
 
 var enableDebug = false
@@ -12,7 +13,7 @@ func SetDebug(enabled bool) {
 
 func Debug(msg string) {
 	if enableDebug {
-		fmt.Printf("\033[36m[DEBUG]\033[0m %s\n", msg)
+		fmt.Fprintf(os.Stderr, "\033[36m[DEBUG]\033[0m %s\n", msg)
 	}
 }
 
@@ -38,10 +39,14 @@ func FormatBytes(bytes int64) string {
 		return fmt.Sprintf("%d B", bytes)
 	}
 	div, exp := int64(unit), 0
+	units := "KMGTPE"
 	for n := bytes / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
+		if exp >= len(units)-1 {
+			break
+		}
 	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), units[exp])
 }
 

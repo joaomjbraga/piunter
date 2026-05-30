@@ -8,23 +8,35 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/joaomjbraga/piunter/pkg/types"
 )
 
 func readOutput(stdout io.ReadCloser, stderr io.ReadCloser) (string, string, error) {
 	var outBuf, errBuf bytes.Buffer
-	outCh := make(chan error, 1)
+	var outErr, errErr error
+	var wg sync.WaitGroup
 
+	wg.Add(2)
 	go func() {
-		_, err := io.Copy(&outBuf, stdout)
-		outCh <- err
+		defer wg.Done()
+		_, outErr = io.Copy(&outBuf, stdout)
 	}()
+	go func() {
+		defer wg.Done()
+		_, errErr = io.Copy(&errBuf, stderr)
+	}()
+	wg.Wait()
 
-	_, copyErr := io.Copy(&errBuf, stderr)
-	<-outCh
+	var resultErr error
+	if outErr != nil {
+		resultErr = outErr
+	} else {
+		resultErr = errErr
+	}
 
-	return outBuf.String(), errBuf.String(), copyErr
+	return outBuf.String(), errBuf.String(), resultErr
 }
 
 func Exec(command string, args ...string) types.CommandResult {
@@ -80,7 +92,14 @@ func RequestSudo() bool {
 }
 
 func GetHomeDir() string {
-	home, _ := os.UserHomeDir()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		Debug(fmt.Sprintf("falha ao obter home directory: %s", err))
+		if IsRoot() {
+			return "/root"
+		}
+		return "/tmp"
+	}
 	return home
 }
 
@@ -145,7 +164,7 @@ func GetDirSize(path string) (int64, error) {
 	return size, err
 }
 
-func GetDirSizeAsync(path string) int64 {
+func GetDirSizeSafe(path string) int64 {
 	size, err := GetDirSize(path)
 	if err != nil {
 		Debug(fmt.Sprintf("falha ao medir diretório %s: %s", path, err))

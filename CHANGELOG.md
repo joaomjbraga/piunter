@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2026-05-30
+## [1.6.0] - 2026-05-30
 
 ### Added
 
@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version cache:** `saveVersionCache` chamado uma única vez com objeto completo — corrige overwrite de dados frescos
 - **`packages.go`:** Exit code 1 do `apt-get` só é ignorado se stderr não contiver `"E:"` ou `"error"`
 - **Executor pattern:** `LogsModule` e `SnapModule` usam `GetExecutor()` — agora testáveis via mock
+- **Pacotes:** Tamanhos reais via `dpkg-query` (apt), `pacman -Si` (pacman), `dnf info` (dnf) em vez de estimativa fixa `10 MB × N`
 - **Erros ignorados:** `json.Unmarshal`, `os.MkdirAll`, `GetDirSizeAsync` agora logam com `Debug`
 - **Constante renomeada:** `VERSION` → `Version` (convenção Go)
 

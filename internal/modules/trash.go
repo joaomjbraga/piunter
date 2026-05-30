@@ -63,7 +63,7 @@ func (m *TrashModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 			var size int64
 			if info.IsDir() {
-				size = utils.GetDirSizeAsync(fullPath)
+				size = utils.GetDirSizeSafe(fullPath)
 			} else {
 				size = info.Size()
 			}

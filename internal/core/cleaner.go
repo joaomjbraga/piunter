@@ -74,8 +74,14 @@ func (c *Cleaner) cleanSequential() []types.CleaningResult {
 }
 
 func (c *Cleaner) PrintReport(report *types.Report) {
-	startTime, _ := time.Parse(time.RFC3339, report.StartTime)
-	endTime, _ := time.Parse(time.RFC3339, report.EndTime)
+	startTime, err := time.Parse(time.RFC3339, report.StartTime)
+	if err != nil {
+		startTime = time.Now()
+	}
+	endTime, err := time.Parse(time.RFC3339, report.EndTime)
+	if err != nil {
+		endTime = time.Now()
+	}
 	duration := endTime.Sub(startTime)
 
 	var durationStr string

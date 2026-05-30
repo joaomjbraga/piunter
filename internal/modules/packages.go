@@ -2,6 +2,7 @@ package modules
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/joaomjbraga/piunter/internal/utils"
@@ -41,6 +42,58 @@ func (m *PackagesModule) IsAvailable() bool {
 	return m.packageManager != "" && utils.IsCommandAvailable(m.packageManager)
 }
 
+func getAptSizes(items []types.CleanableItem) {
+	executor := utils.GetExecutor()
+	for i, item := range items {
+		result := executor.Exec("dpkg-query", "-W", "-f=${Installed-Size}", item.Path)
+		if result.Success {
+			sizeKB, err := strconv.ParseInt(strings.TrimSpace(result.Stdout), 10, 64)
+			if err == nil {
+				items[i].Size = sizeKB * 1024
+			}
+		}
+	}
+}
+
+func getPacmanSizes(items []types.CleanableItem) {
+	executor := utils.GetExecutor()
+	for i, item := range items {
+		result := executor.Exec("pacman", "-Si", item.Path)
+		if !result.Success {
+			continue
+		}
+		for _, line := range strings.Split(result.Stdout, "\n") {
+			if strings.HasPrefix(line, "Installed Size") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					items[i].Size = parseSize(strings.TrimSpace(parts[1]))
+				}
+				break
+			}
+		}
+	}
+}
+
+func getDnfSizes(items []types.CleanableItem) {
+	executor := utils.GetExecutor()
+	for i, item := range items {
+		result := executor.Exec("dnf", "info", item.Path)
+		if !result.Success {
+			continue
+		}
+		for _, line := range strings.Split(result.Stdout, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "Size") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					items[i].Size = parseSize(strings.TrimSpace(parts[1]))
+				}
+				break
+			}
+		}
+	}
+}
+
 func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	result := &types.AnalysisResult{
 		Module:    m.id,
@@ -77,7 +130,6 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 	lines := strings.Split(execResult.Stdout, "\n")
 	orphanCount := 0
-	avgSize := int64(10 * utils.MB)
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -127,7 +179,23 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	}
 
 	if orphanCount > 0 {
-		result.TotalSize = int64(orphanCount) * avgSize
+		switch m.packageManager {
+		case "apt":
+			getAptSizes(result.Items)
+		case "pacman":
+			getPacmanSizes(result.Items)
+		case "dnf":
+			getDnfSizes(result.Items)
+		}
+
+		var total int64
+		for _, item := range result.Items {
+			total += item.Size
+		}
+		if total == 0 {
+			total = int64(orphanCount) * 10 * utils.MB
+		}
+		result.TotalSize = total
 	}
 
 	return result, nil
@@ -162,11 +230,12 @@ func (m *PackagesModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return result, nil
 	}
 
+	executor := utils.GetExecutor()
 	var execResult types.CommandResult
 
 	switch m.packageManager {
 	case "apt":
-		execResult = utils.Exec("sudo", "apt", "autoremove", "-y")
+		execResult = executor.Exec("sudo", "apt", "autoremove", "-y")
 	case "pacman":
 		var pkgNames []string
 		for _, item := range analysis.Items {
@@ -175,10 +244,10 @@ func (m *PackagesModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		if len(pkgNames) == 0 {
 			return result, nil
 		}
-		args := append([]string{"pacman", "-Rns"}, pkgNames...)
-		execResult = utils.Exec("sudo", args...)
+		args := append([]string{"pacman", "-Rns", "--noconfirm"}, pkgNames...)
+		execResult = executor.Exec("sudo", args...)
 	case "dnf":
-		execResult = utils.Exec("sudo", "dnf", "autoremove", "-y")
+		execResult = executor.Exec("sudo", "dnf", "autoremove", "-y")
 	}
 
 	if execResult.Success {

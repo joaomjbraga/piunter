@@ -137,14 +137,16 @@ func (m *LogsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return result, nil
 	}
 
-	sudoPrefix := "sudo"
-	if utils.IsRoot() {
-		sudoPrefix = ""
-	}
-
 	executor := utils.GetExecutor()
-	journalResult := executor.Exec(sudoPrefix, "journalctl", "--vacuum-time=7d")
-	findResult := executor.Exec(sudoPrefix, "find", "/var/log", "-type", "f", "-name", "*.gz", "-mtime", "+30", "-delete")
+
+	var journalResult, findResult types.CommandResult
+	if utils.IsRoot() {
+		journalResult = executor.Exec("journalctl", "--vacuum-time=7d")
+		findResult = executor.Exec("find", "/var/log", "-type", "f", "-name", "*.gz", "-mtime", "+30", "-delete")
+	} else {
+		journalResult = executor.Exec("sudo", "journalctl", "--vacuum-time=7d")
+		findResult = executor.Exec("sudo", "find", "/var/log", "-type", "f", "-name", "*.gz", "-mtime", "+30", "-delete")
+	}
 
 	var journalSize, gzSize int64
 	for _, item := range analysis.Items {
@@ -432,15 +434,15 @@ func (m *SnapModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return result, nil
 	}
 
-	sudoPrefix := "sudo"
-	if utils.IsRoot() {
-		sudoPrefix = ""
-	}
-
 	var removed int
 	executor := utils.GetExecutor()
 	for _, s := range disabled {
-		execResult := executor.Exec(sudoPrefix, "snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
+		var execResult types.CommandResult
+		if utils.IsRoot() {
+			execResult = executor.Exec("snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
+		} else {
+			execResult = executor.Exec("sudo", "snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
+		}
 		if execResult.Success {
 			removed++
 		} else {

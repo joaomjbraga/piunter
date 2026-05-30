@@ -56,10 +56,29 @@ func (m *DockerModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		}
 	}
 
-	containerCount := len(utils.SplitLines(executor.Exec("docker", "ps", "-aq").Stdout))
-	imageCount := len(utils.SplitLines(executor.Exec("docker", "images", "-aq").Stdout))
-	volumeCount := len(utils.SplitLines(executor.Exec("docker", "volume", "ls", "-q").Stdout))
-	networkCount := len(utils.SplitLines(executor.Exec("docker", "network", "ls", "--filter", "type=custom", "-q").Stdout))
+	containerResult := executor.Exec("docker", "ps", "-aq")
+	containerCount := 0
+	if containerResult.Success {
+		containerCount = len(utils.SplitLines(containerResult.Stdout))
+	}
+
+	imageResult := executor.Exec("docker", "images", "-aq")
+	imageCount := 0
+	if imageResult.Success {
+		imageCount = len(utils.SplitLines(imageResult.Stdout))
+	}
+
+	volumeResult := executor.Exec("docker", "volume", "ls", "-q")
+	volumeCount := 0
+	if volumeResult.Success {
+		volumeCount = len(utils.SplitLines(volumeResult.Stdout))
+	}
+
+	networkResult := executor.Exec("docker", "network", "ls", "--filter", "type=custom", "-q")
+	networkCount := 0
+	if networkResult.Success {
+		networkCount = len(utils.SplitLines(networkResult.Stdout))
+	}
 
 	if containerCount > 0 {
 		result.Items = append(result.Items, types.CleanableItem{
@@ -125,7 +144,12 @@ func (m *DockerModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 
 	executor := utils.GetExecutor()
 
-	containerIDs := strings.Fields(executor.Exec("docker", "ps", "-q").Stdout)
+	runningResult := executor.Exec("docker", "ps", "-q")
+	if !runningResult.Success {
+		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao listar containers: %s", runningResult.Stderr))
+		return result, nil
+	}
+	containerIDs := strings.Fields(runningResult.Stdout)
 	if len(containerIDs) > 0 {
 		stopArgs := append([]string{"stop"}, containerIDs...)
 		stopResult := executor.Exec("docker", stopArgs...)

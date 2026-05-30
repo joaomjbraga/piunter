@@ -67,19 +67,19 @@ piunter --large-files --threshold=500
 
 ## Módulos
 
-| Módulo      | Flag            | Descrição                                        |
-| ----------- | --------------- | ------------------------------------------------ |
-| Cache       | `--cache`       | Limpa cache do usuário (~/.cache)                |
-| Pacotes     | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF)           |
-| Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak                   |
-| Snap        | `--snap`        | Remove revisões desativadas do Snap              |
+| Módulo      | Flag            | Descrição                                                                          |
+| ----------- | --------------- | ---------------------------------------------------------------------------------- |
+| Cache       | `--cache`       | Limpa cache do usuário (~/.cache)                                                  |
+| Pacotes     | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF)                                             |
+| Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak                                                     |
+| Snap        | `--snap`        | Remove revisões desativadas do Snap                                                |
 | Docker      | `--docker`      | Remove todos os recursos Docker (containers, imagens, volumes, redes, build cache) |
-| Logs        | `--logs`        | Limpa logs antigos do sistema (journald + .gz)   |
-| Large Files | `--large-files` | Encontra arquivos grandes (> threshold)          |
-| AppImage    | `--appimage`    | Remove AppImages do diretório Downloads          |
-| Thumbs      | `--thumbs`      | Remove miniaturas em cache (~/.cache/thumbnails) |
-| Recent      | `--recent`      | Lista arquivos modificados nos últimos 7 dias    |
-| Trash       | `--trash`       | Esvazia a lixeira do usuário                     |
+| Logs        | `--logs`        | Limpa logs antigos do sistema (journald + .gz)                                     |
+| Large Files | `--large-files` | Encontra arquivos grandes (> threshold)                                            |
+| AppImage    | `--appimage`    | Remove AppImages do diretório Downloads                                            |
+| Thumbs      | `--thumbs`      | Remove miniaturas em cache (~/.cache/thumbnails)                                   |
+| Recent      | `--recent`      | Lista arquivos modificados nos últimos 7 dias                                      |
+| Trash       | `--trash`       | Esvazia a lixeira do usuário                                                       |
 
 Flags dos módulos também podem ser combinadas com `--all` para execução completa.
 
@@ -141,8 +141,10 @@ go vet ./...
 
 ## Licença
 
-MIT - João Braga
+MIT - João M J Braga
 
 ## Contribuindo
+
+[![João M J Braga](https://github.com/joaomjbraga.png?size=100)](https://github.com/joaomjbraga)
 
 Veja [CONTRIBUTING.md](CONTRIBUTING.md)
