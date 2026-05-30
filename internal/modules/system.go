@@ -31,7 +31,8 @@ func (m *LogsModule) IsAvailable() bool {
 }
 
 func getJournalSize() int64 {
-	execResult := utils.Exec("journalctl", "--disk-usage")
+	executor := utils.GetExecutor()
+	execResult := executor.Exec("journalctl", "--disk-usage")
 	if !execResult.Success {
 		return 0
 	}
@@ -51,13 +52,24 @@ func getJournalSize() int64 {
 	return 0
 }
 
+func isLogGzFile(name string) bool {
+	base := strings.TrimSuffix(name, ".gz")
+	if strings.HasSuffix(base, ".log") {
+		return true
+	}
+	if base != "" && base[len(base)-1] >= '0' && base[len(base)-1] <= '9' {
+		return true
+	}
+	return false
+}
+
 func getOldGzSize(root string) int64 {
 	var total int64
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(info.Name(), ".gz") && time.Since(info.ModTime()).Hours() > 30*24 {
+		if isLogGzFile(info.Name()) && time.Since(info.ModTime()).Hours() > 30*24 {
 			total += info.Size()
 		}
 		return nil
@@ -130,23 +142,37 @@ func (m *LogsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		sudoPrefix = ""
 	}
 
-	journalOK := true
-	journalResult := utils.Exec(sudoPrefix, "journalctl", "--vacuum-time=7d")
-	if !journalResult.Success {
-		journalOK = false
+	executor := utils.GetExecutor()
+	journalResult := executor.Exec(sudoPrefix, "journalctl", "--vacuum-time=7d")
+	findResult := executor.Exec(sudoPrefix, "find", "/var/log", "-type", "f", "-name", "*.gz", "-mtime", "+30", "-delete")
+
+	var journalSize, gzSize int64
+	for _, item := range analysis.Items {
+		switch item.Path {
+		case "/var/log/journal":
+			journalSize = item.Size
+		case "/var/log/*.gz":
+			gzSize = item.Size
+		}
+	}
+
+	var totalFreed int64
+	if journalResult.Success {
+		totalFreed += journalSize
+		result.ItemsRemoved++
+	} else {
 		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao limpar journal: %s", journalResult.Stderr))
 	}
 
-	gzOK := true
-	findResult := utils.Exec(sudoPrefix, "find", "/var/log", "-type", "f", "-name", "*.gz", "-mtime", "+30", "-delete")
-	if !findResult.Success {
-		gzOK = false
+	if findResult.Success {
+		totalFreed += gzSize
+		result.ItemsRemoved++
+	} else {
 		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao limpar logs antigos: %s", findResult.Stderr))
 	}
 
-	if journalOK || gzOK {
-		result.SpaceFreed = analysis.TotalSize
-		result.ItemsRemoved = len(analysis.Items)
+	if totalFreed > 0 {
+		result.SpaceFreed = totalFreed
 		utils.Item(m.Name(), "Logs limpos")
 	}
 
@@ -412,8 +438,9 @@ func (m *SnapModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	}
 
 	var removed int
+	executor := utils.GetExecutor()
 	for _, s := range disabled {
-		execResult := utils.Exec(sudoPrefix, "snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
+		execResult := executor.Exec(sudoPrefix, "snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
 		if execResult.Success {
 			removed++
 		} else {

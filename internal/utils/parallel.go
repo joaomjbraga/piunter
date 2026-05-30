@@ -1,21 +1,8 @@
 package utils
 
 import (
-	"runtime"
 	"strings"
 )
-
-func GetOptimalWorkers(taskCount int) int {
-	cpuCount := runtime.NumCPU()
-	workers := cpuCount
-	if taskCount < workers {
-		workers = taskCount
-	}
-	if workers < 1 {
-		workers = 1
-	}
-	return workers
-}
 
 func SplitLines(s string) []string {
 	if s == "" {

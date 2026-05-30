@@ -8,6 +8,11 @@ import (
 	"github.com/joaomjbraga/piunter/pkg/types"
 )
 
+var cacheSkipDirs = map[string]bool{
+	"thumbnails": true,
+	"thumbnail":  true,
+}
+
 type CacheModule struct {
 	BaseModule
 }
@@ -43,11 +48,6 @@ func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		return result, utils.NewAnalysisError(m.id, "falha ao ler diretório de cache", err)
 	}
 
-	skipDirs := map[string]bool{
-		"thumbnails": true,
-		"thumbnail":  true,
-	}
-
 	for _, entry := range entries {
 		fullPath := filepath.Join(cacheDir, entry.Name())
 		info, err := os.Stat(fullPath)
@@ -55,7 +55,7 @@ func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 			continue
 		}
 
-		if skipDirs[entry.Name()] {
+		if cacheSkipDirs[entry.Name()] {
 			continue
 		}
 
@@ -101,13 +101,8 @@ func (m *CacheModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		Errors:       []string{},
 	}
 
-	skipDirs := map[string]bool{
-		"thumbnails": true,
-		"thumbnail":  true,
-	}
-
 	for _, item := range analysis.Items {
-		if skipDirs[filepath.Base(item.Path)] {
+		if cacheSkipDirs[filepath.Base(item.Path)] {
 			continue
 		}
 

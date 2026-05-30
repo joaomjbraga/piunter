@@ -30,16 +30,12 @@ func NewAnalysisError(module, message string, cause error) *AnalysisError {
 }
 
 type CleaningError struct {
-	Module    string
-	Message   string
-	Cause     error
-	ItemPath  string
+	Module  string
+	Message string
+	Cause   error
 }
 
 func (e *CleaningError) Error() string {
-	if e.ItemPath != "" {
-		return fmt.Sprintf("%s: %s (item: %s)", e.Module, e.Message, e.ItemPath)
-	}
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %s (%v)", e.Module, e.Message, e.Cause)
 	}

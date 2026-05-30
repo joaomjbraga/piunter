@@ -155,8 +155,7 @@ git push origin feat/nova-funcionalidade
 - Código deve passar em `go vet ./...` sem erros
 - Código deve ser testado quando possível
 - Preferir `fmt.Errorf("%s", err)` em vez de `fmt.Errorf(err)` (segurança)
-- Usar `GetOptimalWorkers()` para workers paralelos
-- Config deve ser cacheado com `sync.Once`
+- Execução sequencial por padrão
 
 ## Perguntas?
 

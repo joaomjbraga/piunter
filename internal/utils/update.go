@@ -38,14 +38,19 @@ func loadVersionCache() VersionCache {
 	if err != nil {
 		return cache
 	}
-	json.Unmarshal(data, &cache)
+	if err := json.Unmarshal(data, &cache); err != nil {
+		Debug(fmt.Sprintf("falha ao decodificar cache de versão: %s", err))
+	}
 	return cache
 }
 
 func saveVersionCache(cache VersionCache) {
 	path := getVersionCachePath()
 	dir := filepath.Dir(path)
-	os.MkdirAll(dir, 0755)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		Debug(fmt.Sprintf("falha ao criar diretório de cache: %s", err))
+		return
+	}
 
 	data, err := json.Marshal(cache)
 	if err != nil {
@@ -138,19 +143,21 @@ func CheckForUpdate(currentVersion string) (string, error) {
 		return "", err
 	}
 
-	saveVersionCache(VersionCache{
-		LastCheck:     time.Now().Unix(),
-		LatestVersion: latest,
-	})
-
-	if isNewerVersion(currentVersion, latest) {
-		if latest == cache.NotifiedVersion {
-			return "", nil
-		}
-		cache.NotifiedVersion = latest
-		saveVersionCache(cache)
-		return latest, nil
+	newCache := VersionCache{
+		LastCheck:       time.Now().Unix(),
+		LatestVersion:   latest,
+		NotifiedVersion: loadVersionCache().NotifiedVersion,
 	}
 
+	notify := isNewerVersion(currentVersion, latest) && latest != newCache.NotifiedVersion
+	if notify {
+		newCache.NotifiedVersion = latest
+	}
+
+	saveVersionCache(newCache)
+
+	if notify {
+		return latest, nil
+	}
 	return "", nil
 }

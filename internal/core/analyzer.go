@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/joaomjbraga/piunter/internal/modules"
 	"github.com/joaomjbraga/piunter/internal/utils"
@@ -11,7 +12,6 @@ import (
 type Analyzer struct {
 	modules   []modules.Module
 	threshold int
-	parallel  bool
 }
 
 func NewAnalyzer(moduleIds []string, threshold int) *Analyzer {
@@ -21,23 +21,13 @@ func NewAnalyzer(moduleIds []string, threshold int) *Analyzer {
 	} else {
 		mods = modules.GetModulesByIds(moduleIds)
 	}
-	cfg, _ := utils.LoadConfig()
-	utils.SetDebug(cfg.DebugEnabled)
 	return &Analyzer{
 		modules:   mods,
 		threshold: threshold,
-		parallel: cfg.Parallel,
 	}
 }
 
 func (a *Analyzer) Analyze() ([]*types.AnalysisResult, error) {
-	if a.parallel {
-		return a.analyzeParallel()
-	}
-	return a.analyzeSequential()
-}
-
-func (a *Analyzer) analyzeSequential() ([]*types.AnalysisResult, error) {
 	var results []*types.AnalysisResult
 	for _, m := range a.modules {
 		if !m.IsAvailable() {
@@ -51,55 +41,6 @@ func (a *Analyzer) analyzeSequential() ([]*types.AnalysisResult, error) {
 		results = append(results, result)
 	}
 	return results, nil
-}
-
-func (a *Analyzer) analyzeParallel() ([]*types.AnalysisResult, error) {
-	results := make([]*types.AnalysisResult, len(a.modules))
-	resultChan := make(chan struct {
-		index  int
-		result *types.AnalysisResult
-		err    error
-	}, len(a.modules))
-
-	workerCount := utils.GetOptimalWorkers(len(a.modules))
-
-	jobChan := make(chan int, len(a.modules))
-	for i := range a.modules {
-		jobChan <- i
-	}
-	close(jobChan)
-
-	for w := 0; w < workerCount; w++ {
-		go func() {
-			for idx := range jobChan {
-				m := a.modules[idx]
-				result, err := m.Analyze(a.threshold)
-				resultChan <- struct {
-					index  int
-					result *types.AnalysisResult
-					err    error
-				}{idx, result, err}
-			}
-		}()
-	}
-
-	for i := 0; i < len(a.modules); i++ {
-		res := <-resultChan
-		if res.err != nil {
-			utils.Debug(fmt.Sprintf("%s: %s", a.modules[res.index].Name(), res.err.Error()))
-		} else {
-			results[res.index] = res.result
-		}
-	}
-
-	var finalResults []*types.AnalysisResult
-	for _, r := range results {
-		if r != nil {
-			finalResults = append(finalResults, r)
-		}
-	}
-
-	return finalResults, nil
 }
 
 func (a *Analyzer) GetSummary(results []*types.AnalysisResult) struct {
@@ -151,7 +92,7 @@ func (a *Analyzer) PrintAnalysis(results []*types.AnalysisResult) {
 	}
 
 	utils.Space()
-	fmt.Printf("  \033[90m%s\033[0m\n", repeat("─", 40))
+	fmt.Printf("  \033[90m%s\033[0m\n", strings.Repeat("─", 40))
 
 	totalSize := utils.FormatBytes(summary.TotalSize)
 
@@ -162,10 +103,3 @@ func (a *Analyzer) PrintAnalysis(results []*types.AnalysisResult) {
 	fmt.Println()
 }
 
-func repeat(s string, count int) string {
-	result := ""
-	for i := 0; i < count; i++ {
-		result += s
-	}
-	return result
-}

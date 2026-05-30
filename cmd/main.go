@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const VERSION = "1.6.0"
+const Version = "1.6.0"
 
 var (
 	all                bool
@@ -29,7 +29,7 @@ var rootCmd *cobra.Command
 func init() {
 	rootCmd = &cobra.Command{
 		Use:     "piunter",
-		Version: VERSION,
+		Version: Version,
 		Short:   "CLI para limpeza e otimização de sistemas Linux",
 		Long: `piunter - CLI para limpeza e otimização de sistemas Linux
 
@@ -149,7 +149,7 @@ func printHeader(distro types.DistroInfo) {
 	fmt.Println()
 	fmt.Printf("  \033[36;1mpiunter\033[0m \033[90m· CLI para Linux\033[0m\n")
 
-	if latest, err := utils.CheckForUpdate(VERSION); err == nil && latest != "" {
+	if latest, err := utils.CheckForUpdate(Version); err == nil && latest != "" {
 		fmt.Printf("  \033[33m!\033[0m Nova versão: \033[36m%s\033[0m\n", latest)
 		fmt.Printf("  \033[90m  https://github.com/joaomjbraga/piunter/releases\033[0m\n")
 	}

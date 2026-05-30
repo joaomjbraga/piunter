@@ -65,14 +65,19 @@ func (m *PackagesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 
 	executor := utils.GetExecutor()
 	execResult := executor.Exec(cmd, args...)
-	if !execResult.Success && execResult.Code != 1 {
-		return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf("%s", execResult.Stderr))
+	if !execResult.Success {
+		if execResult.Code != 1 {
+			return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf("%s", execResult.Stderr))
+		}
+		stderr := strings.ToLower(execResult.Stderr)
+		if strings.Contains(stderr, "e:") || strings.Contains(stderr, "error") {
+			return result, utils.NewAnalysisError(m.id, fmt.Sprintf("falha ao listar pacotes órfãos com %s", m.packageManager), fmt.Errorf("%s", execResult.Stderr))
+		}
 	}
 
 	lines := strings.Split(execResult.Stdout, "\n")
 	orphanCount := 0
-	config, _ := utils.LoadConfig()
-	avgSize := config.PackageSizes.OrphanPackageMB * utils.MB
+	avgSize := int64(10 * utils.MB)
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)

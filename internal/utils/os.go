@@ -146,7 +146,10 @@ func GetDirSize(path string) (int64, error) {
 }
 
 func GetDirSizeAsync(path string) int64 {
-	size, _ := GetDirSize(path)
+	size, err := GetDirSize(path)
+	if err != nil {
+		Debug(fmt.Sprintf("falha ao medir diretório %s: %s", path, err))
+	}
 	return size
 }
 

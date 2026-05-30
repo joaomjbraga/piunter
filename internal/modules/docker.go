@@ -17,7 +17,7 @@ func NewDockerModule() *DockerModule {
 		BaseModule: BaseModule{
 			id:          "docker",
 			name:        "Docker",
-			description: "Remove containers e imagens Docker não utilizados",
+			description: "Remove todos os recursos Docker",
 		},
 	}
 }
@@ -34,6 +34,7 @@ func (m *DockerModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	}
 
 	executor := utils.GetExecutor()
+
 	execResult := executor.Exec("docker", "system", "df", "--format", "{{.Type}}\t{{.Size}}")
 	if !execResult.Success {
 		return result, utils.NewAnalysisError(m.id, "falha ao analisar Docker", fmt.Errorf("%s: exit code %d", execResult.Stderr, execResult.Code))
@@ -55,6 +56,44 @@ func (m *DockerModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 		}
 	}
 
+	containerCount := len(utils.SplitLines(executor.Exec("docker", "ps", "-aq").Stdout))
+	imageCount := len(utils.SplitLines(executor.Exec("docker", "images", "-aq").Stdout))
+	volumeCount := len(utils.SplitLines(executor.Exec("docker", "volume", "ls", "-q").Stdout))
+	networkCount := len(utils.SplitLines(executor.Exec("docker", "network", "ls", "--filter", "type=custom", "-q").Stdout))
+
+	if containerCount > 0 {
+		result.Items = append(result.Items, types.CleanableItem{
+			Path:        fmt.Sprintf("%d containers", containerCount),
+			Size:        0,
+			Type:        "docker",
+			Description: fmt.Sprintf("%d containers para remover", containerCount),
+		})
+	}
+	if imageCount > 0 {
+		result.Items = append(result.Items, types.CleanableItem{
+			Path:        fmt.Sprintf("%d imagens", imageCount),
+			Size:        0,
+			Type:        "docker",
+			Description: fmt.Sprintf("%d imagens para remover", imageCount),
+		})
+	}
+	if volumeCount > 0 {
+		result.Items = append(result.Items, types.CleanableItem{
+			Path:        fmt.Sprintf("%d volumes", volumeCount),
+			Size:        0,
+			Type:        "docker",
+			Description: fmt.Sprintf("%d volumes para remover", volumeCount),
+		})
+	}
+	if networkCount > 0 {
+		result.Items = append(result.Items, types.CleanableItem{
+			Path:        fmt.Sprintf("%d redes", networkCount),
+			Size:        0,
+			Type:        "docker",
+			Description: fmt.Sprintf("%d redes para remover", networkCount),
+		})
+	}
+
 	result.TotalSize = totalSize
 	return result, nil
 }
@@ -65,7 +104,7 @@ func (m *DockerModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return &types.CleaningResult{
 			Module:  m.id,
 			Success: false,
-			Errors: []string{err.Error()},
+			Errors:  []string{err.Error()},
 		}, err
 	}
 
@@ -77,25 +116,32 @@ func (m *DockerModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		Errors:       []string{},
 	}
 
-	if analysis.TotalSize == 0 {
-		return result, nil
-	}
-
 	if dryRun {
 		result.SpaceFreed = analysis.TotalSize
-		utils.Info(fmt.Sprintf("[DRY-RUN] Limparia %s do Docker", utils.FormatBytes(analysis.TotalSize)))
+		result.ItemsRemoved = len(analysis.Items)
+		utils.Info(fmt.Sprintf("[DRY-RUN] Removeria todos os recursos Docker (%s)", utils.FormatBytes(analysis.TotalSize)))
 		return result, nil
 	}
 
 	executor := utils.GetExecutor()
-	execResult := executor.Exec("docker", "system", "prune", "-a", "-f")
-	if execResult.Success {
+
+	containerIDs := strings.Fields(executor.Exec("docker", "ps", "-q").Stdout)
+	if len(containerIDs) > 0 {
+		stopArgs := append([]string{"stop"}, containerIDs...)
+		stopResult := executor.Exec("docker", stopArgs...)
+		if !stopResult.Success {
+			result.Errors = append(result.Errors, fmt.Sprintf("Falha ao parar containers: %s", stopResult.Stderr))
+		}
+	}
+
+	pruneResult := executor.Exec("docker", "system", "prune", "-a", "--volumes", "-f")
+	if pruneResult.Success {
 		result.SpaceFreed = analysis.TotalSize
 		result.ItemsRemoved = len(analysis.Items)
-		utils.Item(m.Name(), "Docker limpo")
+		utils.Item(m.Name(), "Docker totalmente limpo")
 	} else {
 		result.Success = false
-		result.Errors = append(result.Errors, utils.NewCleaningError(m.Name(), "falha ao limpar Docker", fmt.Errorf("%s", execResult.Stderr)).Error())
+		result.Errors = append(result.Errors, utils.NewCleaningError(m.Name(), "falha ao limpar Docker", fmt.Errorf("%s", pruneResult.Stderr)).Error())
 	}
 
 	return result, nil

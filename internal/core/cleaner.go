@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/joaomjbraga/piunter/internal/modules"
@@ -10,32 +11,21 @@ import (
 )
 
 type Cleaner struct {
-	modules  []modules.Module
-	dryRun   bool
-	parallel bool
+	modules []modules.Module
+	dryRun  bool
 }
 
 func NewCleaner(moduleIds []string, dryRun bool) *Cleaner {
 	mods := modules.GetModulesByIds(moduleIds)
-	cfg, _ := utils.LoadConfig()
-	utils.SetDebug(cfg.DebugEnabled)
 	return &Cleaner{
-		modules:  mods,
-		dryRun:   dryRun,
-		parallel: cfg.Parallel,
+		modules: mods,
+		dryRun:  dryRun,
 	}
 }
 
 func (c *Cleaner) Clean() (*types.Report, error) {
 	startTime := time.Now()
-	var results []types.CleaningResult
-
-	if c.parallel {
-		results = c.cleanParallel()
-	} else {
-		results = c.cleanSequential()
-	}
-
+	results := c.cleanSequential()
 	endTime := time.Now()
 
 	var totalSpaceFreed int64
@@ -83,58 +73,6 @@ func (c *Cleaner) cleanSequential() []types.CleaningResult {
 	return results
 }
 
-func (c *Cleaner) cleanParallel() []types.CleaningResult {
-	results := make([]types.CleaningResult, len(c.modules))
-	resultChan := make(chan struct {
-		index   int
-		result types.CleaningResult
-		err    error
-	}, len(c.modules))
-
-	workerCount := utils.GetOptimalWorkers(len(c.modules))
-
-	jobChan := make(chan int, len(c.modules))
-	for i := range c.modules {
-		jobChan <- i
-	}
-	close(jobChan)
-
-	for w := 0; w < workerCount; w++ {
-		go func() {
-			for idx := range jobChan {
-				m := c.modules[idx]
-				result, err := m.Clean(c.dryRun)
-				if err != nil {
-					resultChan <- struct {
-						index   int
-						result types.CleaningResult
-						err    error
-					}{idx, types.CleaningResult{
-						Module:       m.ID(),
-						Success:      false,
-						SpaceFreed:   0,
-						ItemsRemoved: 0,
-						Errors:       []string{err.Error()},
-					}, err}
-				} else {
-					resultChan <- struct {
-						index   int
-						result types.CleaningResult
-						err    error
-					}{idx, *result, nil}
-				}
-			}
-		}()
-	}
-
-	for i := 0; i < len(c.modules); i++ {
-		res := <-resultChan
-		results[res.index] = res.result
-	}
-
-	return results
-}
-
 func (c *Cleaner) PrintReport(report *types.Report) {
 	startTime, _ := time.Parse(time.RFC3339, report.StartTime)
 	endTime, _ := time.Parse(time.RFC3339, report.EndTime)
@@ -156,7 +94,7 @@ func (c *Cleaner) PrintReport(report *types.Report) {
 	}
 
 	utils.Space()
-	fmt.Printf("  \033[90m%s\033[0m\n", repeat("─", 40))
+	fmt.Printf("  \033[90m%s\033[0m\n", strings.Repeat("─", 40))
 
 	totalSize := utils.FormatBytes(report.TotalSpaceFreed)
 	totalItems := fmt.Sprintf("%d", report.TotalItemsRemoved)

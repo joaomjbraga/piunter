@@ -1,4 +1,4 @@
-# piunter (v1.6.0)
+# piunter (v1.7.0)
 
 <div>
   <img src=".github/preview.gif">
@@ -73,7 +73,7 @@ piunter --large-files --threshold=500
 | Pacotes     | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF)           |
 | Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak                   |
 | Snap        | `--snap`        | Remove revisões desativadas do Snap              |
-| Docker      | `--docker`      | Remove containers/imagens não utilizados         |
+| Docker      | `--docker`      | Remove todos os recursos Docker (containers, imagens, volumes, redes, build cache) |
 | Logs        | `--logs`        | Limpa logs antigos do sistema (journald + .gz)   |
 | Large Files | `--large-files` | Encontra arquivos grandes (> threshold)          |
 | AppImage    | `--appimage`    | Remove AppImages do diretório Downloads          |
@@ -100,30 +100,6 @@ Flags dos módulos também podem ser combinadas com `--all` para execução comp
 
 > Para desativar a verificação: `export PIUNTER_SKIP_UPDATE_CHECK=1`
 
-## Configuração
-
-O piunter lê configurações de `~/.config/piunter/config.yaml`:
-
-```yaml
-version: 1.0
-threshold_mb: 100
-dry_run_default: false
-debug_enabled: false
-parallel: false
-
-disabled_modules:
-  - flatpak
-  - snap
-
-exclude_paths:
-  - /home/user/documents
-
-package_sizes:
-  orphan_package_mb: 10
-  flatpak_app_mb: 50
-  snap_revision_mb: 200
-```
-
 ## Compatibilidade
 
 | Distribuição  | Gerenciador |
@@ -147,7 +123,7 @@ package_sizes:
 
 - Confirmação antes de limpar (exceto com `--force`)
 - Dry-run disponível para simulação
-- Execução paralela opcional (configurável em `config.yaml`)
+- Execução sequencial por padrão
 - Módulos que requerem sudo solicitam elevação de privilégio automaticamente
 
 ## Desenvolvimento

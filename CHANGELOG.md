@@ -5,25 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.0] - 2026-05-30
+## [1.7.0] - 2026-05-30
 
 ### Added
 
-- **Flag `--version`:** Mostra a versão do piunter
-- **GitHub Actions:** Workflow de release automático (`amd64` + `arm64`) ao criar tag `v*`
-- **Cobertura de testes:** `go test -coverprofile` documentado no `CONTRIBUTING.md`
-- **Variável de ambiente `PIUNTER_SKIP_UPDATE_CHECK`:** Salta verificação de versão
+- **Docker nuclear:** `docker stop` antes do prune; contagem de containers, imagens, volumes e redes na análise
+- **Filtro `isLogGzFile()`:** Só considera `.gz` com padrão de log (terminam em `.log` ou dígito) em `/var/log`
 
 ### Changed
 
-- **Parse YAML:** Substituído parser manual por `gopkg.in/yaml.v3` — mais robusto e confiável
-- **SnapModule:** Removeu exigência de `IsRoot()`; usa `sudo` como os demais módulos
-- **User-Agent:** `fetchLatestVersion()` envia `User-Agent: piunter/X.X.X` para GitHub API
-- **Notificação única:** `CheckForUpdate` não notifica duas vezes a mesma versão
+- **Docker:** `docker system prune -a --volumes -f` — remove volumes e build cache (antes só `prune -a`)
+- **Docker:** Resultado de `docker stop` verificado; erros acumulados no módulo
+- **`shouldSkipDir`:** `strings.Contains` substituído por `==` — evita falsos positivos (`node_modules_backup`, `my.cache.data`)
+- **LogsModule:** Espaço limpo calculado por operação (journal vs gz) — corrige sobrestimativa quando uma falha
+- **Version cache:** `saveVersionCache` chamado uma única vez com objeto completo — corrige overwrite de dados frescos
+- **`packages.go`:** Exit code 1 do `apt-get` só é ignorado se stderr não contiver `"E:"` ou `"error"`
+- **Executor pattern:** `LogsModule` e `SnapModule` usam `GetExecutor()` — agora testáveis via mock
+- **Erros ignorados:** `json.Unmarshal`, `os.MkdirAll`, `GetDirSizeAsync` agora logam com `Debug`
+- **Constante renomeada:** `VERSION` → `Version` (convenção Go)
 
 ### Removed
 
-- **Script de instalação:** Removido `install/install.sh` — instalação agora é só `curl + chmod + mv`
+- **Sistema de config YAML:** `config.go` (131 linhas), `config_test.go` (141 linhas), dependência `gopkg.in/yaml.v3`
+- **Código paralelo morto:** `analyzeParallel()` + `cleanParallel()` — 117 linhas; campo `parallel`; `GetOptimalWorkers()`
+- **`CleaningError.ItemPath`:** campo nunca preenchido
+
+### Fixed
+
+- **LogsModule:** Espaço reportado agora reflete apenas as operações que realmente sucederam
+- **Version cache:** Notificação de nova versão já não é silenciada por overwrite do cache
+- **`shouldSkipDir`:** `node_modules_backup` já não corresponde a `node_modules`
 
 ## [1.5.0] - 2026-05-10
 

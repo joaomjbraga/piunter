@@ -53,7 +53,7 @@ var SkipDirs = []string{
 
 func shouldSkipDir(name string) bool {
 	for _, skip := range SkipDirs {
-		if name == skip || strings.Contains(name, skip) {
+		if name == skip {
 			return true
 		}
 	}
