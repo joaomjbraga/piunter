@@ -54,4 +54,12 @@ func TestNewSnapModule(t *testing.T) {
 	if module.ID() != "snap" {
 		t.Errorf("expected id 'snap', got %s", module.ID())
 	}
+
+	if module.Name() != "Snap" {
+		t.Errorf("expected name 'Snap', got %s", module.Name())
+	}
+
+	if module.Description() == "" {
+		t.Errorf("expected non-empty description")
+	}
 }

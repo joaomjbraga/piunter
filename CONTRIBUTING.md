@@ -38,6 +38,11 @@ go vet ./...
 # Executar testes
 go test ./...
 
+# Verificar cobertura
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out | tail -1
+rm -f coverage.out
+
 # Build final
 go build -o piunter ./cmd
 ```
@@ -46,9 +51,10 @@ go build -o piunter ./cmd
 
 ```
 piunter/
+├── .github/workflows/
+│   └── release.yml          # Release automático (amd64 + arm64)
 ├── cmd/main.go              # Entry point + CLI (Cobra)
 ├── pkg/types/types.go        # Tipos compartilhados
-├── install/install.sh        # Script de instalação
 └── internal/
     ├── core/
     │   ├── analyzer.go      # Análise de espaço

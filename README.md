@@ -15,33 +15,20 @@ CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 
 ## Instalação
 
-### Script de instalação (Recomendado)
+### Binary release (recomendado)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/install/install.sh | sudo bash
-```
-
-Para usuário sem sudo:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/joaomjbraga/piunter/main/install/install.sh | bash
-```
-
-### Binary release
-
-```bash
-# Baixe a versão mais recente (amd64)
+# amd64
 curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-amd64 -o piunter
-
 chmod +x piunter
 sudo mv piunter /usr/local/bin/
-piunter --help
 ```
 
-Para **arm64**:
-
 ```bash
+# arm64
 curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-linux-arm64 -o piunter
+chmod +x piunter
+sudo mv piunter /usr/local/bin/
 ```
 
 ### Via Go
@@ -50,18 +37,12 @@ curl -L https://github.com/joaomjbraga/piunter/releases/latest/download/piunter-
 go install github.com/joaomjbraga/piunter/cmd@latest
 ```
 
-### Build local
-
-```bash
-git clone https://github.com/joaomjbraga/piunter.git
-cd piunter
-go build -o piunter ./cmd
-./piunter --help
-```
-
 ## Uso
 
 ```bash
+# Ver versão
+piunter --version
+
 # Ver help
 piunter --help
 
@@ -111,10 +92,13 @@ Flags dos módulos também podem ser combinadas com `--all` para execução comp
 | `-n`, `--dry-run` | Simula execução                      |
 | `-f`, `--force`   | Pula todas as confirmações           |
 | `--list`          | Lista módulos disponíveis            |
+| `--version`       | Mostra a versão do piunter           |
 | `--threshold=MB`  | Tamanho mínimo para arquivos grandes (default: 100) |
 | `-h`, `--help`    | Mostra ajuda                         |
 
 **Auto-update**: O piunter verifica automaticamente no GitHub se há uma nova versão (cache de 24h em `~/.config/piunter/version_cache.json`). A notificação aparece no cabeçalho ao executar o comando.
+
+> Para desativar a verificação: `export PIUNTER_SKIP_UPDATE_CHECK=1`
 
 ## Configuração
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-05-30
+
+### Added
+
+- **Flag `--version`:** Mostra a versão do piunter
+- **GitHub Actions:** Workflow de release automático (`amd64` + `arm64`) ao criar tag `v*`
+- **Cobertura de testes:** `go test -coverprofile` documentado no `CONTRIBUTING.md`
+- **Variável de ambiente `PIUNTER_SKIP_UPDATE_CHECK`:** Salta verificação de versão
+
+### Changed
+
+- **Parse YAML:** Substituído parser manual por `gopkg.in/yaml.v3` — mais robusto e confiável
+- **SnapModule:** Removeu exigência de `IsRoot()`; usa `sudo` como os demais módulos
+- **User-Agent:** `fetchLatestVersion()` envia `User-Agent: piunter/X.X.X` para GitHub API
+- **Notificação única:** `CheckForUpdate` não notifica duas vezes a mesma versão
+
+### Removed
+
+- **Script de instalação:** Removido `install/install.sh` — instalação agora é só `curl + chmod + mv`
+
 ## [1.5.0] - 2026-05-10
 
 ### Added
@@ -45,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Script de instalação:** Script shell para instalação automática (`install/install.sh`)
+- **Script de instalação:** Script shell para instalação automática (`install/install.sh`) — removido em 1.5.1
 - **GitHub Actions:** Workflow para build e release automático em `amd64` e `arm64`
 - **Módulo NVM:** Suporte para limpar cache do Node Version Manager
 - **Módulo SDKMAN:** Suporte para limpar cache do SDKMAN

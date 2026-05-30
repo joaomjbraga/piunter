@@ -337,7 +337,7 @@ func NewSnapModule() *SnapModule {
 }
 
 func (m *SnapModule) IsAvailable() bool {
-	return utils.IsCommandAvailable("snap") && utils.IsRoot()
+	return utils.IsCommandAvailable("snap")
 }
 
 func (m *SnapModule) Analyze(threshold int) (*types.AnalysisResult, error) {
@@ -406,9 +406,14 @@ func (m *SnapModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return result, nil
 	}
 
+	sudoPrefix := "sudo"
+	if utils.IsRoot() {
+		sudoPrefix = ""
+	}
+
 	var removed int
 	for _, s := range disabled {
-		execResult := utils.Exec("snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
+		execResult := utils.Exec(sudoPrefix, "snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
 		if execResult.Success {
 			removed++
 		} else {

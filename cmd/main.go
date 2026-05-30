@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const VERSION = "1.5.0"
+const VERSION = "1.6.0"
 
 var (
 	all                bool
@@ -28,8 +28,9 @@ var rootCmd *cobra.Command
 
 func init() {
 	rootCmd = &cobra.Command{
-		Use:   "piunter",
-		Short: "CLI para limpeza e otimização de sistemas Linux",
+		Use:     "piunter",
+		Version: VERSION,
+		Short:   "CLI para limpeza e otimização de sistemas Linux",
 		Long: `piunter - CLI para limpeza e otimização de sistemas Linux
 
 Execute com módulos específicos ou use --all para executar todos.`,
