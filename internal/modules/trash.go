@@ -125,6 +125,10 @@ func (m *TrashModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		}
 	}
 
+	if result.ItemsRemoved == 0 && len(result.Errors) > 0 {
+		result.Success = false
+	}
+
 	if result.ItemsRemoved > 0 {
 		utils.Item(m.Name(), fmt.Sprintf("%d itens removidos", result.ItemsRemoved))
 	}

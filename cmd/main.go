@@ -138,6 +138,13 @@ func runMain(args []string, flags *pflag.FlagSet) {
 		fmt.Println("  \033[33mAlguns módulos requerem privilégios de administrador.\033[0m")
 		if !utils.RequestSudo() {
 			fmt.Println("  \033[90mMódulos que requerem sudo serão pulados.\033[0m")
+			var filtered []string
+			for _, id := range moduleIds {
+				if !requiresSudo([]string{id}) {
+					filtered = append(filtered, id)
+				}
+			}
+			moduleIds = filtered
 		}
 		fmt.Println()
 	}

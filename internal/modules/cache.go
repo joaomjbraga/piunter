@@ -120,7 +120,11 @@ func (m *CacheModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		}
 	}
 
-	if result.SpaceFreed > 0 && !dryRun {
+	if result.ItemsRemoved == 0 && len(result.Errors) > 0 {
+		result.Success = false
+	}
+
+	if result.ItemsRemoved > 0 && !dryRun {
 		utils.Item(m.Name(), "Cache limpo")
 	}
 

@@ -212,6 +212,7 @@ func (m *ThumbsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 
 	err = os.RemoveAll(thumbsPath)
 	if err != nil {
+		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao remover miniaturas: %s", err.Error()))
 		result.Errors = append(result.Errors, "Tente manualmente: rm -rf ~/.cache/thumbnails")
 	} else {
@@ -391,6 +392,10 @@ func (m *AppImageModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 			result.SpaceFreed += item.Size
 			result.ItemsRemoved++
 		}
+	}
+
+	if result.ItemsRemoved == 0 && len(result.Errors) > 0 {
+		result.Success = false
 	}
 
 	if result.ItemsRemoved > 0 {

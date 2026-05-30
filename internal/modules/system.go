@@ -32,7 +32,12 @@ func (m *LogsModule) IsAvailable() bool {
 
 func getJournalSize() int64 {
 	executor := utils.GetExecutor()
-	execResult := executor.Exec("journalctl", "--disk-usage")
+	var execResult types.CommandResult
+	if utils.IsRoot() {
+		execResult = executor.Exec("journalctl", "--disk-usage")
+	} else {
+		execResult = executor.Exec("sudo", "journalctl", "--disk-usage")
+	}
 	if !execResult.Success {
 		return 0
 	}
@@ -176,6 +181,8 @@ func (m *LogsModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	if totalFreed > 0 {
 		result.SpaceFreed = totalFreed
 		utils.Item(m.Name(), "Logs limpos")
+	} else if len(result.Errors) > 0 {
+		result.Success = false
 	}
 
 	return result, nil
@@ -305,6 +312,7 @@ func (m *FlatpakModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		result.ItemsRemoved = 1
 		utils.Item(m.Name(), "Flatpak limpo")
 	} else {
+		result.Success = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Falha ao limpar Flatpak: %s", execResult.Stderr))
 	}
 
@@ -420,23 +428,24 @@ func (m *SnapModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		return result, nil
 	}
 
-	var totalSize int64
-	for _, s := range disabled {
-		snapPath := fmt.Sprintf("/var/lib/snapd/snaps/%s_%d.snap", s.name, s.rev)
-		if fi, err := os.Stat(snapPath); err == nil {
-			totalSize += fi.Size()
-		}
-	}
-
 	if dryRun {
+		var totalSize int64
+		for _, s := range disabled {
+			snapPath := fmt.Sprintf("/var/lib/snapd/snaps/%s_%d.snap", s.name, s.rev)
+			if fi, err := os.Stat(snapPath); err == nil {
+				totalSize += fi.Size()
+			}
+		}
 		result.SpaceFreed = totalSize
 		utils.Info(fmt.Sprintf("[DRY-RUN] Limparia %s de revisões Snap", utils.FormatBytes(totalSize)))
 		return result, nil
 	}
 
 	var removed int
+	var freed int64
 	executor := utils.GetExecutor()
 	for _, s := range disabled {
+		snapPath := fmt.Sprintf("/var/lib/snapd/snaps/%s_%d.snap", s.name, s.rev)
 		var execResult types.CommandResult
 		if utils.IsRoot() {
 			execResult = executor.Exec("snap", "remove", s.name, "--revision", strconv.Itoa(s.rev))
@@ -445,13 +454,16 @@ func (m *SnapModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		}
 		if execResult.Success {
 			removed++
+			if fi, err := os.Stat(snapPath); err == nil {
+				freed += fi.Size()
+			}
 		} else {
 			result.Errors = append(result.Errors, fmt.Sprintf("Falha ao remover revisão %d de %s: %s", s.rev, s.name, execResult.Stderr))
 		}
 	}
 
 	if removed > 0 {
-		result.SpaceFreed = totalSize
+		result.SpaceFreed = freed
 		result.ItemsRemoved = removed
 		utils.Item(m.Name(), "Snap limpo")
 	} else {
