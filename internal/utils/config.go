@@ -86,31 +86,6 @@ func loadConfigFromFile() (Config, error) {
 	return cfg, nil
 }
 
-func ResetConfigCache() {
-	configCacheOnce = sync.Once{}
-}
-
-func SaveConfig(cfg Config) error {
-	configPath := GetConfigPath()
-	dir := filepath.Dir(configPath)
-
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("failed to create config dir: %w", err)
-	}
-
-	data, err := yaml.Marshal(&cfg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
-
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write config: %w", err)
-	}
-
-	ResetConfigCache()
-	return nil
-}
-
 type ConfigValidator struct {
 	cfg Config
 }

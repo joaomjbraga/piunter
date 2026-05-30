@@ -79,21 +79,6 @@ func (m *MockExecutor) IsCommandAvailable(cmd string) bool {
 	}
 	return true
 }
-
-func (m *MockExecutor) WhenExec(command string, args ...string) *MockExecutor {
-	key := command
-	for _, arg := range args {
-		key += " " + arg
-	}
-	m.execResults[key] = types.CommandResult{
-		Success: true,
-		Stdout:  "",
-		Stderr:  "",
-		Code:    0,
-	}
-	return m
-}
-
 func (m *MockExecutor) WhenExecResult(command string, result types.CommandResult) {
 	m.execResults[command] = result
 }

@@ -55,35 +55,6 @@ func Exec(command string, args ...string) types.CommandResult {
 	}
 }
 
-func ExecWithEnv(env []string, command string, args ...string) types.CommandResult {
-	cmd := exec.Command(command, args...)
-	cmd.Env = append(os.Environ(), env...)
-	cmd.Stdout = nil
-	cmd.Stderr = nil
-
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
-	err := cmd.Start()
-	if err != nil {
-		return types.CommandResult{
-			Success: false,
-			Stderr:  err.Error(),
-			Code:    1,
-		}
-	}
-
-	output, stderrOutput, _ := readOutput(stdout, stderr)
-	cmd.Wait()
-
-	return types.CommandResult{
-		Success: cmd.ProcessState.ExitCode() == 0,
-		Stdout:  output,
-		Stderr:  stderrOutput,
-		Code:    cmd.ProcessState.ExitCode(),
-	}
-}
-
 func IsCommandAvailable(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
@@ -189,9 +160,4 @@ func RemovePath(path string, recursive bool) error {
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
-}
-
-func IsDir(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && info.IsDir()
 }

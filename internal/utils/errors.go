@@ -58,11 +58,4 @@ func NewCleaningError(module, message string, cause error) *CleaningError {
 	}
 }
 
-func NewItemCleaningError(module, itemPath, message string, cause error) *CleaningError {
-	return &CleaningError{
-		Module:   module,
-		Message:  message,
-		Cause:    cause,
-		ItemPath: itemPath,
-	}
-}
+

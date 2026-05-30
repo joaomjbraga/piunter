@@ -43,20 +43,6 @@ type AnalysisResult struct {
 	Items     []CleanableItem
 	TotalSize int64
 }
-
-type ModuleInfo struct {
-	ID          string
-	Name        string
-	Description string
-	Available   bool
-}
-
-type CleanOptions struct {
-	DryRun  bool
-	Force   bool
-	Modules []string
-}
-
 type Report struct {
 	StartTime        string
 	EndTime          string

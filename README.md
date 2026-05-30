@@ -1,4 +1,4 @@
-# piunter (v1.5.0)
+# piunter (v1.6.0)
 
 <div>
   <img src=".github/preview.gif">
@@ -67,34 +67,34 @@ piunter --large-files --threshold=500
 
 ## Módulos
 
-| Módulo           | Flag            | Descrição                        |
-| ---------------- | --------------- | -------------------------------- |
-| Cache            | `--cache`       | Limpa cache do usuário (~/.cache)|
-| Pacotes          | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF) |
-| Flatpak          | `--flatpak`     | Remove dados órfãos do Flatpak   |
-| Snap             | `--snap`        | Remove revisões desativadas do Snap |
-| Docker           | `--docker`      | Remove containers/imagens não utilizados |
-| Logs             | `--logs`        | Limpa logs antigos do sistema (journald + .gz) |
-| Large Files      | `--large-files` | Encontra arquivos grandes (> threshold) |
-| AppImage         | `--appimage`    | Remove AppImages do diretório Downloads |
-| Thumbs           | `--thumbs`      | Remove miniaturas em cache (~/.cache/thumbnails) |
-| Recent           | `--recent`      | Lista arquivos modificados nos últimos 7 dias |
-| Trash            | `--trash`       | Esvazia a lixeira do usuário     |
+| Módulo      | Flag            | Descrição                                        |
+| ----------- | --------------- | ------------------------------------------------ |
+| Cache       | `--cache`       | Limpa cache do usuário (~/.cache)                |
+| Pacotes     | `--packages`    | Remove pacotes órfãos (APT/Pacman/DNF)           |
+| Flatpak     | `--flatpak`     | Remove dados órfãos do Flatpak                   |
+| Snap        | `--snap`        | Remove revisões desativadas do Snap              |
+| Docker      | `--docker`      | Remove containers/imagens não utilizados         |
+| Logs        | `--logs`        | Limpa logs antigos do sistema (journald + .gz)   |
+| Large Files | `--large-files` | Encontra arquivos grandes (> threshold)          |
+| AppImage    | `--appimage`    | Remove AppImages do diretório Downloads          |
+| Thumbs      | `--thumbs`      | Remove miniaturas em cache (~/.cache/thumbnails) |
+| Recent      | `--recent`      | Lista arquivos modificados nos últimos 7 dias    |
+| Trash       | `--trash`       | Esvazia a lixeira do usuário                     |
 
 Flags dos módulos também podem ser combinadas com `--all` para execução completa.
 
 ## Flags
 
-| Flag              | Descrição                            |
-| ----------------- | ------------------------------------ |
-| `-a`, `--all`     | Executa todos os módulos             |
-| `--analyze`       | Analisa sem limpar (preview)         |
-| `-n`, `--dry-run` | Simula execução                      |
-| `-f`, `--force`   | Pula todas as confirmações           |
-| `--list`          | Lista módulos disponíveis            |
-| `--version`       | Mostra a versão do piunter           |
+| Flag              | Descrição                                           |
+| ----------------- | --------------------------------------------------- |
+| `-a`, `--all`     | Executa todos os módulos                            |
+| `--analyze`       | Analisa sem limpar (preview)                        |
+| `-n`, `--dry-run` | Simula execução                                     |
+| `-f`, `--force`   | Pula todas as confirmações                          |
+| `--list`          | Lista módulos disponíveis                           |
+| `--version`       | Mostra a versão do piunter                          |
 | `--threshold=MB`  | Tamanho mínimo para arquivos grandes (default: 100) |
-| `-h`, `--help`    | Mostra ajuda                         |
+| `-h`, `--help`    | Mostra ajuda                                        |
 
 **Auto-update**: O piunter verifica automaticamente no GitHub se há uma nova versão (cache de 24h em `~/.config/piunter/version_cache.json`). A notificação aparece no cabeçalho ao executar o comando.
 

@@ -31,10 +31,6 @@ func (m *LargeFilesModule) IsAvailable() bool {
 	return true
 }
 
-func (m *LargeFilesModule) SetThreshold(t int) {
-	m.threshold = t
-}
-
 // SkipDirs lists directories that are unlikely to contain large user files worth scanning
 var SkipDirs = []string{
 	".cache",
@@ -245,10 +241,6 @@ func NewRecentFilesModule() *RecentFilesModule {
 
 func (m *RecentFilesModule) IsAvailable() bool {
 	return true
-}
-
-func (m *RecentFilesModule) SetDays(d int) {
-	m.days = d
 }
 
 func (m *RecentFilesModule) Analyze(threshold int) (*types.AnalysisResult, error) {
