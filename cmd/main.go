@@ -37,6 +37,8 @@ func init() {
 		Short:   "CLI para limpeza e otimização de sistemas Linux",
 		Long: `piunter - CLI para limpeza e otimização de sistemas Linux
 
+Este projeto é voltado exclusivamente para ambientes Linux. Não há suporte para macOS, Windows ou outras plataformas.
+
 Execute com módulos específicos ou use --all para executar todos.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			runMain(args, cmd.Flags())
