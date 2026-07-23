@@ -3,8 +3,28 @@ package modules
 var AllModules = []Module{}
 
 func init() {
-	AllModules = []Module{
+	AllModules = instantiateModules()
+}
+
+func instantiateModules() []Module {
+	return []Module{
 		NewPackagesModule(),
+		NewPackageCacheModule(),
+		NewTempFilesModule(),
+		NewShellHistoryModule(),
+		NewDevCacheModule(),
+		NewBrowserCacheModule(),
+		NewEditorCacheModule(),
+		NewMediaCacheModule(),
+		NewGameCacheModule(),
+		NewContainerCacheModule(),
+		NewBuildCacheModule(),
+		NewIdesCacheModule(),
+		NewBrowserPluginsModule(),
+		NewOldInstallersModule(),
+		NewSwapFilesModule(),
+		NewAppLogsModule(),
+		NewDownloadsOldModule(),
 		NewCacheModule(),
 		NewFlatpakModule(),
 		NewSnapModule(),
@@ -15,8 +35,15 @@ func init() {
 		NewThumbsModule(),
 		NewRecentFilesModule(),
 		NewTrashModule(),
-
 	}
+}
+
+func GetModuleIDs() []string {
+	ids := make([]string, 0, len(AllModules))
+	for _, module := range AllModules {
+		ids = append(ids, module.ID())
+	}
+	return ids
 }
 
 func GetModule(id string) Module {

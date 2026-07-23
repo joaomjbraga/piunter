@@ -3,6 +3,7 @@ package modules
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/joaomjbraga/piunter/internal/utils"
 	"github.com/joaomjbraga/piunter/pkg/types"
@@ -83,6 +84,14 @@ func (m *CacheModule) Analyze(threshold int) (*types.AnalysisResult, error) {
 	return result, nil
 }
 
+func isPermissionError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "permission denied") || strings.Contains(msg, "access denied") || strings.Contains(msg, "operation not permitted")
+}
+
 func (m *CacheModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 	analysis, err := m.Analyze(0)
 	if err != nil {
@@ -112,6 +121,10 @@ func (m *CacheModule) Clean(dryRun bool) (*types.CleaningResult, error) {
 		} else {
 			err := utils.RemovePath(item.Path, item.Type == "directory")
 			if err != nil {
+				if isPermissionError(err) {
+					utils.Debug("ignoring permission denied while removing " + item.Path)
+					continue
+				}
 				result.Errors = append(result.Errors, "Falha ao remover "+item.Path+": "+err.Error())
 			} else {
 				result.SpaceFreed += item.Size

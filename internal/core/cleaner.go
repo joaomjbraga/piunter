@@ -13,6 +13,7 @@ import (
 type Cleaner struct {
 	modules []modules.Module
 	dryRun  bool
+	verbose bool
 }
 
 func NewCleaner(moduleIds []string, dryRun bool) *Cleaner {
@@ -20,6 +21,16 @@ func NewCleaner(moduleIds []string, dryRun bool) *Cleaner {
 	return &Cleaner{
 		modules: mods,
 		dryRun:  dryRun,
+		verbose: false,
+	}
+}
+
+func NewCleanerWithOptions(moduleIds []string, dryRun bool, verbose bool) *Cleaner {
+	mods := modules.GetModulesByIds(moduleIds)
+	return &Cleaner{
+		modules: mods,
+		dryRun:  dryRun,
+		verbose: verbose,
 	}
 }
 
@@ -28,6 +39,26 @@ func (c *Cleaner) Clean() (*types.Report, error) {
 	results := c.cleanSequential()
 	endTime := time.Now()
 
+	return buildReport(startTime, endTime, results), nil
+}
+
+func isVerboseEnabled(verboseFlag bool, configVerbose bool) bool {
+	return verboseFlag || configVerbose
+}
+
+func BuildConfirmationSummary(moduleIDs []string, dryRun bool) string {
+	if len(moduleIDs) == 0 {
+		return "Nenhum módulo selecionado."
+	}
+
+	base := fmt.Sprintf("Os seguintes módulos serão processados: %s.", strings.Join(moduleIDs, ", "))
+	if dryRun {
+		return base + " Execução em modo dry-run, nenhuma alteração será aplicada."
+	}
+	return base + " Confirmação necessária para aplicar as alterações."
+}
+
+func buildReport(startTime, endTime time.Time, results []types.CleaningResult) *types.Report {
 	var totalSpaceFreed int64
 	var totalItemsRemoved int
 	var errors []string
@@ -39,13 +70,13 @@ func (c *Cleaner) Clean() (*types.Report, error) {
 	}
 
 	return &types.Report{
-		StartTime:        startTime.Format(time.RFC3339),
-		EndTime:          endTime.Format(time.RFC3339),
-		Modules:          results,
-		TotalSpaceFreed:  totalSpaceFreed,
+		StartTime:         startTime.Format(time.RFC3339),
+		EndTime:           endTime.Format(time.RFC3339),
+		Modules:           results,
+		TotalSpaceFreed:   totalSpaceFreed,
 		TotalItemsRemoved: totalItemsRemoved,
-		Errors:           errors,
-	}, nil
+		Errors:            errors,
+	}
 }
 
 func (c *Cleaner) cleanSequential() []types.CleaningResult {
@@ -57,6 +88,9 @@ func (c *Cleaner) cleanSequential() []types.CleaningResult {
 		}
 
 		result, err := m.Clean(c.dryRun)
+		if c.verbose {
+			utils.Info(fmt.Sprintf("[verbose] módulo %s concluído", m.ID()))
+		}
 		if err != nil {
 			results = append(results, types.CleaningResult{
 				Module:       m.ID(),
@@ -71,6 +105,13 @@ func (c *Cleaner) cleanSequential() []types.CleaningResult {
 	}
 
 	return results
+}
+
+func summarizeReport(report *types.Report) string {
+	if len(report.Errors) == 0 {
+		return fmt.Sprintf("Limpeza concluída com sucesso. Espaço liberado: %s", utils.FormatBytes(report.TotalSpaceFreed))
+	}
+	return fmt.Sprintf("Limpeza concluída com avisos. Espaço liberado: %s. Erros: %d", utils.FormatBytes(report.TotalSpaceFreed), len(report.Errors))
 }
 
 func (c *Cleaner) PrintReport(report *types.Report) {
@@ -119,19 +160,19 @@ func (c *Cleaner) PrintReport(report *types.Report) {
 
 	if len(report.Errors) > 0 {
 		utils.Space()
-		fmt.Printf("  \033[1;31mErros:\033[0m\n")
+		fmt.Printf("  \033[33mAvisos:\033[0m\n")
 		for _, err := range report.Errors {
-			fmt.Printf("    \033[90m-\033[0m \033[31m%s\033[0m\n", err)
+			fmt.Printf("    \033[90m-\033[0m \033[33m%s\033[0m\n", err)
 		}
 	}
 
 	utils.Space()
 
+	fmt.Printf("  \033[32m*\033[0m %s\n", summarizeReport(report))
 	if c.dryRun {
-		fmt.Printf("  \033[33m!\033[0m Dry-run concluído\n")
 		fmt.Printf("  \033[90mExecute sem --dry-run para aplicar\033[0m\n")
 	} else {
-		fmt.Printf("  \033[32m*\033[0m Limpeza concluída em %s\n", durationStr)
+		fmt.Printf("  \033[90mTempo total: %s\033[0m\n", durationStr)
 	}
 	fmt.Println()
 }
