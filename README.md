@@ -1,4 +1,4 @@
-# piunter (v1.6.0)
+# piunter (v1.7.0)
 
 <div>
   <img src=".github/preview.gif">
