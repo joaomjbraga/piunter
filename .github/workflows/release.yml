@@ -1,15 +1,36 @@
-name: Release
+name: CI
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run tests
+        run: go test ./...
+
   build:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,10 +40,12 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.26'
+          go-version-file: go.mod
+          cache: true
 
-      - name: Build
+      - name: Build Linux binary
         env:
+          GOOS: linux
           GOARCH: ${{ matrix.arch == 'arm64' && 'arm64' || 'amd64' }}
         run: |
           go build -o piunter-linux-${{ matrix.arch }} -ldflags="-s -w" ./cmd
@@ -35,7 +58,10 @@ jobs:
 
   release:
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
