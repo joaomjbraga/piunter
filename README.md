@@ -6,6 +6,8 @@
 
 CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 
+Este projeto é voltado exclusivamente para ambientes Linux.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.26+-green.svg" alt="Go">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
