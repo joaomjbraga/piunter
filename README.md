@@ -6,7 +6,7 @@
 
 CLI para limpeza e otimização de sistemas Linux, escrita em Go.
 
-Este projeto é voltado exclusivamente para ambientes Linux.
+Este projeto é voltado exclusivamente para ambientes Linux. Não há suporte para macOS, Windows ou outras plataformas.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.26+-green.svg" alt="Go">
@@ -19,7 +19,7 @@ Este projeto é voltado exclusivamente para ambientes Linux.
 
 ### Opção 1: binário (recomendada)
 
-Use esta opção se você quiser instalar rapidamente sem depender do ambiente Go.
+Use esta opção se você quiser instalar rapidamente sem depender do ambiente Go em um sistema Linux.
 
 ```bash
 # amd64
